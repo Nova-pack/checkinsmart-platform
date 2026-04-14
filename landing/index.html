@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CheckinSmart — Gestión inteligente para áreas de autocaravanas</title>
+<meta name="description" content="CheckinSmart es el sistema todo-en-uno para gestionar áreas de autocaravanas, campings y RV parks. Reservas online, check-in, facturación, partes policía y más.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#0066CC;--primary-dark:#004fa3;--primary-light:#e8f1fb;
+  --accent:#FF6B35;--accent-light:#fff3ee;
+  --green:#00C851;--green-light:#e6f9ed;
+  --text:#1a1a2e;--text-sec:#555;--text-ter:#888;
+  --bg:#f8f9fa;--surface:#fff;
+  --border:#e5e7eb;
+  --radius:12px;--radius-lg:20px;
+  --shadow:0 4px 20px rgba(0,0,0,.08);--shadow-lg:0 8px 40px rgba(0,0,0,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;line-height:1.2}
+a{text-decoration:none;color:inherit}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 5%}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo-nav{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:var(--primary)}
+.logo-nav span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:.9rem;font-weight:500;color:var(--text-sec);transition:color .2s}
+.nav-links a:hover{color:var(--primary)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,102,204,.3)}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{background:#e85a24;transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.btn-outline:hover{background:var(--primary-light)}
+.btn-lg{padding:14px 32px;font-size:1rem;border-radius:10px}
+.btn-xl{padding:18px 40px;font-size:1.1rem;border-radius:12px}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0a1628 0%,#0d2456 50%,#0066CC 100%);color:#fff;padding:100px 5% 80px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:6px 16px;font-size:.85rem;font-weight:500;margin-bottom:24px}
+.hero h1{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto}
+.hero h1 span{color:#64b5f6}
+.hero p{font-size:1.15rem;color:rgba(255,255,255,.8);max-width:600px;margin:0 auto 40px}
+.hero-ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:60px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat strong{display:block;font-size:2rem;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.hero-stat span{font-size:.85rem;color:rgba(255,255,255,.65)}
+
+/* ── SECTION ── */
+section{padding:80px 5%}
+.container{max-width:1200px;margin:0 auto}
+.section-label{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 14px;border-radius:50px;margin-bottom:16px}
+.section-title{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:700;margin-bottom:16px}
+.section-sub{font-size:1.05rem;color:var(--text-sec);max-width:600px}
+.text-center{text-align:center}
+.text-center .section-sub{margin:0 auto}
+
+/* ── PROBLEMA/SOLUCIÓN ── */
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;margin-top:60px}
+.problem-list{list-style:none}
+.problem-list li{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
+.problem-list li:last-child{border-bottom:none}
+.problem-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
+.problem-text strong{display:block;font-weight:600;margin-bottom:4px}
+.problem-text span{font-size:.9rem;color:var(--text-sec)}
+.solution-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-lg)}
+.solution-card h3{font-size:1.6rem;margin-bottom:12px}
+.solution-card p{opacity:.85;margin-bottom:24px}
+.solution-check{display:flex;flex-direction:column;gap:12px}
+.solution-check li{display:flex;align-items:center;gap:10px;font-weight:500}
+.solution-check li::before{content:'✓';background:rgba(255,255,255,.2);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+
+/* ── MÓDULOS ── */
+.modules-bg{background:var(--surface)}
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:60px}
+.module-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:all .2s;cursor:default}
+.module-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--primary)}
+.module-icon{font-size:2rem;margin-bottom:16px}
+.module-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.module-card p{font-size:.9rem;color:var(--text-sec)}
+
+/* ── PRECIOS ── */
+.pricing-bg{background:linear-gradient(180deg,var(--bg) 0%,#eef4ff 100%)}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:60px;max-width:800px;margin-left:auto;margin-right:auto}
+.price-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-lg);padding:40px;position:relative;transition:all .2s}
+.price-card.featured{border-color:var(--primary);box-shadow:0 8px 40px rgba(0,102,204,.15)}
+.price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;padding:4px 16px;border-radius:50px;white-space:nowrap}
+.price-name{font-size:1.1rem;font-weight:700;color:var(--text-sec);margin-bottom:8px}
+.price-plazas{font-size:.85rem;color:var(--text-ter);margin-bottom:24px}
+.price-amount{font-size:3rem;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--text);line-height:1}
+.price-amount span{font-size:1rem;font-weight:500;color:var(--text-sec)}
+.price-period{font-size:.85rem;color:var(--text-ter);margin-bottom:28px}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
+.price-features li{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.price-trial{font-size:.8rem;color:var(--text-ter);text-align:center;margin-top:12px}
+
+/* ── CÓMO FUNCIONA ── */
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px;margin-top:60px}
+.step{text-align:center}
+.step-num{width:52px;height:52px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;font-family:'Space Grotesk',sans-serif;margin:0 auto 20px}
+.step h3{font-size:1rem;font-weight:700;margin-bottom:8px}
+.step p{font-size:.9rem;color:var(--text-sec)}
+.step-connector{display:none}
+
+/* ── CASO DE ÉXITO ── */
+.case-bg{background:var(--surface)}
+.case-card{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.case-quote{font-size:1.2rem;font-style:italic;color:var(--text);line-height:1.7;margin-bottom:24px;padding-left:20px;border-left:4px solid var(--primary)}
+.case-author{display:flex;align-items:center;gap:14px}
+.case-avatar{width:48px;height:48px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem}
+.case-stats{display:flex;flex-direction:column;gap:20px}
+.case-stat{background:var(--bg);border-radius:var(--radius);padding:24px}
+.case-stat strong{display:block;font-size:2rem;font-weight:700;color:var(--primary);font-family:'Space Grotesk',sans-serif}
+.case-stat span{font-size:.9rem;color:var(--text-sec)}
+
+/* ── CTA FINAL ── */
+.cta-final{background:linear-gradient(135deg,#0a1628,#0066CC);color:#fff;text-align:center;padding:100px 5%}
+.cta-final h2{font-size:clamp(1.8rem,3vw,2.8rem);margin-bottom:16px}
+.cta-final p{font-size:1.05rem;opacity:.85;max-width:500px;margin:0 auto 40px}
+.cta-final .hero-ctas{margin-top:0}
+
+/* ── FAQ ── */
+.faq-list{max-width:720px;margin:60px auto 0}
+.faq-item{border-bottom:1px solid var(--border);padding:24px 0}
+.faq-q{font-weight:700;font-size:1rem;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-a{font-size:.95rem;color:var(--text-sec);line-height:1.7}
+
+/* ── FOOTER ── */
+footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-size:.9rem}
+.footer-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand .logo-nav{font-size:1.6rem;display:block;margin-bottom:12px}
+.footer-brand p{opacity:.7;font-size:.9rem;line-height:1.7}
+.footer-col h4{color:#fff;font-weight:700;margin-bottom:16px}
+.footer-col a{display:block;margin-bottom:8px;opacity:.7;transition:opacity .2s}
+.footer-col a:hover{opacity:1}
+.footer-bottom{max-width:1200px;margin:0 auto;border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap;gap:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .nav-links{display:none}
+  .problem-grid,.case-card,.pricing-grid,.footer-grid{grid-template-columns:1fr}
+  .hero-stats{gap:24px}
+  .hero-stat strong{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <span class="logo-nav">Checkin<span>Smart</span></span>
+    <div class="nav-links">
+      <a href="#modulos">Funcionalidades</a>
+      <a href="#precios">Precios</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contacto" class="btn btn-outline" style="padding:8px 20px">Contacto</a>
+      <a href="/app/" class="btn btn-primary" style="padding:8px 20px">Acceder</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚐 Diseñado para áreas de autocaravanas</div>
+  <h1>La gestión de tu área,<br><span>todo en un solo lugar</span></h1>
+  <p>Reservas online, check-in digital, partes policía, facturación y tienda. Sin papel, sin errores, sin estrés.</p>
+  <div class="hero-ctas">
+    <a href="#precios" class="btn btn-accent btn-xl">Empezar 30 días gratis</a>
+    <a href="#modulos" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">Ver funcionalidades</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><strong>100%</strong><span>Sin papel</span></div>
+    <div class="hero-stat"><strong>4 idiomas</strong><span>ES / EN / DE / FR</span></div>
+    <div class="hero-stat"><strong>3,33€/día</strong><span>Plan Essential</span></div>
+    <div class="hero-stat"><strong>30 días</strong><span>Prueba gratuita</span></div>
+  </div>
+</section>
+
+<!-- PROBLEMA / SOLUCIÓN -->
+<section>
+  <div class="container">
+    <div class="problem-grid">
+      <div>
+        <span class="section-label">El problema</span>
+        <h2 class="section-title">¿Cómo gestionas tu área ahora mismo?</h2>
+        <ul class="problem-list">
+          <li>
+            <span class="problem-icon">📋</span>
+            <div class="problem-text">
+              <strong>Reservas por teléfono y email</strong>
+              <span>Sin confirmación automática, sin calendario visible para el cliente</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">📝</span>
+            <div class="problem-text">
+              <strong>Partes policía en papel</strong>
+              <span>Rellenos a mano, errores frecuentes, archivado difícil</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🧮</span>
+            <div class="problem-text">
+              <strong>Caja y tienda en Excel o libreta</strong>
+              <span>Cuadrar caja lleva horas y los errores son inevitables</span>
+            </div>
+          </li>
+          <li>
+            <span class="problem-icon">🤷</span>
+            <div class="problem-text">
+              <strong>¿Cuánto ingresaste este mes?</strong>
+              <span>Sin estadísticas ni histórico, imposible tomar decisiones</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="solution-card">
+        <h3>Con CheckinSmart</h3>
+        <p>Todo lo que necesitas para gestionar tu área, integrado y funcionando desde el primer día.</p>
+        <ul class="solution-check">
+          <li>Reservas online en tu web 24/7</li>
+          <li>Partes policía en 2 clics</li>
+          <li>Caja y tienda automatizadas</li>
+          <li>Estadísticas en tiempo real</li>
+          <li>Facturación con impresión directa</li>
+          <li>Tu marca, tus colores, tu dominio</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MÓDULOS -->
+<section class="modules-bg" id="modulos">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Todo incluido</span>
+      <h2 class="section-title">Un sistema, todas las herramientas</h2>
+      <p class="section-sub">Sin módulos extra, sin sorpresas. Todo lo que necesitas desde el primer día.</p>
+    </div>
+    <div class="modules-grid">
+      <div class="module-card">
+        <div class="module-icon">🗓️</div>
+        <h3>Motor de Reservas Online</h3>
+        <p>Web pública con calendario, mapa de parcelas y pago online. Tus clientes reservan en cualquier idioma.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">✅</div>
+        <h3>Check-in / Check-out</h3>
+        <p>Gestión de llegadas y salidas del día. Historial completo de estancias y estado en tiempo real.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🗺️</div>
+        <h3>Mapa de Parcelas</h3>
+        <p>Vista visual del área completa. Saber en un vistazo qué parcelas están libres, ocupadas o en mantenimiento.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🛡️</div>
+        <h3>Partes de Policía</h3>
+        <p>Fichas de viajeros conformes con la normativa. Exportación CSV para el sistema SES del Ministerio del Interior.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🔍</div>
+        <h3>Escáner DNI / Pasaporte</h3>
+        <p>Lectura automática del código MRZ. Autocumplimenta la ficha de check-in en segundos.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🧾</div>
+        <h3>Facturación</h3>
+        <p>Facturas y notas de abono con impresión directa. CIF, IVA, series y archivo histórico.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🛒</div>
+        <h3>Tienda y Caja</h3>
+        <p>Catálogo de productos, ventas, control de stock y cierre de turno con cuadre automático.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">📊</div>
+        <h3>Dashboard y Estadísticas</h3>
+        <p>Ocupación, ingresos, nacionalidades, estancia media. Todo en una pantalla, siempre actualizado.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🎨</div>
+        <h3>Tu Marca, Tus Colores</h3>
+        <p>Logo, colores corporativos y nombre de tu empresa. Tus clientes ven tu marca, no la nuestra.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRECIOS -->
+<section class="pricing-bg" id="precios">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Precios</span>
+      <h2 class="section-title">Simple, transparente, sin sorpresas</h2>
+      <p class="section-sub">Un precio todo incluido. Sin módulos extra, sin letra pequeña, sin permanencia.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Essential</div>
+        <div class="price-plazas">Hasta 150 plazas</div>
+        <div class="price-amount">199<span>€</span></div>
+        <div class="price-period">/ mes · IVA no incluido</div>
+        <ul class="price-features">
+          <li>Todos los módulos incluidos</li>
+          <li>Motor de reservas online</li>
+          <li>Partes policía + exportación SES</li>
+          <li>Facturación completa</li>
+          <li>Tienda y cierre de caja</li>
+          <li>Escáner DNI / pasaporte</li>
+          <li>2 usuarios</li>
+          <li>Soporte email 48h</li>
+        </ul>
+        <a href="#contacto" class="btn btn-outline" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">⭐ Más popular</div>
+        <div class="price-name">Professional</div>
+        <div class="price-plazas">De 151 a 300 plazas</div>
+        <div class="price-amount">299<span>€</span></div>
+        <div class="price-period">/ mes · IVA no incluido</div>
+        <ul class="price-features">
+          <li>Todo lo del plan Essential</li>
+          <li>Usuarios ilimitados</li>
+          <li>Dominio propio (tuarea.com)</li>
+          <li>Soporte email + WhatsApp 24h</li>
+          <li>Onboarding personalizado</li>
+          <li>Videollamada de configuración</li>
+        </ul>
+        <a href="#contacto" class="btn btn-primary" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:32px;color:var(--text-sec);font-size:.9rem">
+      ¿Más de 300 plazas o necesitas algo a medida? <a href="#contacto" style="color:var(--primary);font-weight:600">Hablamos →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="como-funciona" style="background:var(--surface)">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Proceso</span>
+      <h2 class="section-title">Listo en 24 horas</h2>
+      <p class="section-sub">Sin instalaciones, sin servidores. Funciona desde el navegador de cualquier dispositivo.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Rellenas el formulario</h3>
+        <p>Nombre de tu área, número de plazas, logo y colores corporativos.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Tu área activa en 24h</h3>
+        <p>Recibes acceso a <strong>tuarea.checkinsmart.com</strong> configurado con tu marca.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Videollamada de configuración</h3>
+        <p>1 hora contigo para configurar parcelas, tarifas y motor de reservas.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Empieza a recibir reservas</h3>
+        <p>Tu motor de reservas online ya está funcionando. 30 días sin compromiso.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASO DE ÉXITO -->
+<section class="case-bg">
+  <div class="container">
+    <div class="case-card">
+      <div>
+        <span class="section-label">Caso de éxito</span>
+        <h2 class="section-title">Area Málaga Beach</h2>
+        <blockquote class="case-quote">
+          "Antes perdíamos reservas por no estar disponibles 24 horas. Ahora el sistema trabaja por nosotros mientras dormimos. Los partes de policía que antes tardaban 20 minutos los hacemos en 2 clics."
+        </blockquote>
+        <div class="case-author">
+          <div class="case-avatar">A</div>
+          <div>
+            <strong>Administración</strong>
+            <div style="font-size:.85rem;color:var(--text-sec)">Area Málaga Beach · Primera línea de playa, Málaga</div>
+          </div>
+        </div>
+      </div>
+      <div class="case-stats">
+        <div class="case-stat">
+          <strong>+40%</strong>
+          <span>Más reservas online el primer mes</span>
+        </div>
+        <div class="case-stat">
+          <strong>2 min</strong>
+          <span>Para hacer el parte de policía (antes: 20 min)</span>
+        </div>
+        <div class="case-stat">
+          <strong>0 errores</strong>
+          <span>En partes de viajeros desde que usan el escáner DNI</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Preguntas frecuentes</span>
+      <h2 class="section-title">Todo lo que necesitas saber</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">¿Necesito instalar algo? <span>+</span></div>
+        <div class="faq-a">No. CheckinSmart funciona 100% en el navegador. Sin instalaciones, sin actualizaciones manuales, sin servidores que mantener. Funciona en ordenador, tablet y móvil.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Qué pasa cuando termina la prueba de 30 días? <span>+</span></div>
+        <div class="faq-a">Te contactamos para activar tu suscripción. Si decides no continuar, no se realiza ningún cargo. Tus datos se mantienen 30 días adicionales para que puedas exportarlos.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Puedo tener mi propio dominio (tuarea.com)? <span>+</span></div>
+        <div class="faq-a">Sí, disponible en el plan Professional. Tu área aparecerá con tu propio dominio y los clientes nunca verán "checkinsmart.com".</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Los partes de policía cumplen la normativa española? <span>+</span></div>
+        <div class="faq-a">Sí. Generamos el fichero CSV en el formato exacto requerido por el sistema SES (Servicio de Entrada/Salida) del Ministerio del Interior, listo para importar directamente.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Puedo cancelar cuando quiera? <span>+</span></div>
+        <div class="faq-a">Sí, sin permanencia ni penalizaciones. Cancela en cualquier momento y el acceso se mantiene hasta el final del período pagado.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Funciona para campings y RV parks además de áreas de autocaravanas? <span>+</span></div>
+        <div class="faq-a">Completamente. El sistema es configurable: número de plazas, zonas, tipología de vehículos, tarifas... se adapta a cualquier tipo de área de estancia para vehículos de recreo.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final" id="contacto">
+  <h2>¿Listo para modernizar tu área?</h2>
+  <p>30 días gratis, sin tarjeta de crédito. Tu área configurada en 24 horas.</p>
+  <div class="hero-ctas">
+    <a href="mailto:hola@checkinsmart.com?subject=Quiero probar CheckinSmart" class="btn btn-accent btn-xl">Solicitar prueba gratuita</a>
+    <a href="https://wa.me/34600000000?text=Hola, me interesa CheckinSmart" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">💬 Hablar por WhatsApp</a>
+  </div>
+  <p style="margin-top:24px;font-size:.85rem;opacity:.6">O escríbenos a hola@checkinsmart.com</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="logo-nav">Checkin<span>Smart</span></span>
+      <p>Sistema de gestión todo-en-uno para áreas de autocaravanas, campings y RV parks.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Producto</h4>
+      <a href="#modulos">Funcionalidades</a>
+      <a href="#precios">Precios</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="/app/">Acceder</a>
+    </div>
+    <div class="footer-col">
+      <h4>Empresa</h4>
+      <a href="mailto:hola@checkinsmart.com">Contacto</a>
+      <a href="#">Aviso legal</a>
+      <a href="#">Privacidad</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CheckinSmart. Todos los derechos reservados.</span>
+    <span>Hecho con ❤️ para áreas de autocaravanas</span>
+  </div>
+</footer>
+
+<script>
+// FAQ toggle simple
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const a = item.querySelector('.faq-a');
+    const icon = q.querySelector('span');
+    const open = a.style.display === 'block';
+    a.style.display = open ? 'none' : 'block';
+    icon.textContent = open ? '+' : '−';
+  });
+});
+// Ocultar respuestas por defecto
+document.querySelectorAll('.faq-a').forEach(a => a.style.display = 'none');
+</script>
+</body>
+</html>

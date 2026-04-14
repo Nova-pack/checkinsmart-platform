@@ -1,0 +1,33 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "tenants/**",
+      "functions/**"
+    ],
+    "rewrites": [
+      { "source": "/app",    "destination": "/app/index.html" },
+      { "source": "/app/**", "destination": "/app/index.html" },
+      { "source": "/booking",    "destination": "/booking/index.html" },
+      { "source": "/booking/**", "destination": "/booking/index.html" }
+    ],
+    "headers": [
+      {
+        "source": "/tenants/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Access-Control-Allow-Origin", "value": "*" }
+        ]
+      },
+      {
+        "source": "/assets/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        ]
+      }
+    ]
+  }
+}

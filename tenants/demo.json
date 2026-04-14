@@ -1,0 +1,30 @@
+{
+  "tenantId": "demo",
+  "nombre": "Area Málaga Beach",
+  "nombreCorto": "AMB",
+  "slogan": "Primera línea de playa en Málaga",
+  "logo": "/assets/logos/demo-logo.jpg",
+  "colores": {
+    "primario": "#0066CC",
+    "primarioDark": "#004fa3",
+    "secundario": "#FF6B35",
+    "acento": "#00C851",
+    "fondo": "#f8f9fa",
+    "sidebar": "#1a1a2e",
+    "sidebarTexto": "#ffffff",
+    "texto": "#333333"
+  },
+  "plan": "professional",
+  "parcelas": 40,
+  "zonas": ["A", "B", "C", "D", "E"],
+  "dominio": "demo.checkinsmart.com",
+  "telefono": "+34 600 000 000",
+  "email": "info@areamalagabeach.com",
+  "direccion": "Playa de la Misericordia, Málaga",
+  "cif": "B12345678",
+  "idiomas": ["es", "en", "de", "fr"],
+  "idiomaDefault": "es",
+  "moneda": "EUR",
+  "pais": "ES",
+  "timezone": "Europe/Madrid"
+}

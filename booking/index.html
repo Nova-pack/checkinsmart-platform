@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CheckinSmart — Reserva tu Parcela</title>
+<script src="/assets/config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f7f4;--surface:#fff;--surface-alt:#f1f0ec;
+  --text:#1a1a1a;--text-sec:#6b6b6b;--text-ter:#999;
+  --primary:var(--cs-primario,#0288d1);--primary-l:#e1f5fe;--primary-h:var(--cs-primario-dark,#0277bd);
+  --orange:#e67e22;--orange-l:#fef3e2;
+  --blue:#2980b9;--blue-l:#e3f2fd;
+  --red:#c0392b;--red-l:#fdecea;
+  --border:#e5e3de;
+  --shadow:0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+  --r:8px;--r-lg:14px;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-text-size-adjust:100%;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Space Grotesk','DM Sans',sans-serif;font-weight:600}
+input,select,textarea,button{font-family:inherit;font-size:inherit}
+
+/* HEADER */
+.header{background:var(--primary);color:#fff;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.logo-sub{font-size:.6rem;opacity:.7;display:block;letter-spacing:1px;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.lang-btn{padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);background:transparent;color:#fff;font-size:.65rem;cursor:pointer;font-family:inherit;transition:.15s;min-width:32px;text-align:center}
+.lang-btn.active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5)}
+.lang-btn:hover{background:rgba(255,255,255,.15)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#01579b 0%,#0277bd 50%,#0288d1 100%);color:#fff;padding:32px 16px 28px;text-align:center}
+.hero h1{font-size:1.6rem;margin-bottom:6px}
+.hero p{font-size:.88rem;opacity:.85;max-width:600px;margin:0 auto 16px}
+.hero-features{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px}
+.hero-feat{display:flex;align-items:center;gap:6px;font-size:.78rem;opacity:.9}
+.hero-feat-icon{font-size:1.1rem}
+
+/* CONTAINER */
+.container{max-width:1100px;margin:0 auto;padding:0 12px}
+
+/* BOOKING WIZARD */
+.wizard{padding:24px 0 40px}
+.wizard-steps{display:flex;justify-content:center;gap:0;margin-bottom:24px;position:relative;overflow-x:auto;padding:0 4px}
+.wizard-step{display:flex;align-items:center;gap:6px;padding:8px 10px;position:relative;z-index:1;flex-shrink:0}
+.wizard-step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;border:2px solid var(--border);color:var(--text-ter);background:var(--surface);transition:.2s;flex-shrink:0}
+.wizard-step.active .wizard-step-num{background:var(--primary);color:#fff;border-color:var(--primary)}
+.wizard-step.done .wizard-step-num{background:var(--primary);color:#fff;border-color:var(--primary)}
+.wizard-step-label{font-size:.72rem;color:var(--text-ter);font-weight:500;white-space:nowrap}
+.wizard-step.active .wizard-step-label{color:var(--text);font-weight:600}
+.wizard-step.done .wizard-step-label{color:var(--primary)}
+.wizard-line{width:20px;height:2px;background:var(--border);align-self:center;flex-shrink:0}
+.wizard-line.done{background:var(--primary)}
+
+/* STEP PANELS */
+.step-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 16px;box-shadow:var(--shadow);max-width:800px;margin:0 auto}
+.step-title{font-size:1.1rem;margin-bottom:4px}
+.step-desc{font-size:.82rem;color:var(--text-sec);margin-bottom:20px}
+
+/* DATE PICKER */
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.date-box{border:2px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:.15s;text-align:center}
+.date-box:hover{border-color:var(--primary)}
+.date-box.selected{border-color:var(--primary);background:var(--primary-l)}
+.date-box-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-sec);margin-bottom:4px}
+.date-input{width:100%;border:none;background:transparent;font-size:.95rem;font-weight:600;font-family:inherit;text-align:center;color:var(--text);cursor:pointer}
+.date-input:focus{outline:none}
+
+/* GUEST COUNT */
+.guest-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.guest-box{border:1px solid var(--border);border-radius:var(--r);padding:12px 8px;text-align:center}
+.guest-box-label{font-size:.72rem;color:var(--text-sec);margin-bottom:6px}
+.guest-counter{display:flex;align-items:center;justify-content:center;gap:10px}
+.guest-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.guest-btn:hover,.guest-btn:active{background:var(--primary-l);border-color:var(--primary)}
+.guest-num{font-size:1.2rem;font-weight:700;width:24px;text-align:center;font-family:'Space Grotesk',sans-serif}
+
+/* VEHICLE SELECT */
+.vehicle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.vehicle-card{border:2px solid var(--border);border-radius:var(--r);padding:12px 8px;text-align:center;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.vehicle-card:hover,.vehicle-card:active{border-color:var(--primary);background:var(--primary-l)}
+.vehicle-card.selected{border-color:var(--primary);background:var(--primary-l)}
+.vehicle-icon{font-size:1.8rem;margin-bottom:4px}
+.vehicle-name{font-size:.75rem;font-weight:600}
+.vehicle-price{font-size:.68rem;color:var(--text-sec);margin-top:2px}
+
+/* PITCH SELECT */
+.pitch-map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:5px;margin-bottom:16px}
+.pm-cell{aspect-ratio:1;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.6rem;font-weight:600;cursor:pointer;border:2px solid transparent;transition:.15s;-webkit-tap-highlight-color:transparent}
+.pm-cell.free{background:#e8f5e9;color:#2e7d32;border-color:#c8e6c9}
+.pm-cell.free:hover,.pm-cell.free:active{border-color:#2e7d32;transform:scale(1.05)}
+.pm-cell.taken{background:#f5f5f5;color:#bbb;border-color:#eee;cursor:default}
+.pm-cell.selected{background:var(--primary);color:#fff;border-color:var(--primary-h);transform:scale(1.08)}
+.pm-cell-num{font-size:.7rem;font-weight:700}
+.pm-cell-info{font-size:.42rem;opacity:.8}
+.zone-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.zone-tab{padding:6px 14px;border:1px solid var(--border);border-radius:20px;font-size:.75rem;cursor:pointer;font-family:inherit;background:var(--surface);transition:.15s;font-weight:500;-webkit-tap-highlight-color:transparent}
+.zone-tab:hover{border-color:var(--primary)}
+.zone-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pitch-legend{display:flex;gap:12px;margin-bottom:12px;font-size:.68rem;color:var(--text-sec);flex-wrap:wrap}
+.pitch-legend-item{display:flex;align-items:center;gap:4px}
+.pitch-legend-dot{width:12px;height:12px;border-radius:3px}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.form-group{margin-bottom:0}
+.form-group.full{grid-column:1/-1}
+.form-label{display:block;font-size:.73rem;font-weight:500;margin-bottom:4px;color:var(--text-sec)}
+.form-input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r);font-size:16px;font-family:inherit;background:var(--surface);transition:.15s;-webkit-appearance:none;appearance:none}
+.form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(2,136,209,.15)}
+select.form-input{appearance:auto;-webkit-appearance:auto}
+
+/* SCANNER */
+.scanner-section{margin-bottom:24px;border:2px dashed var(--border);border-radius:var(--r-lg);padding:20px;text-align:center;background:var(--surface-alt)}
+.scanner-section.active{border-color:var(--primary);background:var(--primary-l)}
+.scanner-title{font-size:.95rem;font-weight:600;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.scanner-desc{font-size:.78rem;color:var(--text-sec);margin-bottom:16px}
+.scan-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:var(--r-lg);font-size:.95rem;font-weight:600;cursor:pointer;border:none;background:var(--primary);color:#fff;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:.15s}
+.scan-btn:active{transform:scale(.97)}
+.scan-btn.secondary{background:var(--orange);color:#fff}
+.scan-btn.outline{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.camera-container{position:relative;width:100%;max-width:400px;margin:0 auto;border-radius:var(--r-lg);overflow:hidden;background:#000}
+.camera-container video{width:100%;display:block;border-radius:var(--r-lg)}
+.camera-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.camera-frame{width:85%;height:60%;border:3px solid rgba(255,255,255,.7);border-radius:12px;position:relative}
+.camera-frame::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border-radius:12px;border:1px dashed rgba(255,255,255,.4)}
+.camera-hint{color:#fff;font-size:.78rem;margin-top:12px;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:20px}
+.camera-controls{display:flex;gap:12px;justify-content:center;margin-top:16px}
+.capture-btn{width:64px;height:64px;border-radius:50%;border:4px solid #fff;background:transparent;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 3px rgba(0,0,0,.3)}
+.capture-btn::after{content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;border-radius:50%;background:#fff;transition:.15s}
+.capture-btn:active::after{transform:scale(.85);background:#e0e0e0}
+.scanned-preview{margin:16px auto;max-width:400px}
+.scanned-preview img{width:100%;border-radius:var(--r);border:2px solid var(--primary);box-shadow:var(--shadow)}
+.scan-result{background:var(--primary-l);border:1px solid #b3e5fc;border-radius:var(--r);padding:14px;margin-top:12px;text-align:left}
+.scan-result-title{font-size:.8rem;font-weight:600;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.scan-result-item{display:flex;justify-content:space-between;padding:4px 0;font-size:.8rem;border-bottom:1px solid rgba(0,0,0,.06)}
+.scan-result-item:last-child{border-bottom:none}
+.ocr-status{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text-sec);margin-top:12px}
+.ocr-spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.doc-tabs{display:flex;gap:8px;margin-bottom:16px;justify-content:center}
+.doc-tab{padding:8px 16px;border:2px solid var(--border);border-radius:var(--r);font-size:.82rem;font-weight:600;cursor:pointer;background:var(--surface);transition:.15s;-webkit-tap-highlight-color:transparent}
+.doc-tab.active{border-color:var(--primary);background:var(--primary-l);color:var(--primary)}
+.doc-tab:active{transform:scale(.97)}
+
+/* SUMMARY */
+.summary-card{background:var(--surface-alt);border-radius:var(--r);padding:16px;margin-bottom:20px}
+.summary-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.82rem}
+.summary-row.total{border-top:2px solid var(--border);margin-top:8px;padding-top:10px;font-size:1.05rem;font-weight:700}
+.summary-total-val{font-family:'Space Grotesk',sans-serif;color:var(--primary)}
+
+/* PAYMENT */
+.payment-methods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.pay-method{border:2px solid var(--border);border-radius:var(--r);padding:14px 8px;text-align:center;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.pay-method:hover,.pay-method:active{border-color:var(--primary)}
+.pay-method.selected{border-color:var(--primary);background:var(--primary-l)}
+.pay-method-icon{font-size:1.6rem;margin-bottom:4px}
+.pay-method-name{font-size:.8rem;font-weight:600}
+.card-form{border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px}
+
+/* CONFIRMATION */
+.confirm-box{text-align:center;padding:12px 0}
+.confirm-icon{font-size:3.5rem;margin-bottom:12px}
+.confirm-title{font-size:1.3rem;color:var(--primary);margin-bottom:6px}
+.confirm-code{font-family:'Space Grotesk',monospace;font-size:1.6rem;font-weight:700;letter-spacing:3px;color:var(--primary);background:var(--primary-l);padding:10px 20px;border-radius:var(--r);display:inline-block;margin:12px 0}
+.qr-canvas{image-rendering:pixelated}
+.confirm-details{text-align:left;background:var(--surface-alt);border-radius:var(--r);padding:16px;margin:16px 0}
+.confirm-detail-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.82rem;border-bottom:1px solid var(--border)}
+.confirm-detail-row:last-child{border-bottom:none}
+.doc-badge{display:inline-flex;align-items:center;gap:4px;background:var(--primary-l);color:var(--primary);padding:4px 10px;border-radius:12px;font-size:.72rem;font-weight:600}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--r);font-size:.88rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:.15s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-h)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--surface-alt)}
+.btn-lg{padding:14px 24px;font-size:.95rem}
+.btn-block{width:100%}
+.btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:20px}
+
+/* SERVICES */
+.services-bar{display:flex;justify-content:center;gap:20px;padding:20px 12px;flex-wrap:wrap}
+.svc-item{text-align:center;font-size:.65rem;color:var(--text-sec)}
+.svc-icon{font-size:1.3rem;margin-bottom:2px}
+
+/* FOOTER */
+.footer{background:var(--primary);color:rgba(255,255,255,.7);padding:24px 16px;text-align:center;font-size:.72rem;margin-top:32px}
+.footer a{color:#fff}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:12px 20px;border-radius:var(--r);font-size:.82rem;z-index:300;animation:slideUp .3s;box-shadow:var(--shadow-lg);max-width:90vw;text-align:center}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+/* WELCOME OVERLAY */
+.welcome-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.welcome-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#01579b 0%,#0277bd 40%,#0288d1 70%,#0277bd 100%);animation:welcomeBgFade 2.8s ease-in-out forwards}
+@keyframes welcomeBgFade{0%{opacity:1}60%{opacity:1}100%{opacity:0}}
+.welcome-content{position:relative;z-index:1;text-align:center;color:#fff;animation:welcomeContentAnim 2.8s ease-in-out forwards}
+@keyframes welcomeContentAnim{0%{opacity:0;transform:scale(0.85) translateY(20px)}12%{opacity:1;transform:scale(1) translateY(0)}65%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(1.05) translateY(-10px)}}
+.welcome-icon{font-size:3.5rem;margin-bottom:16px;animation:welcomeIconPulse 2s ease-in-out}
+@keyframes welcomeIconPulse{0%{transform:scale(0)}15%{transform:scale(1.2)}25%{transform:scale(1)}50%{transform:scale(1.05)}75%{transform:scale(1)}}
+.welcome-title{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;letter-spacing:1px;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,0.3)}
+.welcome-sub{font-size:1rem;opacity:0.85;font-weight:400;letter-spacing:0.5px}
+.welcome-line{width:60px;height:3px;background:rgba(255,255,255,0.5);border-radius:2px;margin:16px auto 0;animation:welcomeLineGrow 1.2s ease-out 0.3s both}
+@keyframes welcomeLineGrow{from{width:0;opacity:0}to{width:60px;opacity:1}}
+.welcome-particles{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none}
+.welcome-particle{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.3);animation:welcomeParticleFloat 2.8s ease-out forwards}
+@keyframes welcomeParticleFloat{0%{opacity:0;transform:translateY(0) scale(0)}20%{opacity:1;transform:translateY(-20px) scale(1)}100%{opacity:0;transform:translateY(-120px) scale(0.3)}}
+
+/* GOODBYE OVERLAY */
+.goodbye-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:400;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.goodbye-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#01579b 0%,#0277bd 40%,#e67e22 100%);animation:goodbyeBgAnim 4.5s ease-in-out forwards}
+@keyframes goodbyeBgAnim{0%{opacity:0}8%{opacity:0.95}55%{opacity:0.95}100%{opacity:0}}
+.goodbye-content{position:relative;z-index:1;text-align:center;color:#fff;max-width:400px;padding:0 20px}
+.goodbye-anim-enter{animation:goodbyeContentEnter 4.5s ease-in-out forwards}
+@keyframes goodbyeContentEnter{0%{opacity:0;transform:translateY(30px) scale(0.9)}10%{opacity:1;transform:translateY(0) scale(1)}60%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-15px) scale(1.02)}}
+.goodbye-sun{font-size:4rem;margin-bottom:12px;display:inline-block;animation:goodbyeSunRise 3s ease-out forwards}
+@keyframes goodbyeSunRise{0%{transform:translateY(40px) scale(0.5);opacity:0}15%{transform:translateY(0) scale(1.1);opacity:1}25%{transform:scale(1)}50%,70%{transform:scale(1.05)}100%{transform:scale(1);opacity:0}}
+.goodbye-title{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:6px;text-shadow:0 2px 20px rgba(0,0,0,0.2)}
+.goodbye-msg{font-size:0.92rem;opacity:0.9;line-height:1.5;margin-bottom:12px}
+.goodbye-wave{display:inline-block;font-size:2rem;animation:goodbyeWave 1s ease-in-out 1s 3}
+@keyframes goodbyeWave{0%{transform:rotate(0deg)}25%{transform:rotate(20deg)}50%{transform:rotate(-10deg)}75%{transform:rotate(15deg)}100%{transform:rotate(0deg)}}
+.goodbye-stars{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none}
+.goodbye-star{position:absolute;font-size:1.2rem;animation:goodbyeStarTwinkle 4s ease-in-out forwards;opacity:0}
+@keyframes goodbyeStarTwinkle{0%{opacity:0;transform:scale(0) rotate(0deg)}15%{opacity:1;transform:scale(1) rotate(90deg)}50%{opacity:0.8;transform:scale(1.2) rotate(180deg)}100%{opacity:0;transform:scale(0) rotate(360deg)}}
+
+/* ADMIN DOCUMENTS PANEL */
+.admin-docs{background:var(--orange-l);border:2px solid var(--orange);border-radius:var(--r-lg);padding:16px;margin-top:16px}
+.admin-docs h4{font-size:.88rem;color:var(--orange);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.admin-doc-item{display:flex;gap:12px;align-items:center;background:var(--surface);border-radius:var(--r);padding:10px;margin-bottom:8px}
+.admin-doc-item:last-child{margin-bottom:0}
+.admin-doc-thumb{width:60px;height:40px;border-radius:4px;object-fit:cover;border:1px solid var(--border)}
+.admin-doc-info{flex:1;font-size:.78rem}
+.admin-doc-name{font-weight:600}
+.admin-doc-meta{color:var(--text-sec);font-size:.7rem}
+.download-btn{padding:6px 12px;border:1px solid var(--orange);border-radius:var(--r);background:transparent;color:var(--orange);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.download-btn:active{background:var(--orange-l)}
+
+/* ===== DESKTOP ===== */
+@media(min-width:641px){
+  .header-inner{padding:14px 24px}
+  .logo{font-size:1.15rem}
+  .lang-btn{font-size:.7rem;padding:3px 10px}
+  .hero{padding:50px 24px 40px}
+  .hero h1{font-size:2.2rem}
+  .hero p{font-size:1rem}
+  .container{padding:0 24px}
+  .wizard{padding:36px 0 56px}
+  .step-panel{padding:28px 32px}
+  .step-title{font-size:1.2rem}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .form-input{font-size:.9rem}
+  .vehicle-grid{grid-template-columns:repeat(5,1fr)}
+  .pitch-map-grid{grid-template-columns:repeat(auto-fill,minmax(56px,1fr))}
+  .wizard-step{padding:10px 16px}
+  .wizard-step-num{width:32px;height:32px;font-size:.8rem}
+  .wizard-step-label{font-size:.78rem}
+  .wizard-line{width:36px}
+  .date-row{gap:16px}
+  .guest-row{gap:16px}
+}
+
+/* ===== SMALL PHONES ===== */
+@media(max-width:380px){
+  .hero h1{font-size:1.3rem}
+  .hero p{font-size:.8rem}
+  .guest-row{grid-template-columns:1fr;gap:8px}
+  .vehicle-grid{grid-template-columns:repeat(2,1fr)}
+  .wizard-step-label{display:none}
+  .wizard-step{padding:6px 4px}
+  .date-row{grid-template-columns:1fr}
+  .payment-methods{grid-template-columns:1fr}
+}
+
+/* Hide step labels on smaller phones */
+@media(max-width:520px){
+  .wizard-step-label{display:none}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+function _csConfig(){ return (window.CheckinSmart && window.CheckinSmart.config) || {}; }
+function _csNombre(){ return _csConfig().nombre || 'Mi Área'; }
+function _csLogo(){ return _csConfig().logo || '/assets/logos/demo-logo.jpg'; }
+function _csEmail(){ return _csConfig().email || 'info@checkinsmart.com'; }
+function _csTel(){ return _csConfig().telefono || ''; }
+function _csDominio(){ return _csConfig().dominio || 'checkinsmart.com'; }
+function _csSlogan(){ return _csConfig().slogan || ''; }
+function _csKey(k){ var tid=(_csConfig().tenantId||'cs'); return tid+'_'+k; }
+(function(){
+"use strict";
+var ce=React.createElement,us=React.useState,ue=React.useEffect,um=React.useMemo,ur=React.useRef,uc=React.useCallback;
+
+var T={
+es:{bookYourStay:'Reserva tu Estancia',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Duchas',blackWater:'Aguas Negras',greyWater:'Aguas Grises',freshWater:'Agua Potable',electricity:'Electricidad',wifi:'WiFi',step1:'Fechas',step2:'Vehículo',step3:'Datos e ID',step4:'Pago',step5:'Confirmación',checkIn:'Entrada',checkOut:'Salida',adults:'Adultos',children:'Niños',pets:'Mascotas',selectDates:'Selecciona tus fechas de estancia',selectVehicle:'Selecciona tu tipo de vehículo',selectPitch:'Elige tu parcela en el mapa',motorhome:'Autocaravana',camper:'Camper',caravan:'Caravana',perNight:'/noche',zone:'Zona',free:'Libre',taken:'Ocupada',selected:'Seleccionada',large:'Grande',standard:'Estándar',withElec:'Con electricidad',next:'Siguiente',back:'Atrás',yourData:'Introduce tus datos personales',name:'Nombre',surname:'Apellidos',email:'Email',phone:'Teléfono',nationality:'Nacionalidad',idDoc:'Nº Documento',plate:'Matrícula del Vehículo',notes:'Notas o peticiones',summary:'Resumen',nights:'noches',pitch:'Parcela',vehicle:'Vehículo',guests:'Viajeros',elecSupplement:'Suplemento electricidad',total:'Total',paymentMethod:'Método de Pago',creditCard:'Tarjeta',payOnArrival:'Pagar a la Llegada',cardNumber:'Nº Tarjeta',expiry:'Caducidad',cvv:'CVV',nameOnCard:'Titular',confirmPay:'Confirmar y Pagar',confirmReserve:'Confirmar Reserva',bookingConfirmed:'¡Reserva Confirmada!',bookingCode:'Tu Código de Reserva',showQR:'Muestra este código QR a tu llegada',bookingDetails:'Detalles',printConfirm:'Imprimir',newBooking:'Nueva Reserva',thankYou:'¡Gracias por elegirnos!',emailSent:'Email de confirmación enviado a',adult:'adulto',child:'niño',pet:'mascota',
+scanTitle:'Escanea tu Documento de Identidad',scanDesc:'Usa la cámara de tu dispositivo para escanear tu DNI o pasaporte. Los datos se rellenarán automáticamente.',scanDNI:'DNI / ID Card',scanPassport:'Pasaporte',openCamera:'Abrir Cámara',takePhoto:'Tomar Foto',retake:'Repetir',processing:'Procesando documento con OCR...',scanComplete:'Documento escaneado correctamente',extractedData:'Datos extraídos del documento',docFront:'Frontal del documento',docType:'Tipo de documento',manualEntry:'Rellenar manualmente',orManual:'o rellena los campos manualmente abajo',docScanned:'Documento escaneado',verifyData:'Verifica que los datos extraídos son correctos',adminDocs:'Documentos del huésped (Admin)',downloadDoc:'Descargar',docRegistered:'Documento registrado',allGuests:'Todos los viajeros deben escanear su documento',addGuest:'Añadir viajero',guestDoc:'Documento viajero',scanAnother:'Escanear otro documento',closeCamera:'Cerrar cámara'
+},
+en:{bookYourStay:'Book Your Stay',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Showers',blackWater:'Black Water',greyWater:'Grey Water',freshWater:'Fresh Water',electricity:'Electricity',wifi:'WiFi',step1:'Dates',step2:'Vehicle',step3:'Details & ID',step4:'Payment',step5:'Confirmation',checkIn:'Check-in',checkOut:'Check-out',adults:'Adults',children:'Children',pets:'Pets',selectDates:'Select your stay dates',selectVehicle:'Select your vehicle type',selectPitch:'Choose your pitch on the map',motorhome:'Motorhome',camper:'Camper',caravan:'Caravan',perNight:'/night',zone:'Zone',free:'Free',taken:'Taken',selected:'Selected',large:'Large',standard:'Standard',withElec:'With electricity',next:'Next',back:'Back',yourData:'Enter your personal details',name:'First Name',surname:'Last Name',email:'Email',phone:'Phone',nationality:'Nationality',idDoc:'ID / Passport No.',plate:'License Plate',notes:'Special requests',summary:'Summary',nights:'nights',pitch:'Pitch',vehicle:'Vehicle',guests:'Guests',elecSupplement:'Electricity supplement',total:'Total',paymentMethod:'Payment Method',creditCard:'Credit Card',payOnArrival:'Pay on Arrival',cardNumber:'Card Number',expiry:'Expiry',cvv:'CVV',nameOnCard:'Name on Card',confirmPay:'Confirm & Pay',confirmReserve:'Confirm Booking',bookingConfirmed:'Booking Confirmed!',bookingCode:'Your Booking Code',showQR:'Show this QR at arrival',bookingDetails:'Details',printConfirm:'Print',newBooking:'New Booking',thankYou:'¡Gracias por elegirnos!',emailSent:'Confirmation email sent to',adult:'adult',child:'child',pet:'pet',
+scanTitle:'Scan Your ID Document',scanDesc:'Use your device camera to scan your ID card or passport. Data will be filled automatically.',scanDNI:'ID Card / DNI',scanPassport:'Passport',openCamera:'Open Camera',takePhoto:'Take Photo',retake:'Retake',processing:'Processing document with OCR...',scanComplete:'Document scanned successfully',extractedData:'Data extracted from document',docFront:'Document front',docType:'Document type',manualEntry:'Fill manually',orManual:'or fill in the fields manually below',docScanned:'Document scanned',verifyData:'Verify the extracted data is correct',adminDocs:'Guest documents (Admin)',downloadDoc:'Download',docRegistered:'Document registered',allGuests:'All guests must scan their document',addGuest:'Add guest',guestDoc:'Guest document',scanAnother:'Scan another document',closeCamera:'Close camera'
+},
+de:{bookYourStay:'Stellplatz Buchen',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Duschen',blackWater:'Schwarzwasser',greyWater:'Grauwasser',freshWater:'Frischwasser',electricity:'Strom',wifi:'WLAN',step1:'Daten',step2:'Fahrzeug',step3:'Daten & ID',step4:'Zahlung',step5:'Bestätigung',checkIn:'Anreise',checkOut:'Abreise',adults:'Erwachsene',children:'Kinder',pets:'Haustiere',selectDates:'Wählen Sie Ihre Daten',selectVehicle:'Fahrzeugtyp wählen',selectPitch:'Stellplatz wählen',motorhome:'Wohnmobil',camper:'Camper',caravan:'Wohnwagen',perNight:'/Nacht',zone:'Zone',free:'Frei',taken:'Belegt',selected:'Gewählt',large:'Groß',standard:'Standard',withElec:'Mit Strom',next:'Weiter',back:'Zurück',yourData:'Geben Sie Ihre Daten ein',name:'Vorname',surname:'Nachname',email:'E-Mail',phone:'Telefon',nationality:'Nationalität',idDoc:'Ausweis-Nr.',plate:'Kennzeichen',notes:'Besondere Wünsche',summary:'Übersicht',nights:'Nächte',pitch:'Stellplatz',vehicle:'Fahrzeug',guests:'Gäste',elecSupplement:'Stromzuschlag',total:'Gesamt',paymentMethod:'Zahlungsmethode',creditCard:'Kreditkarte',payOnArrival:'Zahlung bei Ankunft',cardNumber:'Kartennummer',expiry:'Gültig bis',cvv:'CVV',nameOnCard:'Karteninhaber',confirmPay:'Bestätigen & Bezahlen',confirmReserve:'Reservierung Bestätigen',bookingConfirmed:'Buchung Bestätigt!',bookingCode:'Ihr Buchungscode',showQR:'Zeigen Sie diesen QR-Code bei Ankunft',bookingDetails:'Details',printConfirm:'Drucken',newBooking:'Neue Buchung',thankYou:'¡Gracias por elegirnos!',emailSent:'Bestätigungsmail gesendet an',adult:'Erwachsener',child:'Kind',pet:'Haustier',
+scanTitle:'Ausweis scannen',scanDesc:'Scannen Sie Ihren Ausweis oder Reisepass mit der Kamera. Daten werden automatisch ausgefüllt.',scanDNI:'Personalausweis',scanPassport:'Reisepass',openCamera:'Kamera öffnen',takePhoto:'Foto aufnehmen',retake:'Wiederholen',processing:'Dokument wird verarbeitet...',scanComplete:'Dokument erfolgreich gescannt',extractedData:'Extrahierte Daten',docFront:'Dokumentvorderseite',docType:'Dokumenttyp',manualEntry:'Manuell ausfüllen',orManual:'oder füllen Sie die Felder manuell aus',docScanned:'Dokument gescannt',verifyData:'Überprüfen Sie die extrahierten Daten',adminDocs:'Gästedokumente (Admin)',downloadDoc:'Herunterladen',docRegistered:'Dokument registriert',allGuests:'Alle Gäste müssen ihr Dokument scannen',addGuest:'Gast hinzufügen',guestDoc:'Gast-Dokument',scanAnother:'Weiteres Dokument scannen',closeCamera:'Kamera schließen'
+},
+fr:{bookYourStay:'Réservez Votre Séjour',heroDesc:"Aire premium pour camping-cars, campers et caravanes sur la plage de Málaga.",showers:'Douches',blackWater:'Eaux Noires',greyWater:'Eaux Grises',freshWater:'Eau Potable',electricity:'Électricité',wifi:'WiFi',step1:'Dates',step2:'Véhicule',step3:'Données & ID',step4:'Paiement',step5:'Confirmation',checkIn:'Arrivée',checkOut:'Départ',adults:'Adultes',children:'Enfants',pets:'Animaux',selectDates:'Sélectionnez vos dates',selectVehicle:'Sélectionnez votre véhicule',selectPitch:'Choisissez votre emplacement',motorhome:'Camping-car',camper:'Camper',caravan:'Caravane',perNight:'/nuit',zone:'Zone',free:'Libre',taken:'Occupé',selected:'Sélectionné',large:'Grand',standard:'Standard',withElec:'Avec électricité',next:'Suivant',back:'Retour',yourData:'Entrez vos coordonnées',name:'Prénom',surname:'Nom',email:'Email',phone:'Téléphone',nationality:'Nationalité',idDoc:'N° Pièce d\'Identité',plate:'Immatriculation',notes:'Demandes spéciales',summary:'Résumé',nights:'nuits',pitch:'Emplacement',vehicle:'Véhicule',guests:'Voyageurs',elecSupplement:'Supplément électricité',total:'Total',paymentMethod:'Mode de Paiement',creditCard:'Carte',payOnArrival:"Payer à l'Arrivée",cardNumber:'N° Carte',expiry:'Expiration',cvv:'CVV',nameOnCard:'Titulaire',confirmPay:'Confirmer et Payer',confirmReserve:'Confirmer Réservation',bookingConfirmed:'Réservation Confirmée!',bookingCode:'Code de Réservation',showQR:"Montrez ce QR à votre arrivée",bookingDetails:'Détails',printConfirm:'Imprimer',newBooking:'Nouvelle Réservation',thankYou:"Thank you for choosing us!",emailSent:'Email de confirmation envoyé à',adult:'adulte',child:'enfant',pet:'animal',
+scanTitle:'Scannez votre Pièce d\'Identité',scanDesc:'Utilisez la caméra pour scanner votre carte d\'identité ou passeport.',scanDNI:'Carte d\'Identité',scanPassport:'Passeport',openCamera:'Ouvrir Caméra',takePhoto:'Prendre Photo',retake:'Recommencer',processing:'Traitement du document...',scanComplete:'Document scanné avec succès',extractedData:'Données extraites',docFront:'Recto du document',docType:'Type de document',manualEntry:'Saisie manuelle',orManual:'ou remplissez les champs manuellement',docScanned:'Document scanné',verifyData:'Vérifiez les données extraites',adminDocs:'Documents du voyageur (Admin)',downloadDoc:'Télécharger',docRegistered:'Document enregistré',allGuests:'Tous les voyageurs doivent scanner leur document',addGuest:'Ajouter voyageur',guestDoc:'Document voyageur',scanAnother:'Scanner un autre document',closeCamera:'Fermer caméra'
+}
+};
+
+var NATS=['España','Alemania','Francia','Reino Unido','Países Bajos','Italia','Portugal','Bélgica','Suiza','Dinamarca','Suecia','Noruega','Austria','Polonia','Irlanda','República Checa','Rumanía','Hungría','Finlandia','Grecia','Croacia','Bulgaria','Eslovaquia','Eslovenia','Lituania','Letonia','Estonia','Luxemburgo','Chipre','Malta','Marruecos','Estados Unidos','Canadá','Argentina','Brasil','México','Australia','Japón','China','Rusia','Otro'];
+var VEHICLES=[
+  {id:'motorhome',icon:'🚐',price:18},
+  {id:'camper',icon:'🚌',price:16},
+  {id:'caravan',icon:'🏕️',price:17}
+];
+var ZONES=['A','B','C','D','E'];
+var ELEC_PRICE=3;
+
+function genPitches(){
+  var p=[],id=1;
+  ZONES.forEach(function(z){
+    var c=z==='A'?25:z==='B'?25:z==='C'?20:z==='D'?20:15;
+    for(var i=1;i<=c;i++){
+      var r=Math.random(),s=r<.4?'free':'taken';
+      p.push({id:id++,code:z+String(i).padStart(2,'0'),zone:z,status:s,electricity:Math.random()>.2,size:Math.random()>.5?'large':'standard'});
+    }
+  });
+  return p;
+}
+
+function QRCode(props){
+  var size=props.size||120,code=props.code||'';
+  var cells=21,cellSize=size/cells;
+  var seed=0;
+  for(var i=0;i<code.length;i++) seed=(seed*31+code.charCodeAt(i))&0x7fffffff;
+  function rand(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff}
+  var grid=[];
+  for(var r=0;r<cells;r++){grid[r]=[];for(var c=0;c<cells;c++){
+    var isMarker=(r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7);
+    if(isMarker){var lr=r>=cells-7?r-(cells-7):r;var lc=c>=cells-7?c-(cells-7):c;grid[r][c]=(lr===0||lr===6||lc===0||lc===6||(lr>=2&&lr<=4&&lc>=2&&lc<=4))?1:0;}else{grid[r][c]=rand()>0.5?1:0;}
+  }}
+  var rects=[];
+  for(var r=0;r<cells;r++){for(var c=0;c<cells;c++){if(grid[r][c]) rects.push(ce('rect',{key:r+'-'+c,x:c*cellSize,y:r*cellSize,width:cellSize,height:cellSize,fill:'#1a1a1a'}));}}
+  return ce('svg',{width:size,height:size,viewBox:'0 0 '+size+' '+size,className:'qr-canvas',style:{border:'6px solid #fff',borderRadius:4,boxShadow:'0 2px 12px rgba(0,0,0,.1)'}},ce('rect',{width:size,height:size,fill:'#fff'}),rects);
+}
+
+// MRZ Parser for passports and ID cards
+function parseMRZ(text){
+  var lines=text.split('\n').map(function(l){return l.replace(/[^A-Z0-9<]/g,'').trim()}).filter(function(l){return l.length>20});
+  var result={};
+  if(lines.length>=2){
+    var l1=lines[lines.length-2]||'';
+    var l2=lines[lines.length-1]||'';
+    // Try passport format (2 lines of 44 chars)
+    if(l1.length>=40){
+      var names=l1.substring(5).split('<<');
+      if(names.length>=2){result.surname=names[0].replace(/</g,' ').trim();result.name=names[1].replace(/</g,' ').trim();}
+      if(l2.length>=28){
+        result.docNumber=l2.substring(0,9).replace(/</g,'').trim();
+        result.nationality=l2.substring(10,13).replace(/</g,'').trim();
+        var bd=l2.substring(13,19);
+        if(bd.length===6) result.birthDate='19'+bd.substring(0,2)+'-'+bd.substring(2,4)+'-'+bd.substring(4,6);
+        result.sex=l2.substring(20,21);
+      }
+    }
+  }
+  return result;
+}
+
+// Extract structured data from OCR text
+function extractDocData(text,docType){
+  var data={};
+  var clean=text.replace(/\n+/g,'\n');
+
+  // Try MRZ first
+  var mrz=parseMRZ(text);
+  if(mrz.name) data.name=mrz.name;
+  if(mrz.surname) data.surname=mrz.surname;
+  if(mrz.docNumber) data.docNumber=mrz.docNumber;
+  if(mrz.nationality) data.nationality=mrz.nationality;
+  if(mrz.birthDate) data.birthDate=mrz.birthDate;
+
+  // Fallback: pattern matching
+  if(!data.docNumber){
+    // Spanish DNI pattern
+    var dniMatch=clean.match(/\b(\d{8})\s*[-]?\s*([A-Z])\b/);
+    if(dniMatch) data.docNumber=dniMatch[1]+dniMatch[2];
+    // Generic passport number
+    if(!data.docNumber){var passMatch=clean.match(/\b([A-Z]{1,2}\d{6,8})\b/);if(passMatch) data.docNumber=passMatch[1];}
+    // Generic ID number
+    if(!data.docNumber){var idMatch=clean.match(/\b(\d{7,12})\b/);if(idMatch) data.docNumber=idMatch[1];}
+  }
+
+  // Name patterns
+  if(!data.name||!data.surname){
+    var namePatterns=[
+      /(?:nombre|name|nom|vorname|prénom)[:\s]+([A-ZÀ-Ü][a-zà-ü]+(?:\s[A-ZÀ-Ü][a-zà-ü]+)*)/i,
+      /(?:apellido|surname|nachname|nom de famille)[:\s]+([A-ZÀ-Ü][a-zà-ü]+(?:\s[A-ZÀ-Ü][a-zà-ü]+)*)/i
+    ];
+    namePatterns.forEach(function(p,i){var m=clean.match(p);if(m){if(i===0&&!data.name) data.name=m[1];if(i===1&&!data.surname) data.surname=m[1];}});
+  }
+
+  // Nationality
+  if(!data.nationality){
+    var natMap={'ESP':'España','DEU':'Alemania','FRA':'Francia','GBR':'Reino Unido','NLD':'Países Bajos','ITA':'Italia','PRT':'Portugal','BEL':'Bélgica','CHE':'Suiza','DNK':'Dinamarca','SWE':'Suecia','NOR':'Noruega','AUT':'Austria','POL':'Polonia','IRL':'Irlanda','MAR':'Marruecos','USA':'Estados Unidos','CAN':'Canadá','ARG':'Argentina','BRA':'Brasil','MEX':'México'};
+    Object.keys(natMap).forEach(function(code){if(clean.indexOf(code)!==-1&&!data.nationality) data.nationality=natMap[code];});
+  }
+
+  return data;
+}
+
+// Welcome animation component
+function WelcomeOverlay(){
+  var _show=us(true),show=_show[0],setShow=_show[1];
+  ue(function(){var t=setTimeout(function(){setShow(false)},3000);return function(){clearTimeout(t)};},[]);
+  if(!show) return null;
+  // Generate random particles
+  var particles=[];
+  for(var i=0;i<12;i++){
+    particles.push(ce('div',{key:i,className:'welcome-particle',style:{
+      left:Math.random()*100+'%',
+      top:40+Math.random()*40+'%',
+      animationDelay:0.2+Math.random()*1.5+'s',
+      width:3+Math.random()*5+'px',
+      height:3+Math.random()*5+'px'
+    }}));
+  }
+  return ce('div',{className:'welcome-overlay'},
+    ce('div',{className:'welcome-bg'}),
+    ce('div',{className:'welcome-particles'},particles),
+    ce('div',{className:'welcome-content'},
+      ce('div',{className:'welcome-icon'},'🏖️'),
+      ce('div',{className:'welcome-title'},_csNombre()),
+      ce('div',{className:'welcome-sub'},'Bienvenido · Welcome · Willkommen · Bienvenue'),
+      ce('div',{className:'welcome-line'})
+    )
+  );
+}
+
+// Goodbye animation component
+function GoodbyeOverlay(props){
+  var _show=us(true),show=_show[0],setShow=_show[1];
+  ue(function(){var t=setTimeout(function(){setShow(false)},4800);return function(){clearTimeout(t)};},[]);
+  if(!show) return null;
+  var stars=['✨','⭐','🌟','✨','⭐','🌟','✨','⭐'];
+  var starEls=stars.map(function(s,i){
+    return ce('div',{key:i,className:'goodbye-star',style:{
+      left:10+Math.random()*80+'%',
+      top:10+Math.random()*80+'%',
+      animationDelay:0.3+i*0.25+'s',
+      fontSize:0.8+Math.random()*0.8+'rem'
+    }},s);
+  });
+  return ce('div',{className:'goodbye-overlay'},
+    ce('div',{className:'goodbye-bg'}),
+    ce('div',{className:'goodbye-stars'},starEls),
+    ce('div',{className:'goodbye-content goodbye-anim-enter'},
+      ce('div',{className:'goodbye-sun'},'🌅'),
+      ce('div',{className:'goodbye-title'},props.title||'¡Gracias por tu reserva!'),
+      ce('div',{className:'goodbye-msg'},props.msg||_csNombre()+'. ¡Nos vemos pronto!'),
+      ce('div',{className:'goodbye-wave'},'👋')
+    )
+  );
+}
+
+function App(){
+  var _l=us('es'),lang=_l[0],setLang=_l[1];
+  var _s=us(1),step=_s[0],setStep=_s[1];
+  var _showGoodbye=us(false),showGoodbye=_showGoodbye[0],setShowGoodbye=_showGoodbye[1];
+  var pitches=um(function(){return genPitches()},[]);
+  var t=T[lang]||T.es;
+
+  var _ci=us(''),checkIn=_ci[0],setCheckIn=_ci[1];
+  var _co=us(''),checkOut=_co[0],setCheckOut=_co[1];
+  var _ad=us(2),adults=_ad[0],setAdults=_ad[1];
+  var _ch=us(0),children=_ch[0],setChildren=_ch[1];
+  var _pe=us(0),pets=_pe[0],setPets=_pe[1];
+  var _vt=us('motorhome'),vehicleType=_vt[0],setVehicleType=_vt[1];
+  var _sp=us(null),selPitch=_sp[0],setSelPitch=_sp[1];
+  var _zone=us('A'),selZone=_zone[0],setSelZone=_zone[1];
+  var _nm=us(''),fname=_nm[0],setFname=_nm[1];
+  var _sn=us(''),sname=_sn[0],setSname=_sn[1];
+  var _em=us(''),email=_em[0],setEmail=_em[1];
+  var _ph=us(''),phone=_ph[0],setPhone=_ph[1];
+  var _nat=us('España'),nat=_nat[0],setNat=_nat[1];
+  var _id=us(''),idDoc=_id[0],setIdDoc=_id[1];
+  var _pl=us(''),plate=_pl[0],setPlate=_pl[1];
+  var _no=us(''),notes=_no[0],setNotes=_no[1];
+  var _pm=us('card'),payMethod=_pm[0],setPayMethod=_pm[1];
+  var _bc=us(''),bookCode=_bc[0],setBookCode=_bc[1];
+
+  // Scanner state
+  var _camOn=us(false),camOn=_camOn[0],setCamOn=_camOn[1];
+  var _docType=us('dni'),docType=_docType[0],setDocType=_docType[1];
+  var _captured=us(null),capturedImg=_captured[0],setCapturedImg=_captured[1];
+  var _ocrProgress=us(''),ocrProgress=_ocrProgress[0],setOcrProgress=_ocrProgress[1];
+  var _ocrDone=us(false),ocrDone=_ocrDone[0],setOcrDone=_ocrDone[1];
+  var _scannedDocs=us([]),scannedDocs=_scannedDocs[0],setScannedDocs=_scannedDocs[1];
+  var videoRef=ur(null);
+  var canvasRef=ur(null);
+  var streamRef=ur(null);
+
+  ue(function(){
+    var today=new Date();var tmr=new Date(today);tmr.setDate(tmr.getDate()+1);
+    var out=new Date(today);out.setDate(out.getDate()+4);
+    setCheckIn(tmr.toISOString().split('T')[0]);
+    setCheckOut(out.toISOString().split('T')[0]);
+  },[]);
+
+  // Cleanup camera on unmount
+  ue(function(){return function(){if(streamRef.current){streamRef.current.getTracks().forEach(function(t){t.stop()});}};},[]);
+
+  var nights=0;
+  if(checkIn&&checkOut){var d1=new Date(checkIn),d2=new Date(checkOut);nights=Math.max(1,Math.round((d2-d1)/86400000))}
+  var veh=VEHICLES.find(function(v){return v.id===vehicleType})||VEHICLES[0];
+  var basePrice=nights*veh.price;
+  var elecPrice=selPitch&&selPitch.electricity?nights*ELEC_PRICE:0;
+  var totalPrice=basePrice+elecPrice;
+
+  function genCode(){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var c='AMB-';for(var i=0;i<6;i++) c+=chars[Math.floor(Math.random()*chars.length)];return c;}
+
+  // Camera functions
+  var startCamera=uc(function(){
+    setCamOn(true);setCapturedImg(null);setOcrDone(false);setOcrProgress('');
+    setTimeout(function(){
+      if(videoRef.current){
+        navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}})
+        .then(function(stream){
+          streamRef.current=stream;
+          if(videoRef.current){videoRef.current.srcObject=stream;videoRef.current.play();}
+        })
+        .catch(function(err){
+          // Fallback to any camera
+          navigator.mediaDevices.getUserMedia({video:true})
+          .then(function(stream){
+            streamRef.current=stream;
+            if(videoRef.current){videoRef.current.srcObject=stream;videoRef.current.play();}
+          })
+          .catch(function(e){alert('Error accessing camera: '+e.message);setCamOn(false);});
+        });
+      }
+    },100);
+  },[]);
+
+  var stopCamera=uc(function(){
+    if(streamRef.current){streamRef.current.getTracks().forEach(function(t){t.stop()});streamRef.current=null;}
+    setCamOn(false);
+  },[]);
+
+  var capturePhoto=uc(function(){
+    if(!videoRef.current||!canvasRef.current) return;
+    var video=videoRef.current;
+    var canvas=canvasRef.current;
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(video,0,0);
+    var dataUrl=canvas.toDataURL('image/jpeg',0.85);
+    setCapturedImg(dataUrl);
+    stopCamera();
+    runOCR(dataUrl);
+  },[]);
+
+  function runOCR(imageData){
+    setOcrProgress(t.processing);
+    if(typeof Tesseract!=='undefined'){
+      Tesseract.recognize(imageData,'eng+spa+fra+deu+ita+por',{
+        logger:function(m){if(m.status==='recognizing text') setOcrProgress(t.processing+' ('+Math.round((m.progress||0)*100)+'%)');}
+      }).then(function(result){
+        var text=result.data.text||'';
+        var extracted=extractDocData(text,docType);
+        // Auto-fill fields
+        if(extracted.name&&!fname) setFname(extracted.name);
+        if(extracted.surname&&!sname) setSname(extracted.surname);
+        if(extracted.docNumber) setIdDoc(extracted.docNumber);
+        if(extracted.nationality){
+          var found=NATS.find(function(n){return n===extracted.nationality});
+          if(found) setNat(found);
+        }
+        // Save scanned doc
+        var newDoc={
+          id:Date.now(),
+          type:docType,
+          image:imageData,
+          extractedText:text,
+          extractedData:extracted,
+          timestamp:new Date().toISOString(),
+          guestName:(extracted.name||fname)+' '+(extracted.surname||sname)
+        };
+        setScannedDocs(function(prev){return prev.concat([newDoc])});
+        setOcrDone(true);
+        setOcrProgress('');
+      }).catch(function(err){
+        setOcrProgress('');
+        setOcrDone(true);
+      });
+    }else{
+      // Tesseract not loaded - just save the image
+      var newDoc={id:Date.now(),type:docType,image:imageData,extractedText:'',extractedData:{},timestamp:new Date().toISOString(),guestName:fname+' '+sname};
+      setScannedDocs(function(prev){return prev.concat([newDoc])});
+      setOcrProgress('');setOcrDone(true);
+    }
+  }
+
+  // File input fallback for devices where getUserMedia doesn't work
+  function handleFileCapture(ev){
+    var file=ev.target.files[0];
+    if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      setCapturedImg(e.target.result);
+      setCamOn(false);
+      runOCR(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function downloadDoc(doc){
+    var a=document.createElement('a');
+    a.href=doc.image;
+    a.download='doc_'+doc.type+'_'+(doc.guestName||'guest').replace(/\s+/g,'_')+'_'+doc.id+'.jpg';
+    a.click();
+  }
+
+  function Counter(props){
+    return ce('div',{className:'guest-box'},
+      ce('div',{className:'guest-box-label'},props.label),
+      ce('div',{className:'guest-counter'},
+        ce('button',{className:'guest-btn',onClick:function(){if(props.value>props.min)props.onChange(props.value-1)},type:'button'},'\u2212'),
+        ce('div',{className:'guest-num'},props.value),
+        ce('button',{className:'guest-btn',onClick:function(){if(props.value<props.max)props.onChange(props.value+1)},type:'button'},'+')
+      )
+    );
+  }
+
+  var stepLabels=[t.step1,t.step2,t.step3,t.step4,t.step5];
+  function WizardSteps(){
+    var items=[];
+    for(var i=0;i<stepLabels.length;i++){
+      if(i>0) items.push(ce('div',{key:'l'+i,className:'wizard-line'+(i<step?' done':'')}));
+      items.push(ce('div',{key:'s'+i,className:'wizard-step'+(step===i+1?' active':'')+(step>i+1?' done':'')},
+        ce('div',{className:'wizard-step-num'},step>i+1?'✓':i+1),
+        ce('div',{className:'wizard-step-label'},stepLabels[i])
+      ));
+    }
+    return ce('div',{className:'wizard-steps'},items);
+  }
+
+  // STEP 1
+  function Step1(){
+    return ce('div',{className:'step-panel'},
+      ce('h2',{className:'step-title'},t.step1),
+      ce('p',{className:'step-desc'},t.selectDates),
+      ce('div',{className:'date-row'},
+        ce('div',{className:'date-box selected'},
+          ce('div',{className:'date-box-label'},t.checkIn),
+          ce('input',{type:'date',className:'date-input',value:checkIn,onChange:function(ev){setCheckIn(ev.target.value)}})
+        ),
+        ce('div',{className:'date-box selected'},
+          ce('div',{className:'date-box-label'},t.checkOut),
+          ce('input',{type:'date',className:'date-input',value:checkOut,onChange:function(ev){setCheckOut(ev.target.value)}})
+        )
+      ),
+      nights>0?ce('div',{style:{textAlign:'center',marginBottom:16,fontSize:'.88rem',color:'var(--primary)',fontWeight:600}},nights+' '+t.nights):null,
+      ce('div',{className:'guest-row'},
+        ce(Counter,{label:t.adults,value:adults,min:1,max:6,onChange:setAdults}),
+        ce(Counter,{label:t.children,value:children,min:0,max:5,onChange:setChildren}),
+        ce(Counter,{label:t.pets,value:pets,min:0,max:3,onChange:setPets})
+      ),
+      ce('div',{className:'btn-row',style:{justifyContent:'flex-end'}},
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(checkIn&&checkOut&&nights>0)setStep(2)}},t.next+' →')
+      )
+    );
+  }
+
+  // STEP 2
+  function Step2(){
+    var zonePitches=pitches.filter(function(p){return p.zone===selZone});
+    return ce('div',{className:'step-panel'},
+      ce('h2',{className:'step-title'},t.step2),
+      ce('p',{className:'step-desc'},t.selectVehicle),
+      ce('div',{className:'vehicle-grid'},VEHICLES.map(function(v){
+        return ce('div',{key:v.id,className:'vehicle-card'+(vehicleType===v.id?' selected':''),onClick:function(){setVehicleType(v.id)}},
+          ce('div',{className:'vehicle-icon'},v.icon),
+          ce('div',{className:'vehicle-name'},t[v.id]||v.id),
+          ce('div',{className:'vehicle-price'},'€'+v.price+t.perNight)
+        );
+      })),
+      ce('p',{className:'step-desc',style:{marginTop:4}},t.selectPitch),
+      ce('div',{className:'pitch-legend'},
+        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'#e8f5e9',border:'1px solid #c8e6c9'}}),t.free),
+        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'#f5f5f5',border:'1px solid #eee'}}),t.taken),
+        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'var(--primary)'}}),t.selected)
+      ),
+      ce('div',{className:'zone-tabs'},ZONES.map(function(z){
+        return ce('button',{key:z,className:'zone-tab'+(selZone===z?' active':''),onClick:function(){setSelZone(z)},type:'button'},t.zone+' '+z);
+      })),
+      ce('div',{className:'pitch-map-grid'},zonePitches.map(function(p){
+        var isSel=selPitch&&selPitch.id===p.id;
+        return ce('div',{key:p.id,className:'pm-cell '+(isSel?'selected':p.status),onClick:function(){if(p.status==='free')setSelPitch(p)}},
+          ce('div',{className:'pm-cell-num'},p.code),
+          ce('div',{className:'pm-cell-info'},(p.size==='large'?'L':'S')+(p.electricity?'⚡':''))
+        );
+      })),
+      selPitch?ce('div',{style:{background:'var(--primary-l)',padding:10,borderRadius:'var(--r)',marginBottom:8,fontSize:'.82rem'}},
+        '✓ ',t.pitch,': ',ce('strong',null,selPitch.code),' — ',t.zone,' ',selPitch.zone,' — ',selPitch.size==='large'?t.large:t.standard,selPitch.electricity?' — ⚡ '+t.withElec:''
+      ):null,
+      ce('div',{className:'btn-row'},
+        ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(1)}},'← '+t.back),
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(selPitch)setStep(3)},style:{opacity:selPitch?1:.5}},t.next+' →')
+      )
+    );
+  }
+
+  // STEP 3 - Personal Data + Document Scanner
+  function Step3(){
+    function inp(label,val,set,type,ph){
+      return ce('div',{className:'form-group'},ce('label',{className:'form-label'},label),
+        type==='select'?ce('select',{className:'form-input',value:val,onChange:function(ev){set(ev.target.value)}},
+          ph.map(function(o){return ce('option',{key:o,value:o},o)})):
+        type==='textarea'?ce('textarea',{className:'form-input',rows:2,value:val,placeholder:ph||'',onChange:function(ev){set(ev.target.value)}}):
+        ce('input',{className:'form-input',type:type||'text',value:val,placeholder:ph||'',onChange:function(ev){set(ev.target.value)}}));
+    }
+
+    // Scanner UI
+    var scannerUI=ce('div',{className:'scanner-section'+(scannedDocs.length>0?' active':'')},
+      ce('div',{className:'scanner-title'},'📷 ',t.scanTitle),
+      ce('p',{className:'scanner-desc'},t.scanDesc),
+
+      // Document type selector
+      ce('div',{className:'doc-tabs'},
+        ce('button',{className:'doc-tab'+(docType==='dni'?' active':''),onClick:function(){setDocType('dni')},type:'button'},'🪪 '+t.scanDNI),
+        ce('button',{className:'doc-tab'+(docType==='passport'?' active':''),onClick:function(){setDocType('passport')},type:'button'},'📘 '+t.scanPassport)
+      ),
+
+      // Camera active
+      camOn?ce('div',null,
+        ce('div',{className:'camera-container'},
+          ce('video',{ref:videoRef,autoPlay:true,playsInline:true,muted:true,style:{width:'100%',display:'block'}}),
+          ce('div',{className:'camera-overlay'},
+            ce('div',{className:'camera-frame'}),
+            ce('div',{className:'camera-hint'},docType==='passport'?'📘 '+t.scanPassport:'🪪 '+t.scanDNI)
+          )
+        ),
+        ce('canvas',{ref:canvasRef,style:{display:'none'}}),
+        ce('div',{className:'camera-controls'},
+          ce('button',{className:'capture-btn',onClick:capturePhoto,type:'button','aria-label':t.takePhoto}),
+          ce('button',{className:'btn btn-outline',onClick:stopCamera,type:'button',style:{alignSelf:'center'}},t.closeCamera)
+        )
+      ):null,
+
+      // Captured image + OCR result
+      capturedImg&&!camOn?ce('div',null,
+        ce('div',{className:'scanned-preview'},
+          ce('img',{src:capturedImg,alt:t.docFront})
+        ),
+        ocrProgress?ce('div',{className:'ocr-status'},ce('div',{className:'ocr-spinner'}),ocrProgress):null,
+        ocrDone?ce('div',{className:'scan-result'},
+          ce('div',{className:'scan-result-title'},'✅ ',t.scanComplete),
+          ce('p',{style:{fontSize:'.78rem',color:'var(--text-sec)',marginBottom:8}},t.verifyData),
+          idDoc?ce('div',{className:'scan-result-item'},ce('span',null,t.idDoc),ce('strong',null,idDoc)):null,
+          fname?ce('div',{className:'scan-result-item'},ce('span',null,t.name),ce('strong',null,fname)):null,
+          sname?ce('div',{className:'scan-result-item'},ce('span',null,t.surname),ce('strong',null,sname)):null,
+          nat?ce('div',{className:'scan-result-item'},ce('span',null,t.nationality),ce('strong',null,nat)):null
+        ):null,
+        ce('div',{style:{display:'flex',gap:8,justifyContent:'center',marginTop:12,flexWrap:'wrap'}},
+          ce('button',{className:'scan-btn outline',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'🔄 '+t.retake),
+          scannedDocs.length<adults+children?ce('button',{className:'scan-btn secondary',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'➕ '+t.scanAnother):null
+        )
+      ):null,
+
+      // Initial state - buttons to start
+      !camOn&&!capturedImg?ce('div',{style:{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}},
+        ce('button',{className:'scan-btn',onClick:startCamera,type:'button'},'📷 '+t.openCamera),
+        ce('label',{className:'scan-btn outline',style:{cursor:'pointer'}},
+          '📁 '+t.manualEntry,
+          ce('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:handleFileCapture})
+        )
+      ):null,
+
+      // Already scanned docs list
+      scannedDocs.length>0?ce('div',{style:{marginTop:16}},
+        scannedDocs.map(function(doc,i){
+          return ce('div',{key:doc.id,style:{display:'flex',alignItems:'center',gap:8,background:'var(--surface)',padding:8,borderRadius:'var(--r)',marginTop:6}},
+            ce('img',{src:doc.image,style:{width:48,height:32,objectFit:'cover',borderRadius:4,border:'1px solid var(--border)'}}),
+            ce('div',{style:{flex:1,fontSize:'.78rem'}},
+              ce('div',{style:{fontWeight:600}},t.guestDoc+' '+(i+1)+' — '+(doc.type==='passport'?'📘':'🪪')),
+              ce('div',{style:{color:'var(--text-sec)',fontSize:'.7rem'}},doc.extractedData.docNumber||t.docRegistered)
+            ),
+            ce('div',{className:'doc-badge'},'✓')
+          );
+        })
+      ):null,
+
+      ce('p',{style:{fontSize:'.72rem',color:'var(--text-ter)',marginTop:12}},t.orManual)
+    );
+
+    return ce('div',{className:'step-panel'},
+      ce('h2',{className:'step-title'},t.step3),
+      ce('p',{className:'step-desc'},t.yourData),
+
+      // Document Scanner
+      scannerUI,
+
+      // Form fields
+      ce('div',{className:'form-grid'},
+        inp(t.name,fname,setFname,'text',''),
+        inp(t.surname,sname,setSname,'text',''),
+        inp(t.email,email,setEmail,'email','email@example.com'),
+        inp(t.phone,phone,setPhone,'tel','+34 600 000 000'),
+        inp(t.nationality,nat,setNat,'select',NATS),
+        inp(t.idDoc,idDoc,setIdDoc,'text',''),
+        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.plate),ce('input',{className:'form-input',value:plate,placeholder:'AB-1234-CD',onChange:function(ev){setPlate(ev.target.value)}})),
+        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.notes),ce('textarea',{className:'form-input',rows:2,value:notes,onChange:function(ev){setNotes(ev.target.value)}}))
+      ),
+      ce('div',{className:'btn-row'},
+        ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(2)}},'← '+t.back),
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(fname&&sname&&email)setStep(4)}},t.next+' →')
+      )
+    );
+  }
+
+  // STEP 4 — Pago con TPV Redsys o Pagar a la Llegada
+  var _tpvLoading=us(false),tpvLoading=_tpvLoading[0],setTpvLoading=_tpvLoading[1];
+
+  function redirectToRedsys(){
+    if(tpvLoading) return;
+    setTpvLoading(true);
+
+    // Generar código de reserva antes del pago
+    var bc = genCode();
+    setBookCode(bc);
+
+    // Guardar la reserva en estado "pendiente de pago"
+    try{
+      var db = JSON.parse(localStorage.getItem(_csKey('global_database'))) || { bookings: [] };
+      var gStr = adults+' '+t.adult+(adults>1?'s':'');
+      if(children>0) gStr+=', '+children+' '+t.child+(children>1?'s':'');
+      if(pets>0) gStr+=', '+pets+' '+t.pet+(pets>1?'s':'');
+      db.bookings.push({
+        id: Date.now(), bookCode: bc, name: fname, surname: sname,
+        email: email, phone: phone, nationality: nat, idDoc: idDoc,
+        vehicleType: vehicleType, plate: plate,
+        pitchCode: selPitch?selPitch.code:'', pitchId: selPitch?selPitch.id:'',
+        dateIn: checkIn, dateOut: checkOut,
+        adults: adults, children: children, pets: pets,
+        status: 'pending_payment', priceTotal: totalPrice,
+        paid: false, paidMethod: 'redsys_tpv',
+        nights: nights, notes: notes,
+        createdTs: new Date().toISOString()
+      });
+      localStorage.setItem(_csKey('global_database'), JSON.stringify(db));
+    }catch(e2){console.error(e2)}
+
+    // Mapa de idiomas Redsys: 001=ES, 002=EN, 003=CA, 004=FR, 005=DE
+    var redsysLangMap = {es:'001',en:'002',fr:'004',de:'005'};
+    var redsysLang = redsysLangMap[lang] || '001';
+
+    // Descripción del pago
+    var desc = 'Reserva '+(selPitch?selPitch.code:'')+' '+checkIn+'/'+checkOut+' '+fname+' '+sname;
+
+    // Enviar al backend PHP para firmar y redirigir
+    var payload = JSON.stringify({
+      amount: totalPrice,
+      order: bc,
+      description: desc,
+      email: email,
+      lang: redsysLang
+    });
+
+    // Crear formulario oculto y enviar al gateway PHP
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'redsys-gateway.php';
+    form.style.display = 'none';
+
+    var fields = {amount:totalPrice,order:bc,description:desc,email:email,lang:redsysLang,type:'payment'};
+    Object.keys(fields).forEach(function(k){
+      var inp = document.createElement('input');
+      inp.type='hidden'; inp.name=k; inp.value=fields[k];
+      form.appendChild(inp);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function Step4(){
+    var guestStr=adults+' '+t.adult+(adults>1?'s':'');
+    if(children>0) guestStr+=', '+children+' '+t.child+(children>1?'s':'');
+    if(pets>0) guestStr+=', '+pets+' '+t.pet+(pets>1?'s':'');
+
+    // Fianza configurable
+    var DEPOSIT_ENABLED = true;
+    var DEPOSIT_AMOUNT = 50;
+
+    // Traducciones específicas del TPV
+    var tpvLabels = {
+      es:{securePayTitle:'Pago Seguro con TPV Bancario',securePayDesc:'Serás redirigido a la página segura de tu banco para introducir los datos de tu tarjeta. Tus datos bancarios NUNCA pasan por nuestra web.',acceptedCards:'Tarjetas aceptadas',redirectBank:'Pagar €'+totalPrice+' — Ir al Banco',redirecting:'Redirigiendo al banco...',bankSecure:'Tus datos los gestiona directamente tu banco',noCharge:'No se realizará ningún cargo hasta confirmar en la web del banco',sandbox:'⚠️ MODO PRUEBAS — Tarjeta test: 4548 8120 4940 0004 · Cad: 12/34 · CVV: 123',depositLabel:'🛡️ Fianza de seguridad',depositNote:'Retención temporal — se libera al check-out sin incidencias',depositHold:'Retención (no es un cobro)'},
+      en:{securePayTitle:'Secure Bank Payment (TPV)',securePayDesc:'You will be redirected to your bank\'s secure page to enter your card details. Your banking data NEVER passes through our website.',acceptedCards:'Accepted cards',redirectBank:'Pay €'+totalPrice+' — Go to Bank',redirecting:'Redirecting to bank...',bankSecure:'Your data is handled directly by your bank',noCharge:'No charge will be made until you confirm on the bank page',sandbox:'⚠️ TEST MODE — Test card: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Security deposit',depositNote:'Temporary hold — released at check-out if no issues',depositHold:'Hold (not a charge)'},
+      de:{securePayTitle:'Sichere Bankzahlung (TPV)',securePayDesc:'Sie werden zur sicheren Seite Ihrer Bank weitergeleitet. Ihre Bankdaten gehen NIE über unsere Website.',acceptedCards:'Akzeptierte Karten',redirectBank:'€'+totalPrice+' Bezahlen — Zur Bank',redirecting:'Weiterleitung zur Bank...',bankSecure:'Ihre Daten werden direkt von Ihrer Bank verwaltet',noCharge:'Keine Belastung bis zur Bestätigung auf der Bankseite',sandbox:'⚠️ TESTMODUS — Testkarte: 4548 8120 4940 0004 · Ablauf: 12/34 · CVV: 123',depositLabel:'🛡️ Sicherheitskaution',depositNote:'Temporäre Zurückhaltung — wird beim Check-out freigegeben',depositHold:'Zurückhaltung (keine Belastung)'},
+      fr:{securePayTitle:'Paiement Bancaire Sécurisé (TPV)',securePayDesc:'Vous serez redirigé vers la page sécurisée de votre banque. Vos données bancaires ne transitent JAMAIS par notre site.',acceptedCards:'Cartes acceptées',redirectBank:'Payer €'+totalPrice+' — Aller à la Banque',redirecting:'Redirection vers la banque...',bankSecure:'Vos données sont gérées directement par votre banque',noCharge:'Aucun débit ne sera fait avant confirmation sur la page de la banque',sandbox:'⚠️ MODE TEST — Carte test: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Caution de sécurité',depositNote:'Retenue temporaire — libérée au check-out sans incident',depositHold:'Retenue (pas un débit)'}
+    };
+    var tpv = tpvLabels[lang] || tpvLabels.es;
+
+    return ce('div',{className:'step-panel'},
+      ce('h2',{className:'step-title'},t.step4),
+      ce('div',{className:'summary-card'},
+        ce('h3',{style:{marginBottom:10,fontSize:'.9rem'}},t.summary),
+        ce('div',{className:'summary-row'},ce('span',null,t.pitch),ce('strong',null,selPitch?selPitch.code:'—')),
+        ce('div',{className:'summary-row'},ce('span',null,t.vehicle),ce('span',null,veh.icon+' '+t[vehicleType])),
+        ce('div',{className:'summary-row'},ce('span',null,t.checkIn+' → '+t.checkOut),ce('span',null,checkIn+' → '+checkOut)),
+        ce('div',{className:'summary-row'},ce('span',null,t.guests),ce('span',null,guestStr)),
+        scannedDocs.length>0?ce('div',{className:'summary-row'},ce('span',null,'📷 '+t.docScanned),ce('span',{className:'doc-badge'},'✓ '+scannedDocs.length+' doc'+(scannedDocs.length>1?'s':''))):null,
+        ce('div',{className:'summary-row'},ce('span',null,nights+' '+t.nights+' × €'+veh.price),ce('span',null,'€'+basePrice)),
+        elecPrice>0?ce('div',{className:'summary-row'},ce('span',null,'⚡ '+t.elecSupplement),ce('span',null,'€'+elecPrice)):null,
+        ce('div',{className:'summary-row total'},ce('span',null,t.total+' ('+t.vehicle+')'),ce('span',{className:'summary-total-val'},'€'+totalPrice)),
+        // Fianza
+        DEPOSIT_ENABLED&&payMethod==='card'?ce('div',{className:'summary-row',style:{borderTop:'2px dashed #ffcc80',marginTop:8,paddingTop:8}},ce('span',{style:{color:'#e65100'}},tpv.depositLabel),ce('span',{style:{color:'#e65100',fontWeight:600}},'€'+DEPOSIT_AMOUNT)):null,
+        DEPOSIT_ENABLED&&payMethod==='card'?ce('div',{style:{fontSize:'.7rem',color:'#999',padding:'2px 0 0',fontStyle:'italic'}},tpv.depositNote):null
+      ),
+      ce('h3',{style:{marginBottom:10,fontSize:'.9rem'}},t.paymentMethod),
+      ce('div',{className:'payment-methods'},
+        ce('div',{className:'pay-method'+(payMethod==='card'?' selected':''),onClick:function(){setPayMethod('card')}},
+          ce('div',{className:'pay-method-icon'},'💳'),ce('div',{className:'pay-method-name'},t.creditCard)),
+        ce('div',{className:'pay-method'+(payMethod==='arrival'?' selected':''),onClick:function(){setPayMethod('arrival')}},
+          ce('div',{className:'pay-method-icon'},'🏠'),ce('div',{className:'pay-method-name'},t.payOnArrival))
+      ),
+
+      // ── Panel TPV Bancario Redsys ──
+      payMethod==='card'?ce('div',{style:{
+        border:'2px solid #b3e5fc',borderRadius:'14px',padding:24,marginBottom:20,
+        background:'linear-gradient(135deg,#e1f5fe 0%,#e3f2fd 50%,#fff 100%)',
+        position:'relative',overflow:'hidden'
+      }},
+        // Header con icono del banco
+        ce('div',{style:{display:'flex',alignItems:'center',gap:12,marginBottom:16}},
+          ce('div',{style:{
+            width:48,height:48,borderRadius:12,
+            background:'linear-gradient(135deg,#01579b,#0288d1)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            fontSize:'1.6rem',flexShrink:0,
+            boxShadow:'0 4px 12px rgba(2,136,209,.3)'
+          }},'🏦'),
+          ce('div',null,
+            ce('div',{style:{fontFamily:"'Space Grotesk',sans-serif",fontWeight:700,fontSize:'1.05rem',color:'#01579b'}},tpv.securePayTitle),
+            ce('div',{style:{fontSize:'.72rem',color:'#6b6b6b',display:'flex',alignItems:'center',gap:4}},'🔒 SSL/TLS · HMAC-SHA256')
+          )
+        ),
+
+        // Descripción
+        ce('p',{style:{fontSize:'.82rem',color:'#555',marginBottom:16,lineHeight:1.5}},tpv.securePayDesc),
+
+        // Tarjetas aceptadas
+        ce('div',{style:{display:'flex',alignItems:'center',gap:8,marginBottom:16,flexWrap:'wrap'}},
+          ce('span',{style:{fontSize:'.72rem',color:'#999',marginRight:4}},tpv.acceptedCards+':'),
+          ['VISA','MC','AMEX','JCB'].map(function(brand){
+            var colors={VISA:'#1a1f71',MC:'#eb001b',AMEX:'#006fcf',JCB:'#0e4c96'};
+            return ce('span',{key:brand,style:{
+              display:'inline-flex',alignItems:'center',justifyContent:'center',
+              padding:'3px 10px',borderRadius:6,
+              background:colors[brand]||'#333',color:'#fff',
+              fontSize:'.62rem',fontWeight:700,letterSpacing:'.5px',
+              boxShadow:'0 2px 4px rgba(0,0,0,.15)'
+            }},brand);
+          })
+        ),
+
+        // Notas de seguridad
+        ce('div',{style:{display:'flex',flexDirection:'column',gap:6,marginBottom:16}},
+          ce('div',{style:{display:'flex',alignItems:'center',gap:8,fontSize:'.78rem',color:'#0277bd'}},
+            ce('span',null,'✓'),ce('span',null,tpv.bankSecure)
+          ),
+          ce('div',{style:{display:'flex',alignItems:'center',gap:8,fontSize:'.78rem',color:'#0277bd'}},
+            ce('span',null,'✓'),ce('span',null,tpv.noCharge)
+          )
+        ),
+
+        // Importe destacado
+        ce('div',{style:{
+          textAlign:'center',padding:'14px 20px',
+          background:'rgba(255,255,255,.8)',borderRadius:10,
+          border:'1px solid #b3e5fc',marginBottom:8
+        }},
+          ce('div',{style:{fontSize:'.72rem',color:'#999',textTransform:'uppercase',letterSpacing:1}},t.total+' ('+t.vehicle+')'),
+          ce('div',{style:{fontFamily:"'Space Grotesk',monospace",fontSize:'2rem',fontWeight:700,color:'#01579b'}},'€'+totalPrice)
+        ),
+
+        // Fianza separada
+        DEPOSIT_ENABLED?ce('div',{style:{
+          textAlign:'center',padding:'10px 16px',
+          background:'linear-gradient(135deg,#fff8e1,#fff3e0)',borderRadius:10,
+          border:'1px dashed #ffcc80',marginBottom:16
+        }},
+          ce('div',{style:{fontSize:'.68rem',color:'#e65100',textTransform:'uppercase',letterSpacing:1}},tpv.depositHold),
+          ce('div',{style:{fontFamily:"'Space Grotesk',monospace",fontSize:'1.3rem',fontWeight:700,color:'#e65100'}},'+ €'+DEPOSIT_AMOUNT+' 🛡️'),
+          ce('div',{style:{fontSize:'.65rem',color:'#999',marginTop:2}},tpv.depositNote)
+        ):null,
+
+        // Banner sandbox (solo visible en modo pruebas)
+        ce('div',{style:{
+          background:'#fff3e0',border:'1px solid #ffcc80',borderRadius:8,
+          padding:'8px 12px',fontSize:'.72rem',color:'#e65100',
+          textAlign:'center',marginBottom:8
+        }},tpv.sandbox)
+
+      ):null,
+
+      // ── Botones ──
+      ce('div',{className:'btn-row'},
+        ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(3)}},'← '+t.back),
+        payMethod==='card'?
+          ce('button',{
+            className:'btn btn-primary btn-lg btn-block',type:'button',
+            style:{flex:1,background:tpvLoading?'#999':'linear-gradient(135deg,#01579b,#0288d1)',border:'none',fontSize:'.95rem'},
+            disabled:tpvLoading,
+            onClick:redirectToRedsys
+          },tpvLoading?
+            ce('span',{style:{display:'flex',alignItems:'center',gap:8}},
+              ce('span',{style:{width:18,height:18,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:'50%',display:'inline-block',animation:'spin .6s linear infinite'}}),
+              tpv.redirecting
+            ):
+            '🏦 '+tpv.redirectBank
+          ):
+          ce('button',{className:'btn btn-primary btn-lg btn-block',type:'button',style:{flex:1},onClick:function(){goToStep(5)}},
+            t.confirmReserve)
+      )
+    );
+  }
+
+  // Wrapper to trigger goodbye animation when moving to step 5
+  var origSetStep=setStep;
+  var goToStep=function(s){
+    if(s===5){
+      var bc = genCode();
+      setBookCode(bc);
+      
+      // SAVE TO GLOBAL DATABASE
+      try{
+        var db = JSON.parse(localStorage.getItem(_csKey('global_database'))) || { bookings: [] };
+        var guestStr = adults + ' ' + t.adult + (adults > 1 ? 's' : '');
+        if(children > 0) guestStr += ', ' + children + ' ' + t.child + (children > 1 ? 's' : '');
+        if(pets > 0) guestStr += ', ' + pets + ' ' + t.pet + (pets > 1 ? 's' : '');
+
+        var baseData = {
+          id: Date.now(),
+          bookCode: bc,
+          name: fname,
+          surname: sname,
+          email: email,
+          phone: phone,
+          nationality: nat,
+          idDoc: idDoc,
+          vehicleType: vehicleType,
+          plate: plate,
+          pitchCode: selPitch ? selPitch.code : '',
+          pitchId: selPitch ? selPitch.id : '',
+          dateIn: checkIn,
+          dateOut: checkOut,
+          adults: adults,
+          children: children,
+          pets: pets,
+          status: 'confirmed',
+          priceTotal: totalPrice,
+          paid: payMethod === 'card',
+          nights: nights,
+          notes: notes,
+          createdTs: new Date().toISOString()
+        };
+        db.bookings.push(baseData);
+        localStorage.setItem(_csKey('global_database'), JSON.stringify(db));
+
+        if(scannedDocs.length>0){
+          var q=JSON.parse(localStorage.getItem(_csKey('sq')))||[];
+          var newEntries=scannedDocs.map(function(doc, idx){
+            return {
+              id: bc+'-'+idx,
+              ts: doc.timestamp,
+              bookCode: bc,
+              guestName: fname+' '+sname+(idx>0?' (adjunto)':''),
+              idDoc: doc.extractedData.docNumber || idDoc,
+              photo: doc.image,
+              pending: true
+            };
+          });
+          localStorage.setItem(_csKey('sq'),JSON.stringify(q.concat(newEntries)));
+        }
+      }catch(e2){ console.error(e2); }
+
+      setShowGoodbye(true);
+      setTimeout(function(){setShowGoodbye(false)},5000);
+    }
+    origSetStep(s);
+  };
+
+  // STEP 5
+  function Step5(){
+    var guestStr=adults+' '+t.adult+(adults>1?'s':'');
+    if(children>0) guestStr+=', '+children+' '+t.child+(children>1?'s':'');
+
+    return ce('div',{className:'step-panel'},
+      ce('div',{className:'confirm-box'},
+        ce('div',{className:'confirm-icon'},'✅'),
+        ce('h2',{className:'confirm-title'},t.bookingConfirmed),
+        ce('p',{style:{color:'var(--text-sec)',marginBottom:6,fontSize:'.85rem'}},t.bookingCode),
+        ce('div',{className:'confirm-code'},bookCode),
+        ce('p',{style:{fontSize:'.8rem',color:'var(--text-sec)',marginBottom:12}},t.showQR),
+        ce(QRCode,{code:bookCode,size:140}),
+        ce('div',{className:'confirm-details'},
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.pitch),ce('strong',null,selPitch?selPitch.code:'—')),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.vehicle),ce('span',null,veh.icon+' '+t[vehicleType])),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.checkIn),ce('span',null,checkIn)),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.checkOut),ce('span',null,checkOut)),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.nights),ce('span',null,nights)),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.guests),ce('span',null,guestStr)),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.name),ce('span',null,fname+' '+sname)),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.idDoc),ce('span',null,idDoc)),
+          scannedDocs.length>0?ce('div',{className:'confirm-detail-row'},ce('span',null,'📷'),ce('span',{className:'doc-badge'},'✓ '+scannedDocs.length+' doc'+(scannedDocs.length>1?'s':''))):null,
+          ce('div',{className:'confirm-detail-row',style:{fontWeight:700}},ce('span',null,t.total),ce('span',{style:{color:'var(--primary)'}},'€'+totalPrice))
+        ),
+
+        // Admin documents section
+        scannedDocs.length>0?ce('div',{className:'admin-docs'},
+          ce('h4',null,'🔐 ',t.adminDocs),
+          scannedDocs.map(function(doc,i){
+            return ce('div',{key:doc.id,className:'admin-doc-item'},
+              ce('img',{src:doc.image,className:'admin-doc-thumb',alt:t.guestDoc+' '+(i+1)}),
+              ce('div',{className:'admin-doc-info'},
+                ce('div',{className:'admin-doc-name'},t.guestDoc+' '+(i+1)+' — '+(doc.type==='passport'?'📘 '+t.scanPassport:'🪪 '+t.scanDNI)),
+                ce('div',{className:'admin-doc-meta'},doc.extractedData.docNumber||'',' — ',new Date(doc.timestamp).toLocaleString())
+              ),
+              ce('button',{className:'download-btn',onClick:function(){downloadDoc(doc)},type:'button'},'⬇ '+t.downloadDoc)
+            );
+          })
+        ):null,
+
+        ce('p',{style:{fontSize:'.78rem',color:'var(--text-sec)',marginTop:12}},t.emailSent+' ',ce('strong',null,email)),
+        ce('p',{style:{fontSize:'.88rem',marginTop:14,color:'var(--primary)',fontWeight:600}},t.thankYou),
+        ce('div',{style:{display:'flex',gap:10,justifyContent:'center',marginTop:16,flexWrap:'wrap'}},
+          ce('button',{className:'btn btn-outline',onClick:function(){window.print()},type:'button'},t.printConfirm),
+          ce('button',{className:'btn btn-primary',type:'button',onClick:function(){setStep(1);setSelPitch(null);setFname('');setSname('');setEmail('');setPhone('');setBookCode('');setIdDoc('');setPlate('');setNotes('');setCapturedImg(null);setOcrDone(false);setScannedDocs([])}},t.newBooking)
+        )
+      )
+    );
+  }
+
+  function ServicesBar(){
+    var svcs=[{icon:'🚿',name:t.showers},{icon:'🔄',name:t.blackWater},{icon:'💧',name:t.greyWater},{icon:'🚰',name:t.freshWater},{icon:'⚡',name:t.electricity},{icon:'📶',name:t.wifi}];
+    return ce('div',{className:'services-bar'},svcs.map(function(s,i){return ce('div',{key:i,className:'svc-item'},ce('div',{className:'svc-icon'},s.icon),s.name);}));
+  }
+
+  // Goodbye messages per language
+  var goodbyeMsgs={
+    es:{title:'¡Gracias por tu reserva!',msg:_csNombre()+'. ¡Nos vemos pronto junto al mar!'},
+    en:{title:'Thank you for your booking!',msg:_csNombre()+'. ¡Nos vemos pronto junto al mar!'},
+    de:{title:'Vielen Dank für Ihre Buchung!',msg:_csNombre()+'. ¡Nos vemos pronto junto al mar!'},
+    fr:{title:'Merci pour votre réservation !',msg:_csNombre()+'. ¡Nos vemos pronto junto al mar!'}
+  };
+  var gm=goodbyeMsgs[lang]||goodbyeMsgs.es;
+
+  return ce('div',null,
+    // Welcome animation (only on first load)
+    ce(WelcomeOverlay),
+    // Goodbye animation (when booking confirmed)
+    showGoodbye?ce(GoodbyeOverlay,{title:gm.title,msg:gm.msg}):null,
+    ce('header',{className:'header'},
+      ce('div',{className:'header-inner'},
+        ce('div',null,ce('div',{className:'logo'},_csNombre()),ce('div',{className:'logo-sub'},_csSlogan())),
+        ce('div',{className:'header-right'},Object.keys(T).map(function(l){
+          return ce('button',{key:l,className:'lang-btn'+(lang===l?' active':''),onClick:function(){setLang(l)},type:'button'},l.toUpperCase());
+        }))
+      )
+    ),
+    step<5?ce('div',{className:'hero'},ce('h1',null,t.bookYourStay),ce('p',null,t.heroDesc),ce(ServicesBar)):null,
+    ce('div',{className:'container'},
+      ce('div',{className:'wizard'},
+        ce(WizardSteps),
+        step===1?ce(Step1):null,
+        step===2?ce(Step2):null,
+        step===3?ce(Step3):null,
+        step===4?ce(Step4):null,
+        step===5?ce(Step5):null
+      )
+    ),
+    ce('footer',{className:'footer'},
+      ce('div',null,'© 2026 '+_csNombre()),
+      ce('div',{style:{marginTop:4}},_csEmail()+' | '+_csTel())
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(ce(App));
+})();
+</script>
+</body>
+</html>
+
