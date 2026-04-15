@@ -18,30 +18,35 @@
   function detectTenantId() {
     const host = window.location.hostname;
 
-    // 1. sessionStorage — set by login portal just before redirecting
+    // 1. ?tenant=X en URL — fuente de verdad explícita, siempre gana
+    try {
+      const paramTenant = new URLSearchParams(window.location.search).get('tenant');
+      if (paramTenant && /^[a-z0-9-]{2,50}$/.test(paramTenant)) {
+        // Sincronizar storage con la URL para que F5 siga funcionando
+        try { sessionStorage.setItem('cs_tenant', paramTenant); } catch(e) {}
+        try { localStorage.setItem('cs_active_tenant', paramTenant); } catch(e) {}
+        return paramTenant;
+      }
+    } catch(e) {}
+
+    // 2. Dominio propio del cliente (camperparkroquetas.com, etc.)
+    if (CUSTOM_DOMAIN_MAP[host]) return CUSTOM_DOMAIN_MAP[host];
+
+    // 3. Subdominio: camperpark-roquetas.checksmart.com → "camperpark-roquetas"
+    const parts = host.split('.');
+    if (parts.length >= 3 && !['web', 'firebaseapp'].includes(parts[1])) return parts[0];
+
+    // 4. sessionStorage — set by login portal just before redirecting
     try {
       const ssTenant = sessionStorage.getItem('cs_tenant');
       if (ssTenant && /^[a-z0-9-]{2,50}$/.test(ssTenant)) return ssTenant;
     } catch(e) {}
 
-    // 2. localStorage — remembers last active tenant (for F5/reloads)
+    // 5. localStorage — remembers last active tenant (for F5/reloads)
     try {
       const lsTenant = localStorage.getItem('cs_active_tenant');
       if (lsTenant && /^[a-z0-9-]{2,50}$/.test(lsTenant)) return lsTenant;
     } catch(e) {}
-
-    // 3. ?tenant=X param (compatibilidad / dev)
-    try {
-      const paramTenant = new URLSearchParams(window.location.search).get('tenant');
-      if (paramTenant && /^[a-z0-9-]{2,50}$/.test(paramTenant)) return paramTenant;
-    } catch(e) {}
-
-    // 4. Dominio propio del cliente (camperparkroquetas.com, etc.)
-    if (CUSTOM_DOMAIN_MAP[host]) return CUSTOM_DOMAIN_MAP[host];
-
-    // 5. Subdominio: camperpark-roquetas.checkingsmart.com → "camperpark-roquetas"
-    const parts = host.split('.');
-    if (parts.length >= 3 && !['web', 'firebaseapp'].includes(parts[1])) return parts[0];
 
     // 6. Fallback (dominio raíz sin subdominio)
     return 'demo';

@@ -154,13 +154,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
   }
 
   function redirect(tenantId, nombre){
-    // Guardar tenant antes de navegar — config.js lo leerá en /app/
+    // Guardar tenant en storage (respaldo para recargas)
     try { sessionStorage.setItem('cs_tenant', tenantId); } catch(e) {}
     try { localStorage.setItem('cs_active_tenant', tenantId); } catch(e) {}
     viewForm.style.display = 'none';
     viewSuccess.style.display = 'block';
     tenantNom.textContent = nombre;
-    setTimeout(function(){ window.location.href = '/app/'; }, 1000);
+    // Incluir ?tenant= en la URL — fuente de verdad que no depende de storage
+    setTimeout(function(){ window.location.href = '/app/?tenant=' + encodeURIComponent(tenantId); }, 1000);
   }
 
   function doLogin(){
