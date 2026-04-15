@@ -117,20 +117,62 @@ td:first-child{font-weight:600;color:#6b7280;width:40%}
 }
 
 // ─── Configuración Redsys (variables de entorno) ──────────────────────────────
-// Configurar con: firebase functions:secrets:set REDSYS_SECRET
-// o definir en .env.local para desarrollo local
-const REDSYS_CONFIG = {
-  merchantCode:    process.env.REDSYS_MERCHANT_CODE    || '999008881',
-  terminal:        process.env.REDSYS_TERMINAL         || '1',
-  currency:        process.env.REDSYS_CURRENCY         || '978',
-  secretKey:       process.env.REDSYS_SECRET           || 'sq7HjrUOBfKmC576ILgskD5srU870gJ7',
-  urlNotification: process.env.REDSYS_URL_NOTIFICATION || '',
-  urlOk:           process.env.REDSYS_URL_OK           || '',
-  urlKo:           process.env.REDSYS_URL_KO           || '',
-  endpoint:        process.env.REDSYS_LIVE === 'true'
-    ? 'https://sis.redsys.es/sis/realizarPago'
-    : 'https://sis-t.redsys.es:25443/sis/realizarPago',
-};
+// ─── Config Redsys por tenant ─────────────────────────────────────────────────
+// Cada tenant tiene sus propias credenciales en Firestore: private_config/{tenantId}
+// La colección private_config está bloqueada al navegador (solo accesible desde Functions).
+// Fallback global: variables de entorno (usado por 'demo' / Area Málaga Beach).
+
+const _redsysCache = {}; // cache en memoria por instancia de la función
+
+async function getTenantRedsys(tenantId) {
+  if (_redsysCache[tenantId]) return _redsysCache[tenantId];
+
+  try {
+    const doc = await admin.firestore().collection('private_config').doc(tenantId).get();
+    if (doc.exists && doc.data().redsys) {
+      const r = doc.data().redsys;
+      _redsysCache[tenantId] = {
+        merchantCode: r.merchantCode,
+        terminal:     r.terminal  || '1',
+        currency:     r.currency  || '978',
+        secretKey:    r.secretKey,
+        live:         r.live      || false,
+        endpoint:     r.live
+          ? 'https://sis.redsys.es/sis/realizarPago'
+          : 'https://sis-t.redsys.es:25443/sis/realizarPago',
+      };
+      return _redsysCache[tenantId];
+    }
+  } catch (e) {
+    console.warn('[Redsys] No se pudo cargar config de tenant:', tenantId, e.message);
+  }
+
+  // Fallback: variables de entorno (Area Málaga Beach / demo)
+  return {
+    merchantCode: process.env.REDSYS_MERCHANT_CODE || '999008881',
+    terminal:     process.env.REDSYS_TERMINAL      || '1',
+    currency:     '978',
+    secretKey:    process.env.REDSYS_SECRET        || 'sq7HjrUOBfKmC576ILgskD5srU870gJ7',
+    live:         process.env.REDSYS_LIVE === 'true',
+    endpoint:     process.env.REDSYS_LIVE === 'true'
+      ? 'https://sis.redsys.es/sis/realizarPago'
+      : 'https://sis-t.redsys.es:25443/sis/realizarPago',
+  };
+}
+
+// Busca tenantId por merchantCode (usado en redsysNotification para verificar firma)
+async function getTenantByMerchantCode(merchantCode) {
+  try {
+    const snap = await admin.firestore().collection('private_config')
+      .where('redsys.merchantCode', '==', merchantCode)
+      .limit(1)
+      .get();
+    if (!snap.empty) return snap.docs[0].id;
+  } catch (e) {
+    console.warn('[Redsys] Error buscando tenant por merchantCode:', e.message);
+  }
+  return 'demo';
+}
 
 // ─── Helpers Redsys ──────────────────────────────────────────────────────────
 
@@ -190,7 +232,7 @@ function buildMerchantParams(params) {
 
 // ─── Cloud Function: redsysGateway ───────────────────────────────────────────
 
-exports.redsysGateway = onRequest({ region: 'europe-west1', cors: true, secrets: ['REDSYS_SECRET', 'RESEND_API_KEY', 'ADMIN_EMAIL_FALLBACK'] }, function (req, res) {
+exports.redsysGateway = onRequest({ region: 'europe-west1', cors: true, secrets: ['REDSYS_SECRET', 'RESEND_API_KEY', 'ADMIN_EMAIL_FALLBACK'] }, async function (req, res) {
 
     // CORS
     res.set('Access-Control-Allow-Origin', '*');
@@ -216,9 +258,10 @@ exports.redsysGateway = onRequest({ region: 'europe-west1', cors: true, secrets:
       return;
     }
 
-    // Determinar URLs de retorno según tenant (extraído del dominio o parámetro)
-    const tenantId = body.tenantId || 'demo';
-    const baseUrl  = `https://${tenantId}.checksmart.com`;
+    // Cargar credenciales Redsys del tenant
+    const tenantId  = body.tenantId || 'demo';
+    const cfg       = await getTenantRedsys(tenantId);
+    const baseUrl   = `https://${tenantId}.checksmart.com`;
 
     const merchantParamsB64 = buildMerchantParams({
       amount,
@@ -226,18 +269,18 @@ exports.redsysGateway = onRequest({ region: 'europe-west1', cors: true, secrets:
       description,
       email,
       lang: lang || '001',
-      urlOk:           REDSYS_CONFIG.urlOk           || `${baseUrl}/booking/?pago=ok&order=${order}`,
-      urlKo:           REDSYS_CONFIG.urlKo           || `${baseUrl}/booking/?pago=ko&order=${order}`,
-      urlNotification: REDSYS_CONFIG.urlNotification || `https://europe-west1-area-malaga-beach.cloudfunctions.net/redsysNotification`,
-      merchantCode:    REDSYS_CONFIG.merchantCode,
-      terminal:        REDSYS_CONFIG.terminal,
-      currency:        REDSYS_CONFIG.currency,
+      urlOk:           `${baseUrl}/booking/?pago=ok&order=${order}`,
+      urlKo:           `${baseUrl}/booking/?pago=ko&order=${order}`,
+      urlNotification: `https://europe-west1-area-malaga-beach.cloudfunctions.net/redsysNotification`,
+      merchantCode:    cfg.merchantCode,
+      terminal:        cfg.terminal,
+      currency:        cfg.currency,
       csrfToken:       csrf_token || '',
     });
 
     // Extraer número de pedido limpio para la firma
     const orderClean = order.replace(/[^A-Za-z0-9]/g, '').padStart(4, '0').slice(0, 12);
-    const signature  = redsysSign(merchantParamsB64, orderClean, REDSYS_CONFIG.secretKey);
+    const signature  = redsysSign(merchantParamsB64, orderClean, cfg.secretKey);
 
     // Devolver HTML con formulario auto-submit que redirige al banco
     const html = `<!DOCTYPE html>
@@ -248,7 +291,7 @@ exports.redsysGateway = onRequest({ region: 'europe-west1', cors: true, secrets:
   Redirigiendo al banco de forma segura...<br>
   <small style="color:#888">Por favor, no cierre esta ventana.</small>
 </p>
-<form id="f" method="POST" action="${REDSYS_CONFIG.endpoint}">
+<form id="f" method="POST" action="${cfg.endpoint}">
   <input type="hidden" name="Ds_SignatureVersion" value="HMAC_SHA256_V1">
   <input type="hidden" name="Ds_MerchantParameters" value="${merchantParamsB64}">
   <input type="hidden" name="Ds_Signature" value="${signature}">
@@ -281,8 +324,13 @@ exports.redsysNotification = onRequest({ region: 'europe-west1', secrets: ['REDS
       const order     = params.Ds_Order || '';
       const responseCode = parseInt(params.Ds_Response || '9999', 10);
 
-      // Verificar firma
-      const expectedSig = redsysSign(Ds_MerchantParameters, order, REDSYS_CONFIG.secretKey);
+      // Identificar tenant por merchantCode y cargar su clave secreta
+      const merchantCode = params.Ds_MerchantCode || '';
+      const tenantId     = await getTenantByMerchantCode(merchantCode);
+      const cfg          = await getTenantRedsys(tenantId);
+
+      // Verificar firma con la clave del tenant correcto
+      const expectedSig = redsysSign(Ds_MerchantParameters, order, cfg.secretKey);
       if (expectedSig !== Ds_Signature) {
         console.warn('[Redsys] Firma inválida para pedido', order);
         res.status(400).send('Invalid signature'); return;
