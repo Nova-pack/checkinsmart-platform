@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CheckinSmart — Reserva tu Parcela</title>
+<title>CheckingSmart — Reserva tu Parcela</title>
 <script src="/assets/config.js"></script>
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="/assets/firestore-db.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -37,7 +41,7 @@ input,select,textarea,button{font-family:inherit;font-size:inherit}
 .lang-btn:hover{background:rgba(255,255,255,.15)}
 
 /* HERO */
-.hero{background:linear-gradient(135deg,#01579b 0%,#0277bd 50%,#0288d1 100%);color:#fff;padding:32px 16px 28px;text-align:center}
+.hero{background:var(--hero-bg,linear-gradient(135deg,#01579b 0%,#0277bd 50%,#0288d1 100%));color:#fff;padding:32px 16px 28px;text-align:center}
 .hero h1{font-size:1.6rem;margin-bottom:6px}
 .hero p{font-size:.88rem;opacity:.85;max-width:600px;margin:0 auto 16px}
 .hero-features{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px}
@@ -290,16 +294,16 @@ select.form-input{appearance:auto;-webkit-appearance:auto}
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" integrity="sha384-tMH8h3BGESGckSAVGZ82T9n90ztNXxvdwvdM6UoR56cYcf+0iGXBliJ29D+wZ/x8" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" integrity="sha384-bm7MnzvK++ykSwVJ2tynSE5TRdN+xL418osEVF2DE/L/gfWHj91J2Sphe582B1Bh" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"></script>
 <script>
-function _csConfig(){ return (window.CheckinSmart && window.CheckinSmart.config) || {}; }
+function _csConfig(){ return (window.Checksmart && window.Checksmart.config) || {}; }
 function _csNombre(){ return _csConfig().nombre || 'Mi Área'; }
 function _csLogo(){ return _csConfig().logo || '/assets/logos/demo-logo.jpg'; }
-function _csEmail(){ return _csConfig().email || 'info@checkinsmart.com'; }
+function _csEmail(){ return _csConfig().email || 'info@checkingsmart.com'; }
 function _csTel(){ return _csConfig().telefono || ''; }
-function _csDominio(){ return _csConfig().dominio || 'checkinsmart.com'; }
+function _csDominio(){ return _csConfig().dominio || 'checkingsmart.com'; }
 function _csSlogan(){ return _csConfig().slogan || ''; }
 function _csKey(k){ var tid=(_csConfig().tenantId||'cs'); return tid+'_'+k; }
 (function(){
@@ -325,7 +329,7 @@ var NATS=['España','Alemania','Francia','Reino Unido','Países Bajos','Italia',
 var VEHICLES=[
   {id:'motorhome',icon:'🚐',price:18},
   {id:'camper',icon:'🚌',price:16},
-  {id:'caravan',icon:'🏕️',price:17}
+  {id:'caravan',icon:'🚛',price:17}
 ];
 var ZONES=['A','B','C','D','E'];
 var ELEC_PRICE=3;
@@ -514,6 +518,24 @@ function App(){
   var canvasRef=ur(null);
   var streamRef=ur(null);
 
+  // ── Config reactiva (sincronizada desde Firestore) ───────────────────────
+  var _vhs=us(function(){
+    // Inicializar precios desde localStorage si existen
+    try{
+      var tid=window.Checksmart&&window.Checksmart.tenantId;
+      if(tid){var p=JSON.parse(localStorage.getItem(tid+'_prices')||'{}');
+        if(p&&Object.keys(p).length) return VEHICLES.map(function(v){return Object.assign({},v,{price:p[v.id]||v.price});});}
+    }catch(e){}
+    return VEHICLES.slice();
+  });
+  var vehicles=_vhs[0],setVehicles=_vhs[1];
+  var _zns=us(function(){
+    var cfg=window.Checksmart&&window.Checksmart.config;
+    return (cfg&&Array.isArray(cfg.zonas)&&cfg.zonas.length)?cfg.zonas:ZONES.slice();
+  });
+  var activeZones=_zns[0],setActiveZones=_zns[1];
+  var _ep=us(ELEC_PRICE),elecPriceRt=_ep[0],setElecPriceRt=_ep[1];
+
   ue(function(){
     var today=new Date();var tmr=new Date(today);tmr.setDate(tmr.getDate()+1);
     var out=new Date(today);out.setDate(out.getDate()+4);
@@ -521,17 +543,49 @@ function App(){
     setCheckOut(out.toISOString().split('T')[0]);
   },[]);
 
+  // Listener de config y Firestore
+  ue(function(){
+    var unsub=null;
+    function onConfig(ev){
+      var cfg=ev.detail;
+      if(cfg&&Array.isArray(cfg.zonas)&&cfg.zonas.length) setActiveZones(cfg.zonas);
+    }
+    function setupPricesListener(db){
+      var tid=window.Checksmart&&window.Checksmart.tenantId;
+      if(!db||!tid) return;
+      unsub=db.collection('tenants').doc(tid).collection('config').doc('prices')
+        .onSnapshot(function(snap){
+          if(!snap.exists) return;
+          var p=snap.data();
+          setVehicles(function(prev){return prev.map(function(v){return p[v.id]!=null?Object.assign({},v,{price:p[v.id]}):v;});});
+          if(p.electricity!=null) setElecPriceRt(p.electricity);
+        });
+    }
+    function onDbReady(ev){setupPricesListener(ev.detail&&ev.detail.db);}
+    window.addEventListener('cs:config-ready',onConfig);
+    window.addEventListener('cs:db-ready',onDbReady);
+    // Si ya están listos antes de montar
+    var existCfg=window.Checksmart&&window.Checksmart.config;
+    if(existCfg&&Array.isArray(existCfg.zonas)&&existCfg.zonas.length) setActiveZones(existCfg.zonas);
+    if(window.Checksmart&&window.Checksmart.db) setupPricesListener(window.Checksmart.db);
+    return function(){
+      window.removeEventListener('cs:config-ready',onConfig);
+      window.removeEventListener('cs:db-ready',onDbReady);
+      if(unsub) unsub();
+    };
+  },[]);
+
   // Cleanup camera on unmount
   ue(function(){return function(){if(streamRef.current){streamRef.current.getTracks().forEach(function(t){t.stop()});}};},[]);
 
   var nights=0;
   if(checkIn&&checkOut){var d1=new Date(checkIn),d2=new Date(checkOut);nights=Math.max(1,Math.round((d2-d1)/86400000))}
-  var veh=VEHICLES.find(function(v){return v.id===vehicleType})||VEHICLES[0];
-  var basePrice=nights*veh.price;
-  var elecPrice=selPitch&&selPitch.electricity?nights*ELEC_PRICE:0;
+  var veh=vehicles.find(function(v){return v.id===vehicleType})||vehicles[0];
+  var basePrice=nights*(veh?veh.price:0);
+  var elecPrice=selPitch&&selPitch.electricity?nights*elecPriceRt:0;
   var totalPrice=basePrice+elecPrice;
 
-  function genCode(){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var c='AMB-';for(var i=0;i<6;i++) c+=chars[Math.floor(Math.random()*chars.length)];return c;}
+  function genCode(){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var c='AMB-';var buf=new Uint32Array(6);crypto.getRandomValues(buf);for(var i=0;i<6;i++) c+=chars[buf[i]%chars.length];return c;}
 
   // Camera functions
   var startCamera=uc(function(){
@@ -689,11 +743,11 @@ function App(){
 
   // STEP 2
   function Step2(){
-    var zonePitches=pitches.filter(function(p){return p.zone===selZone});
+    var zonePitches=pitches.filter(function(p){return p.zone===selZone&&p.status==='free'});
     return ce('div',{className:'step-panel'},
       ce('h2',{className:'step-title'},t.step2),
       ce('p',{className:'step-desc'},t.selectVehicle),
-      ce('div',{className:'vehicle-grid'},VEHICLES.map(function(v){
+      ce('div',{className:'vehicle-grid'},vehicles.map(function(v){
         return ce('div',{key:v.id,className:'vehicle-card'+(vehicleType===v.id?' selected':''),onClick:function(){setVehicleType(v.id)}},
           ce('div',{className:'vehicle-icon'},v.icon),
           ce('div',{className:'vehicle-name'},t[v.id]||v.id),
@@ -703,15 +757,14 @@ function App(){
       ce('p',{className:'step-desc',style:{marginTop:4}},t.selectPitch),
       ce('div',{className:'pitch-legend'},
         ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'#e8f5e9',border:'1px solid #c8e6c9'}}),t.free),
-        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'#f5f5f5',border:'1px solid #eee'}}),t.taken),
         ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'var(--primary)'}}),t.selected)
       ),
-      ce('div',{className:'zone-tabs'},ZONES.map(function(z){
+      ce('div',{className:'zone-tabs'},activeZones.map(function(z){
         return ce('button',{key:z,className:'zone-tab'+(selZone===z?' active':''),onClick:function(){setSelZone(z)},type:'button'},t.zone+' '+z);
       })),
       ce('div',{className:'pitch-map-grid'},zonePitches.map(function(p){
         var isSel=selPitch&&selPitch.id===p.id;
-        return ce('div',{key:p.id,className:'pm-cell '+(isSel?'selected':p.status),onClick:function(){if(p.status==='free')setSelPitch(p)}},
+        return ce('div',{key:p.id,className:'pm-cell '+(isSel?'selected':'free'),onClick:function(){setSelPitch(p)}},
           ce('div',{className:'pm-cell-num'},p.code),
           ce('div',{className:'pm-cell-info'},(p.size==='large'?'L':'S')+(p.electricity?'⚡':''))
         );
@@ -726,14 +779,25 @@ function App(){
     );
   }
 
+  // ─── Sanitización de inputs ──────────────────────────────────────────────────
+  // Elimina etiquetas HTML y limita longitud para prevenir XSS e inyecciones.
+  var FIELD_LIMITS = {text:100, email:254, tel:20, textarea:500, default:200};
+  function sanitizeInput(val, type){
+    var maxLen = FIELD_LIMITS[type] || FIELD_LIMITS.default;
+    // Eliminar etiquetas HTML y caracteres de control peligrosos
+    var clean = String(val).replace(/<[^>]*>/g,'').replace(/[<>'"]/g,'');
+    return clean.slice(0, maxLen);
+  }
+
   // STEP 3 - Personal Data + Document Scanner
   function Step3(){
     function inp(label,val,set,type,ph){
+      var handleChange = function(ev){ set(sanitizeInput(ev.target.value, type||'text')); };
       return ce('div',{className:'form-group'},ce('label',{className:'form-label'},label),
         type==='select'?ce('select',{className:'form-input',value:val,onChange:function(ev){set(ev.target.value)}},
           ph.map(function(o){return ce('option',{key:o,value:o},o)})):
-        type==='textarea'?ce('textarea',{className:'form-input',rows:2,value:val,placeholder:ph||'',onChange:function(ev){set(ev.target.value)}}):
-        ce('input',{className:'form-input',type:type||'text',value:val,placeholder:ph||'',onChange:function(ev){set(ev.target.value)}}));
+        type==='textarea'?ce('textarea',{className:'form-input',rows:2,value:val,placeholder:ph||'',maxLength:FIELD_LIMITS.textarea,onChange:handleChange}):
+        ce('input',{className:'form-input',type:type||'text',value:val,placeholder:ph||'',maxLength:FIELD_LIMITS[type]||FIELD_LIMITS.default,onChange:handleChange}));
     }
 
     // Scanner UI
@@ -824,8 +888,8 @@ function App(){
         inp(t.phone,phone,setPhone,'tel','+34 600 000 000'),
         inp(t.nationality,nat,setNat,'select',NATS),
         inp(t.idDoc,idDoc,setIdDoc,'text',''),
-        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.plate),ce('input',{className:'form-input',value:plate,placeholder:'AB-1234-CD',onChange:function(ev){setPlate(ev.target.value)}})),
-        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.notes),ce('textarea',{className:'form-input',rows:2,value:notes,onChange:function(ev){setNotes(ev.target.value)}}))
+        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.plate),ce('input',{className:'form-input',value:plate,placeholder:'AB-1234-CD',maxLength:20,onChange:function(ev){setPlate(sanitizeInput(ev.target.value,'text'))}})),
+        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.notes),ce('textarea',{className:'form-input',rows:2,value:notes,maxLength:FIELD_LIMITS.textarea,onChange:function(ev){setNotes(sanitizeInput(ev.target.value,'textarea'))}}))
       ),
       ce('div',{className:'btn-row'},
         ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(2)}},'← '+t.back),
@@ -839,6 +903,19 @@ function App(){
 
   function redirectToRedsys(){
     if(tpvLoading) return;
+
+    // Rate limiting: máx 3 intentos por sesión, cooldown 60s entre intentos
+    var RL_KEY = 'cs_rl_booking';
+    var now = Date.now();
+    var rl = JSON.parse(sessionStorage.getItem(RL_KEY) || '{"count":0,"last":0}');
+    if(rl.count >= 3 && (now - rl.last) < 60000){
+      alert('Demasiados intentos. Espera un momento antes de volver a intentarlo.');
+      return;
+    }
+    rl.count = (now - rl.last) > 60000 ? 1 : rl.count + 1;
+    rl.last = now;
+    sessionStorage.setItem(RL_KEY, JSON.stringify(rl));
+
     setTpvLoading(true);
 
     // Generar código de reserva antes del pago
@@ -882,13 +959,20 @@ function App(){
       lang: redsysLang
     });
 
+    // Generar CSRF nonce criptográfico — se almacena en sessionStorage y se incluye
+    // en los parámetros para que el gateway PHP pueda verificarlo antes de procesar.
+    var csrfBuf = new Uint8Array(16);
+    crypto.getRandomValues(csrfBuf);
+    var csrfToken = Array.from(csrfBuf).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+    sessionStorage.setItem('cs_csrf_'+bc, csrfToken);
+
     // Crear formulario oculto y enviar al gateway PHP
     var form = document.createElement('form');
     form.method = 'POST';
-    form.action = 'redsys-gateway.php';
+    form.action = 'https://europe-west1-area-malaga-beach.cloudfunctions.net/redsysGateway';
     form.style.display = 'none';
 
-    var fields = {amount:totalPrice,order:bc,description:desc,email:email,lang:redsysLang,type:'payment'};
+    var fields = {amount:totalPrice,order:bc,description:desc,email:email,lang:redsysLang,type:'payment',csrf_token:csrfToken};
     Object.keys(fields).forEach(function(k){
       var inp = document.createElement('input');
       inp.type='hidden'; inp.name=k; inp.value=fields[k];
@@ -935,10 +1019,8 @@ function App(){
       ),
       ce('h3',{style:{marginBottom:10,fontSize:'.9rem'}},t.paymentMethod),
       ce('div',{className:'payment-methods'},
-        ce('div',{className:'pay-method'+(payMethod==='card'?' selected':''),onClick:function(){setPayMethod('card')}},
-          ce('div',{className:'pay-method-icon'},'💳'),ce('div',{className:'pay-method-name'},t.creditCard)),
-        ce('div',{className:'pay-method'+(payMethod==='arrival'?' selected':''),onClick:function(){setPayMethod('arrival')}},
-          ce('div',{className:'pay-method-icon'},'🏠'),ce('div',{className:'pay-method-name'},t.payOnArrival))
+        ce('div',{className:'pay-method selected'},
+          ce('div',{className:'pay-method-icon'},'💳'),ce('div',{className:'pay-method-name'},t.creditCard))
       ),
 
       // ── Panel TPV Bancario Redsys ──
@@ -1046,6 +1128,18 @@ function App(){
   var origSetStep=setStep;
   var goToStep=function(s){
     if(s===5){
+      // Rate limiting: mismo control que la vía Redsys
+      var RL_KEY = 'cs_rl_booking';
+      var now = Date.now();
+      var rl = JSON.parse(sessionStorage.getItem(RL_KEY) || '{"count":0,"last":0}');
+      if(rl.count >= 3 && (now - rl.last) < 60000){
+        alert('Demasiados intentos. Espera un momento antes de volver a intentarlo.');
+        return;
+      }
+      rl.count = (now - rl.last) > 60000 ? 1 : rl.count + 1;
+      rl.last = now;
+      sessionStorage.setItem(RL_KEY, JSON.stringify(rl));
+
       var bc = genCode();
       setBookCode(bc);
       

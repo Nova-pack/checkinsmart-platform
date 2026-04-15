@@ -1,0 +1,1 @@
+{"version":"0.0.1","configurations":[{"name":"checksmart-app","runtimeExecutable":"npx","runtimeArgs":["serve","-p","4200","-s","."],"port":4200}]}

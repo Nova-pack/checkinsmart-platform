@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CheckinSmart — Gestión inteligente para áreas de autocaravanas</title>
-<meta name="description" content="CheckinSmart es el sistema todo-en-uno para gestionar áreas de autocaravanas, campings y RV parks. Reservas online, check-in, facturación, partes policía y más.">
+<title>CheckingSmart — Gestión inteligente para áreas de autocaravanas</title>
+<meta name="description" content="CheckingSmart es el sistema todo-en-uno para gestionar áreas de autocaravanas, campings y RV parks. Reservas online, check-in, facturación, partes policía y más.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -159,14 +159,16 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <span class="logo-nav">Checkin<span>Smart</span></span>
+    <a href="#" style="display:inline-flex;align-items:center;text-decoration:none">
+      <img src="/assets/logo.svg" alt="CheckingSmart" height="44" style="height:44px;width:auto"/>
+    </a>
     <div class="nav-links">
       <a href="#modulos">Funcionalidades</a>
       <a href="#precios">Precios</a>
       <a href="#como-funciona">Cómo funciona</a>
       <a href="#faq">FAQ</a>
       <a href="#contacto" class="btn btn-outline" style="padding:8px 20px">Contacto</a>
-      <a href="/app/" class="btn btn-primary" style="padding:8px 20px">Acceder</a>
+      <a href="/login/" class="btn btn-primary" style="padding:8px 20px">Acceder</a>
     </div>
   </div>
 </nav>
@@ -227,7 +229,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
         </ul>
       </div>
       <div class="solution-card">
-        <h3>Con CheckinSmart</h3>
+        <h3>Con CheckingSmart</h3>
         <p>Todo lo que necesitas para gestionar tu área, integrado y funcionando desde el primer día.</p>
         <ul class="solution-check">
           <li>Reservas online en tu web 24/7</li>
@@ -308,12 +310,22 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       <h2 class="section-title">Simple, transparente, sin sorpresas</h2>
       <p class="section-sub">Un precio todo incluido. Sin módulos extra, sin letra pequeña, sin permanencia.</p>
     </div>
+    <!-- Toggle mensual / anual -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:32px 0 8px">
+      <span id="lbl-month" style="font-weight:700;color:var(--primary)">Mensual</span>
+      <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer">
+        <input type="checkbox" id="billing-toggle" style="opacity:0;width:0;height:0" onchange="switchBilling(this.checked)">
+        <span style="position:absolute;inset:0;background:#cbd5e1;border-radius:28px;transition:.3s" id="toggle-track"></span>
+        <span style="position:absolute;top:4px;left:4px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3)" id="toggle-thumb"></span>
+      </label>
+      <span id="lbl-year" style="font-weight:400;color:var(--text-sec)">Anual <strong style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:.8rem">-10%</strong></span>
+    </div>
     <div class="pricing-grid">
       <div class="price-card">
         <div class="price-name">Essential</div>
         <div class="price-plazas">Hasta 150 plazas</div>
-        <div class="price-amount">199<span>€</span></div>
-        <div class="price-period">/ mes · IVA no incluido</div>
+        <div class="price-amount" id="price-essential">199<span>€</span></div>
+        <div class="price-period" id="period-essential">/ mes · IVA no incluido</div>
         <ul class="price-features">
           <li>Todos los módulos incluidos</li>
           <li>Motor de reservas online</li>
@@ -324,15 +336,15 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
           <li>2 usuarios</li>
           <li>Soporte email 48h</li>
         </ul>
-        <a href="#contacto" class="btn btn-outline" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <a id="link-essential" href="https://buy.stripe.com/test_cNi3cvcXi70s79F52k63K03" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
         <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
       </div>
       <div class="price-card featured">
         <div class="price-badge">⭐ Más popular</div>
         <div class="price-name">Professional</div>
         <div class="price-plazas">De 151 a 300 plazas</div>
-        <div class="price-amount">299<span>€</span></div>
-        <div class="price-period">/ mes · IVA no incluido</div>
+        <div class="price-amount" id="price-professional">299<span>€</span></div>
+        <div class="price-period" id="period-professional">/ mes · IVA no incluido</div>
         <ul class="price-features">
           <li>Todo lo del plan Essential</li>
           <li>Usuarios ilimitados</li>
@@ -341,10 +353,35 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
           <li>Onboarding personalizado</li>
           <li>Videollamada de configuración</li>
         </ul>
-        <a href="#contacto" class="btn btn-primary" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <a id="link-professional" href="https://buy.stripe.com/test_eVq00j3mI84weC70M463K04" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
         <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
       </div>
     </div>
+    <script>
+    var PRICES = {
+      month: { essential: { amount:'199', period:'/ mes · IVA no incluido', url:'https://buy.stripe.com/test_cNi3cvcXi70s79F52k63K03' },
+               professional: { amount:'299', period:'/ mes · IVA no incluido', url:'https://buy.stripe.com/test_eVq00j3mI84weC70M463K04' } },
+      year:  { essential: { amount:'179', period:'/ mes · facturado 2.149 €/año · IVA no incluido', url:'https://buy.stripe.com/test_cNi4gz0aw70s8dJgL263K07' },
+               professional: { amount:'269', period:'/ mes · facturado 3.229 €/año · IVA no incluido', url:'https://buy.stripe.com/test_bJe7sL0aw1G8fGbbqI63K08' } }
+    };
+    function switchBilling(isAnnual) {
+      var mode = isAnnual ? 'year' : 'month';
+      var track = document.getElementById('toggle-track');
+      var thumb = document.getElementById('toggle-thumb');
+      track.style.background = isAnnual ? 'var(--primary)' : '#cbd5e1';
+      thumb.style.left = isAnnual ? '28px' : '4px';
+      document.getElementById('lbl-month').style.fontWeight = isAnnual ? '400' : '700';
+      document.getElementById('lbl-month').style.color = isAnnual ? 'var(--text-sec)' : 'var(--primary)';
+      document.getElementById('lbl-year').style.fontWeight = isAnnual ? '700' : '400';
+      document.getElementById('lbl-year').style.color = isAnnual ? 'var(--primary)' : 'var(--text-sec)';
+      ['essential','professional'].forEach(function(p){
+        var d = PRICES[mode][p];
+        document.getElementById('price-'+p).innerHTML = d.amount+'<span>€</span>';
+        document.getElementById('period-'+p).textContent = d.period;
+        document.getElementById('link-'+p).href = d.url;
+      });
+    }
+    </script>
     <div style="text-align:center;margin-top:32px;color:var(--text-sec);font-size:.9rem">
       ¿Más de 300 plazas o necesitas algo a medida? <a href="#contacto" style="color:var(--primary);font-weight:600">Hablamos →</a>
     </div>
@@ -368,7 +405,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       <div class="step">
         <div class="step-num">2</div>
         <h3>Tu área activa en 24h</h3>
-        <p>Recibes acceso a <strong>tuarea.checkinsmart.com</strong> configurado con tu marca.</p>
+        <p>Recibes acceso a <strong>tuarea.checkingsmart.com</strong> configurado con tu marca.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
@@ -430,7 +467,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
     <div class="faq-list">
       <div class="faq-item">
         <div class="faq-q">¿Necesito instalar algo? <span>+</span></div>
-        <div class="faq-a">No. CheckinSmart funciona 100% en el navegador. Sin instalaciones, sin actualizaciones manuales, sin servidores que mantener. Funciona en ordenador, tablet y móvil.</div>
+        <div class="faq-a">No. CheckingSmart funciona 100% en el navegador. Sin instalaciones, sin actualizaciones manuales, sin servidores que mantener. Funciona en ordenador, tablet y móvil.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Qué pasa cuando termina la prueba de 30 días? <span>+</span></div>
@@ -438,7 +475,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Puedo tener mi propio dominio (tuarea.com)? <span>+</span></div>
-        <div class="faq-a">Sí, disponible en el plan Professional. Tu área aparecerá con tu propio dominio y los clientes nunca verán "checkinsmart.com".</div>
+        <div class="faq-a">Sí, disponible en el plan Professional. Tu área aparecerá con tu propio dominio y los clientes nunca verán "checkingsmart.com".</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Los partes de policía cumplen la normativa española? <span>+</span></div>
@@ -461,10 +498,10 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   <h2>¿Listo para modernizar tu área?</h2>
   <p>30 días gratis, sin tarjeta de crédito. Tu área configurada en 24 horas.</p>
   <div class="hero-ctas">
-    <a href="mailto:hola@checkinsmart.com?subject=Quiero probar CheckinSmart" class="btn btn-accent btn-xl">Solicitar prueba gratuita</a>
-    <a href="https://wa.me/34600000000?text=Hola, me interesa CheckinSmart" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">💬 Hablar por WhatsApp</a>
+    <a href="mailto:hola@checkingsmart.com?subject=Quiero probar CheckingSmart" class="btn btn-accent btn-xl">Solicitar prueba gratuita</a>
+    <a href="https://wa.me/34600000000?text=Hola, me interesa CheckingSmart" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">💬 Hablar por WhatsApp</a>
   </div>
-  <p style="margin-top:24px;font-size:.85rem;opacity:.6">O escríbenos a hola@checkinsmart.com</p>
+  <p style="margin-top:24px;font-size:.85rem;opacity:.6">O escríbenos a hola@checkingsmart.com</p>
 </section>
 
 <!-- FOOTER -->
@@ -479,18 +516,18 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       <a href="#modulos">Funcionalidades</a>
       <a href="#precios">Precios</a>
       <a href="#como-funciona">Cómo funciona</a>
-      <a href="/app/">Acceder</a>
+      <a href="/login/">Acceder</a>
     </div>
     <div class="footer-col">
       <h4>Empresa</h4>
-      <a href="mailto:hola@checkinsmart.com">Contacto</a>
+      <a href="mailto:hola@checkingsmart.com">Contacto</a>
       <a href="#">Aviso legal</a>
       <a href="#">Privacidad</a>
       <a href="#">Cookies</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 CheckinSmart. Todos los derechos reservados.</span>
+    <span>© 2026 CheckingSmart. Todos los derechos reservados.</span>
     <span>Hecho con ❤️ para áreas de autocaravanas</span>
   </div>
 </footer>

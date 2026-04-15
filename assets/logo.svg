@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 112" width="460" height="112" role="img" aria-label="Checksmart">
+  <defs>
+    <!-- Pin gradient: bright sky → brand blue → deep navy -->
+    <linearGradient id="pg" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#4fc3f7"/>
+      <stop offset="48%"  stop-color="#0288d1"/>
+      <stop offset="100%" stop-color="#01579b"/>
+    </linearGradient>
+
+    <!-- Inner glass highlight (top-left radial) -->
+    <radialGradient id="hl" cx="32%" cy="24%" r="54%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.52)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+
+    <!-- Checkmark gradient: pure white → ice white -->
+    <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e3f2fd"/>
+    </linearGradient>
+
+    <!-- Orange glow for accent dot -->
+    <radialGradient id="og" cx="50%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#ffab76"/>
+      <stop offset="100%" stop-color="#e64a00"/>
+    </radialGradient>
+
+    <!-- Drop shadow (blue-tinted, soft) -->
+    <filter id="sh" x="-28%" y="-12%" width="156%" height="152%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5"
+                    flood-color="#01579b" flood-opacity="0.30"/>
+    </filter>
+
+    <!-- Glow filter for checkmark -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ══════════════ ICON MARK ══════════════ -->
+  <!-- Pin body with shadow -->
+  <g filter="url(#sh)">
+    <path d="M 50 5
+             C 74 5 88 24 88 43
+             C 88 66 67 82 50 106
+             C 33 82 12 66 12 43
+             C 12 24 26 5 50 5 Z"
+          fill="url(#pg)"/>
+    <!-- Glass highlight overlay -->
+    <path d="M 50 5
+             C 74 5 88 24 88 43
+             C 88 66 67 82 50 106
+             C 33 82 12 66 12 43
+             C 12 24 26 5 50 5 Z"
+          fill="url(#hl)"/>
+  </g>
+
+  <!-- Subtle inner circle ring -->
+  <circle cx="50" cy="42" r="27"
+          fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="1.5"/>
+
+  <!-- Checkmark — thick, rounded, with subtle glow -->
+  <polyline points="30,43 44,57 70,28"
+            stroke="url(#cg)" stroke-width="8.5"
+            stroke-linecap="round" stroke-linejoin="round"
+            fill="none" filter="url(#glow)"/>
+
+  <!-- Orange accent dot at pin tip -->
+  <circle cx="50" cy="106" r="5" fill="url(#og)"/>
+
+  <!-- ══════════════ VERTICAL DIVIDER ══════════════ -->
+  <rect x="106" y="19" width="3" height="72" rx="1.5" fill="#FF6B35"/>
+
+  <!-- ══════════════ WORDMARK ══════════════ -->
+  <text y="68"
+        font-family="'Segoe UI','SF Pro Display','Helvetica Neue',Arial,sans-serif"
+        font-size="44"
+        letter-spacing="-0.5">
+    <tspan x="121"
+           font-weight="200"
+           fill="#1a1a2e">Checkin</tspan><tspan font-weight="800"
+           fill="#0288d1"
+           letter-spacing="-1.2">Smart</tspan>
+  </text>
+
+  <!-- Tagline in tracked small-caps -->
+  <text x="122" y="88"
+        font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="10.5"
+        font-weight="600"
+        fill="#78909c"
+        letter-spacing="3.2">GESTIÓN INTELIGENTE DE ÁREAS</text>
+</svg>

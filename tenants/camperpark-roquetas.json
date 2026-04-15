@@ -1,0 +1,80 @@
+{
+  "tenantId": "camperpark-roquetas",
+  "nombre": "Camper Park Roquetas",
+  "nombreCorto": "CPR",
+  "slogan": "Soñando sobre ruedas",
+  "logo": "/tenants/camperpark-roquetas/logo.jpg",
+  "colores": {
+    "primario":         "#1A3A8F",
+    "primarioDark":     "#0D2568",
+    "primarioLight":    "#E8EDF8",
+    "secundario":       "#9496A8",
+    "acento":           "#5C7BD4",
+
+    "fondo":            "#F0F0F4",
+    "superficie":       "#FFFFFF",
+    "superficieAlt":    "#EAEAEF",
+
+    "texto":            "#0D1A3A",
+    "textoSecundario":  "#4A4E65",
+    "textoTerciario":   "#9496A8",
+    "borde":            "#CCCDD8",
+
+    "sidebar":          "#0D2050",
+    "sidebarTexto":     "#FFFFFF",
+
+    "sombra":           "0 4px 20px rgba(26,58,143,.12)",
+    "sombraGrande":     "0 12px 40px rgba(26,58,143,.18)",
+    "heroBg":           "linear-gradient(135deg,#0D2050 0%,#1A3A8F 60%,#2A4FA0 100%)"
+  },
+  "plan": "essential",
+  "parcelas": 50,
+  "zonas": ["A"],
+  "dominio": "camperparkroquetas.com",
+  "telefono": "+34 722 16 83 07",
+  "email": "camperparkroquetas@gmail.com",
+  "direccion": "Carretera la Marina, 9, 04740 Roquetas de Mar, Almería",
+  "cif": "",
+  "idiomas": ["es", "en", "nl", "fr", "de"],
+  "idiomaDefault": "es",
+  "moneda": "EUR",
+  "pais": "ES",
+  "timezone": "Europe/Madrid",
+  "activo": true,
+  "fechaAlta": "2026-04-14",
+  "redesSociales": {
+    "facebook": "https://www.facebook.com/roquetasdemarcamperpark/",
+    "instagram": "https://www.instagram.com/camperparkroquetas/"
+  },
+  "precios": {
+    "autocaravana": 0,
+    "camper": 0,
+    "caravana": 0,
+    "electricidad": 4,
+    "ducha": 1,
+    "adultoExtra": 4,
+    "fianza": 0
+  },
+  "condiciones": {
+    "minimoNoches": 3,
+    "electricidadGratis30dias": true,
+    "admiteMascotas": true,
+    "abierto365": true
+  },
+  "servicios": [
+    "Electricidad 6A y 10A en todas las parcelas (6x12m)",
+    "Agua potable",
+    "Vaciado de aguas grises (2 puntos)",
+    "Vaciado de WC químico (3 puntos)",
+    "Duchas con vestuario privado (1€/5min)",
+    "Lavandería (lavadora y secadora 10kg, 4€)",
+    "WiFi gratuito 365/24",
+    "Admite mascotas",
+    "Tienda con bebidas y artículos básicos",
+    "Videovigilancia",
+    "Playa a 700m",
+    "Alquiler de bicicletas",
+    "Transporte público cercano"
+  ],
+  "web": "https://camperparkroquetas.com"
+}

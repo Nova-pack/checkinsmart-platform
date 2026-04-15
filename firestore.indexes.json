@@ -1,0 +1,37 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "guests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",  "order": "ASCENDING"  },
+        { "fieldPath": "dateIn",  "order": "ASCENDING"  }
+      ]
+    },
+    {
+      "collectionGroup": "guests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dateOut", "order": "ASCENDING"  },
+        { "fieldPath": "status",  "order": "ASCENDING"  }
+      ]
+    },
+    {
+      "collectionGroup": "slog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId",  "order": "ASCENDING"  },
+        { "fieldPath": "ts",      "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "invoices",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "date",    "order": "DESCENDING" },
+        { "fieldPath": "type",    "order": "ASCENDING"  }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

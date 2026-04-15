@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Checksmart">
+  <defs>
+    <linearGradient id="pg" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#4fc3f7"/>
+      <stop offset="48%"  stop-color="#0288d1"/>
+      <stop offset="100%" stop-color="#01579b"/>
+    </linearGradient>
+    <radialGradient id="hl" cx="32%" cy="24%" r="54%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.52)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <radialGradient id="og" cx="50%" cy="30%" r="70%">
+      <stop offset="0%"   stop-color="#ffab76"/>
+      <stop offset="100%" stop-color="#e64a00"/>
+    </radialGradient>
+    <filter id="sh" x="-25%" y="-10%" width="150%" height="145%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4"
+                    flood-color="#01579b" flood-opacity="0.28"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#f8f9fa"/>
+
+  <!-- Pin (scaled and centered in 100×100) -->
+  <g filter="url(#sh)">
+    <path d="M 50 8
+             C 68 8 80 22 80 38
+             C 80 56 63 69 50 88
+             C 37 69 20 56 20 38
+             C 20 22 32 8 50 8 Z"
+          fill="url(#pg)"/>
+    <path d="M 50 8
+             C 68 8 80 22 80 38
+             C 80 56 63 69 50 88
+             C 37 69 20 56 20 38
+             C 20 22 32 8 50 8 Z"
+          fill="url(#hl)"/>
+  </g>
+
+  <!-- Inner ring -->
+  <circle cx="50" cy="37" r="20" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+
+  <!-- Checkmark -->
+  <polyline points="35,38 46,49 65,26"
+            stroke="white" stroke-width="7"
+            stroke-linecap="round" stroke-linejoin="round"
+            fill="none" filter="url(#glow)"/>
+
+  <!-- Orange tip dot -->
+  <circle cx="50" cy="88" r="4.5" fill="url(#og)"/>
+</svg>

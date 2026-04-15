@@ -1,5 +1,5 @@
 /**
- * CheckinSmart — Sistema de configuración multi-tenant
+ * CheckingSmart — Sistema de configuración multi-tenant
  * Este archivo carga la configuración del tenant activo y aplica
  * colores corporativos, logo y nombre de forma dinámica.
  */
@@ -7,38 +7,79 @@
 (function () {
   'use strict';
 
-  // ─── Detectar tenant desde subdominio o parámetro URL ───────────────────────
+  // ─── Detectar tenant desde subdominio ───────────────────────────────────────
+
+  // Mapeo de dominios propios de clientes → tenantId
+  const CUSTOM_DOMAIN_MAP = {
+    'camperparkroquetas.com':     'camperpark-roquetas',
+    'www.camperparkroquetas.com': 'camperpark-roquetas',
+  };
+
   function detectTenantId() {
-    // ?tenant=demo (para desarrollo local)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('tenant')) return urlParams.get('tenant');
-
-    // subdominio: demo.checkinsmart.com → "demo"
     const host = window.location.hostname;
-    const parts = host.split('.');
-    if (parts.length >= 3) return parts[0];
 
-    // fallback
+    // 1. sessionStorage — set by login portal just before redirecting
+    try {
+      const ssTenant = sessionStorage.getItem('cs_tenant');
+      if (ssTenant && /^[a-z0-9-]{2,50}$/.test(ssTenant)) return ssTenant;
+    } catch(e) {}
+
+    // 2. localStorage — remembers last active tenant (for F5/reloads)
+    try {
+      const lsTenant = localStorage.getItem('cs_active_tenant');
+      if (lsTenant && /^[a-z0-9-]{2,50}$/.test(lsTenant)) return lsTenant;
+    } catch(e) {}
+
+    // 3. ?tenant=X param (compatibilidad / dev)
+    try {
+      const paramTenant = new URLSearchParams(window.location.search).get('tenant');
+      if (paramTenant && /^[a-z0-9-]{2,50}$/.test(paramTenant)) return paramTenant;
+    } catch(e) {}
+
+    // 4. Dominio propio del cliente (camperparkroquetas.com, etc.)
+    if (CUSTOM_DOMAIN_MAP[host]) return CUSTOM_DOMAIN_MAP[host];
+
+    // 5. Subdominio: camperpark-roquetas.checkingsmart.com → "camperpark-roquetas"
+    const parts = host.split('.');
+    if (parts.length >= 3 && !['web', 'firebaseapp'].includes(parts[1])) return parts[0];
+
+    // 6. Fallback (dominio raíz sin subdominio)
     return 'demo';
   }
 
   // ─── Aplicar CSS variables corporativas ─────────────────────────────────────
   function applyColors(colores) {
     const root = document.documentElement;
-    root.style.setProperty('--cs-primario',       colores.primario      || '#0066CC');
-    root.style.setProperty('--cs-primario-dark',  colores.primarioDark  || '#004fa3');
-    root.style.setProperty('--cs-secundario',     colores.secundario    || '#FF6B35');
-    root.style.setProperty('--cs-acento',         colores.acento        || '#00C851');
-    root.style.setProperty('--cs-fondo',          colores.fondo         || '#f8f9fa');
-    root.style.setProperty('--cs-sidebar',        colores.sidebar       || '#1a1a2e');
-    root.style.setProperty('--cs-sidebar-texto',  colores.sidebarTexto  || '#ffffff');
-    root.style.setProperty('--cs-texto',          colores.texto         || '#333333');
+
+    // Variables de marca (usadas por admin panel y legacy)
+    root.style.setProperty('--cs-primario',       colores.primario        || '#0066CC');
+    root.style.setProperty('--cs-primario-dark',  colores.primarioDark    || '#004fa3');
+    root.style.setProperty('--cs-secundario',     colores.secundario      || '#FF6B35');
+    root.style.setProperty('--cs-acento',         colores.acento          || '#00C851');
+    root.style.setProperty('--cs-fondo',          colores.fondo           || '#f8f9fa');
+    root.style.setProperty('--cs-sidebar',        colores.sidebar         || '#1a1a2e');
+    root.style.setProperty('--cs-sidebar-texto',  colores.sidebarTexto    || '#ffffff');
+    root.style.setProperty('--cs-texto',          colores.texto           || '#333333');
+
+    // Variables de UI completas (motor de reservas + panel de check-in)
+    // Solo se aplican si el tenant las define explícitamente
+    if (colores.fondo)            root.style.setProperty('--bg',          colores.fondo);
+    if (colores.superficie)       root.style.setProperty('--surface',      colores.superficie);
+    if (colores.superficieAlt)    root.style.setProperty('--surface-alt',  colores.superficieAlt);
+    if (colores.texto)            root.style.setProperty('--text',         colores.texto);
+    if (colores.textoSecundario)  root.style.setProperty('--text-sec',     colores.textoSecundario);
+    if (colores.textoTerciario)   root.style.setProperty('--text-ter',     colores.textoTerciario);
+    if (colores.borde)            root.style.setProperty('--border',       colores.borde);
+    if (colores.primarioLight)    root.style.setProperty('--primary-l',    colores.primarioLight);
+    if (colores.sombra)           root.style.setProperty('--shadow',       colores.sombra);
+    if (colores.sombraGrande)     root.style.setProperty('--shadow-lg',    colores.sombraGrande);
+    if (colores.heroBg)           root.style.setProperty('--hero-bg',      colores.heroBg);
   }
 
   // ─── Aplicar logo y nombre de empresa ───────────────────────────────────────
   function applyBranding(config) {
     // Título de la página
-    document.title = config.nombre + ' — CheckinSmart';
+    document.title = config.nombre + ' — CheckingSmart';
 
     // Logo: cualquier elemento con data-cs-logo
     document.querySelectorAll('[data-cs-logo]').forEach(el => {
@@ -68,9 +109,9 @@
 
   // ─── Guardar config globalmente ──────────────────────────────────────────────
   function storeConfig(config) {
-    window.CheckinSmart = window.CheckinSmart || {};
-    window.CheckinSmart.config = config;
-    window.CheckinSmart.tenantId = config.tenantId;
+    window.Checksmart = window.Checksmart || {};
+    window.Checksmart.config = config;
+    window.Checksmart.tenantId = config.tenantId;
   }
 
   // ─── Cargar configuración del tenant ────────────────────────────────────────
@@ -96,9 +137,9 @@
       window.dispatchEvent(new CustomEvent('cs:config-ready', { detail: config }));
 
     } catch (err) {
-      console.warn('[CheckinSmart] No se pudo cargar tenant:', tenantId, err);
-      // Cargar demo como fallback
-      if (tenantId !== 'demo') {
+      console.warn('[Checksmart] No se pudo cargar tenant:', tenantId, err);
+      // Cargar demo como fallback (solo en localhost)
+      if (tenantId !== 'demo' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         window.location.search = '?tenant=demo';
       }
     }

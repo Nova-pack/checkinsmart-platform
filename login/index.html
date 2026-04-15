@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceder — CheckingSmart</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#0066CC;--primary-dark:#004fa3;--primary-light:#e8f1fb;
+  --accent:#FF6B35;
+  --text:#1a1a2e;--text-sec:#555;--text-ter:#888;
+  --surface:#fff;--border:#e5e7eb;
+  --error:#d32f2f;--error-bg:#fff5f5;
+  --shadow-lg:0 12px 40px rgba(0,0,0,.16);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-height:1.6}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(135deg,#0a1628 0%,#0d2456 55%,#0066CC 100%)}
+.page::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.card{position:relative;z-index:1;background:var(--surface);border-radius:20px;
+  box-shadow:var(--shadow-lg);padding:48px 44px;width:100%;max-width:420px}
+.logo-wrap{text-align:center;margin-bottom:36px}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;
+  color:var(--primary);letter-spacing:-.5px}
+.logo-text span{color:var(--accent)}
+.logo-sub{font-size:.78rem;color:var(--text-ter);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
+.card h1{font-family:'Space Grotesk',sans-serif;font-size:1.45rem;font-weight:700;
+  text-align:center;margin-bottom:6px}
+.card .sub{text-align:center;color:var(--text-sec);font-size:.9rem;margin-bottom:28px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.78rem;font-weight:700;color:var(--text-sec);
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
+.field input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:.97rem;font-family:inherit;color:var(--text);background:#fff;
+  transition:border-color .2s,box-shadow .2s;outline:none}
+.field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,102,204,.1)}
+.field input::placeholder{color:#c0c8d4}
+.error-msg{display:none;background:var(--error-bg);color:var(--error);
+  border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;
+  font-size:.88rem;margin-bottom:16px;gap:8px;align-items:flex-start}
+.error-msg.show{display:flex}
+.btn-entrar{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;
+  border-radius:10px;font-size:1rem;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-entrar:hover:not(:disabled){background:var(--primary-dark);
+  transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,102,204,.3)}
+.btn-entrar:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.spinner{display:inline-block;width:16px;height:16px;
+  border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.success{display:none;text-align:center;padding:16px 0}
+.success .check{font-size:3rem;margin-bottom:12px}
+.success h2{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:6px}
+.success p{color:var(--text-sec);font-size:.9rem}
+.footer{text-align:center;margin-top:24px;font-size:.82rem;color:var(--text-ter)}
+.footer a{color:var(--primary);font-weight:600}
+@media(max-width:480px){.card{padding:36px 20px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="logo-wrap">
+      <a href="/landing/" style="text-decoration:none">
+        <div class="logo-text">Checking<span>Smart</span></div>
+        <div class="logo-sub">Acceso clientes</div>
+      </a>
+    </div>
+
+    <div id="view-form">
+      <h1>Accede a tu área</h1>
+      <p class="sub">Introduce tus credenciales de acceso</p>
+
+      <div id="error-msg" class="error-msg">
+        <span>⚠</span>
+        <span id="error-text"></span>
+      </div>
+
+      <div class="field">
+        <label for="inp-email">Email</label>
+        <input type="email" id="inp-email" placeholder="tu@empresa.com"
+               autocomplete="email" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="inp-pass">Contraseña</label>
+        <input type="password" id="inp-pass" placeholder="••••••••"
+               autocomplete="current-password">
+      </div>
+
+      <button id="btn-entrar" class="btn-entrar">Entrar</button>
+    </div>
+
+    <div id="view-success" class="success">
+      <div class="check">✅</div>
+      <h2>Acceso verificado</h2>
+      <p>Redirigiendo a <strong id="tenant-nombre"></strong>...</p>
+      <div style="margin-top:16px"><span class="spinner"
+        style="border-color:rgba(0,102,204,.25);border-top-color:var(--primary)"></span></div>
+    </div>
+
+    <div class="footer">
+      ¿Problemas de acceso?
+      <a href="mailto:soporte@checkingsmart.com">Contactar soporte</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var PLATFORM_DOMAIN = 'checkingsmart.com';
+
+  var FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyDP9yWuhGPmHUByb-N7Qynh7Lc1OGZHE7k',
+    authDomain:        'area-malaga-beach.firebaseapp.com',
+    projectId:         'area-malaga-beach',
+    storageBucket:     'area-malaga-beach.firebasestorage.app',
+    messagingSenderId: '559229870217',
+    appId:             '1:559229870217:web:dfa860e653300ef5efa658'
+  };
+
+  // Mapa email → tenant (añadir aquí cada nuevo cliente)
+  var EMAIL_MAP = {
+    'info@areamalagabeach.com':     { tenantId: 'demo',               nombre: 'Area Málaga Beach' },
+    'camperparkroquetas@gmail.com': { tenantId: 'camperpark-roquetas', nombre: 'Camper Park Roquetas' }
+  };
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+  var auth = firebase.auth();
+
+  var viewForm    = document.getElementById('view-form');
+  var viewSuccess = document.getElementById('view-success');
+  var btn         = document.getElementById('btn-entrar');
+  var inpEmail    = document.getElementById('inp-email');
+  var inpPass     = document.getElementById('inp-pass');
+  var errBox      = document.getElementById('error-msg');
+  var errTxt      = document.getElementById('error-text');
+  var tenantNom   = document.getElementById('tenant-nombre');
+
+  function showError(msg){
+    errTxt.textContent = msg;
+    errBox.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+
+  function redirect(tenantId, nombre){
+    // Guardar tenant antes de navegar — config.js lo leerá en /app/
+    try { sessionStorage.setItem('cs_tenant', tenantId); } catch(e) {}
+    try { localStorage.setItem('cs_active_tenant', tenantId); } catch(e) {}
+    viewForm.style.display = 'none';
+    viewSuccess.style.display = 'block';
+    tenantNom.textContent = nombre;
+    setTimeout(function(){ window.location.href = '/app/'; }, 1000);
+  }
+
+  function doLogin(){
+    var email = inpEmail.value.trim().toLowerCase();
+    var pass  = inpPass.value;
+
+    if(!email){ showError('Introduce tu email.'); inpEmail.focus(); return; }
+    if(!pass) { showError('Introduce tu contraseña.'); inpPass.focus(); return; }
+
+    errBox.classList.remove('show');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verificando...';
+
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(function(){
+        var tenant = EMAIL_MAP[email];
+        if(!tenant){
+          // Email no registrado en el mapa → buscar por prefijo de dominio como fallback
+          var domain = email.split('@')[1] || '';
+          for(var k in EMAIL_MAP){
+            if(k.split('@')[1] === domain){ tenant = EMAIL_MAP[k]; break; }
+          }
+        }
+        if(!tenant){
+          auth.signOut();
+          showError('Cuenta sin área asignada. Contacta con soporte.');
+          return;
+        }
+        redirect(tenant.tenantId, tenant.nombre);
+      })
+      .catch(function(err){
+        var msg;
+        switch(err.code){
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+          case 'auth/invalid-email':
+            msg = 'Email o contraseña incorrectos.'; break;
+          case 'auth/too-many-requests':
+            msg = 'Demasiados intentos fallidos. Espera unos minutos.'; break;
+          case 'auth/user-disabled':
+            msg = 'Cuenta desactivada. Contacta con soporte.'; break;
+          case 'auth/network-request-failed':
+            msg = 'Sin conexión. Comprueba tu red e inténtalo de nuevo.'; break;
+          default:
+            msg = 'Error al iniciar sesión (' + (err.code||err.message) + ').';
+        }
+        showError(msg);
+      });
+  }
+
+  btn.addEventListener('click', doLogin);
+  inpEmail.addEventListener('keydown', function(e){ if(e.key==='Enter') inpPass.focus(); });
+  inpPass.addEventListener('keydown',  function(e){ if(e.key==='Enter') doLogin(); });
+
+  // Cerrar siempre la sesión anterior al entrar en el login
+  // Evita que una sesión de un cliente redirija automáticamente a otro cliente
+  auth.signOut();
+
+})();
+</script>
+</body>
+</html>

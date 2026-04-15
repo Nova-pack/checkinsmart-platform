@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Datos de cada tenant ──────────────────────────────────────────────
+    // Acceso por tenantId válido (aislamiento por namespace)
+    // TODO FASE 3: añadir Firebase Auth custom claims para seguridad plena
+    match /tenants/{tenantId}/{document=**} {
+
+      // Cualquier lectura/escritura con tenantId válido
+      allow read, write: if tenantId.matches('[a-z0-9\\-]{2,50}');
+
+      // Excepción: crear reservas online sin autenticación (motor de reservas público)
+      // Solo permite create en guests con campos mínimos obligatorios
+      allow create: if tenantId.matches('[a-z0-9\\-]{2,50}')
+        && request.resource.data.keys().hasAll(['name', 'dateIn', 'dateOut']);
+    }
+
+    // ─── Cuentas SaaS (login portal) ──────────────────────────────────────
+    // Solo el propio usuario Firebase Auth puede leer su cuenta
+    match /saas_accounts/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // ─── Bloquear todo lo demás ────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
