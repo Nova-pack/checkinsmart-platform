@@ -8,13 +8,20 @@
  */
 
 const admin = require('firebase-admin');
-const serviceAccount = require('./service-account.json'); // descargar de Firebase Console
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  projectId: 'area-malaga-beach',
-});
+// Usar service-account.json
+let credential;
+try {
+  const sa = require('./service-account.json');
+  credential = admin.credential.cert(sa);
+  console.log('Usando service-account.json');
+} catch (e) {
+  console.error('No se encontró service-account.json en la carpeta functions/');
+  console.error('Descárgalo de Firebase Console → Project Settings → Service Accounts → Generar nueva clave privada');
+  process.exit(1);
+}
 
+admin.initializeApp({ credential, projectId: 'area-malaga-beach' });
 const db = admin.firestore();
 
 const configs = {
@@ -22,22 +29,22 @@ const configs = {
   // ── Area Málaga Beach (demo) ───────────────────────────────────────────────
   'demo': {
     redsys: {
-      merchantCode: '999008881',          // Código de comercio real de Area Málaga Beach
+      merchantCode: '999008881',
       terminal:     '1',
-      currency:     '978',               // EUR
-      secretKey:    'sq7HjrUOBfKmC576ILgskD5srU870gJ7', // Clave SHA-256 del banco
-      live:         false,               // ⚠️  cambiar a true cuando sea producción
+      currency:     '978',
+      secretKey:    'sq7HjrUOBfKmC576ILgskD5srU870gJ7',
+      live:         false,
     }
   },
 
   // ── Camper Park Roquetas ──────────────────────────────────────────────────
   'camperpark-roquetas': {
     redsys: {
-      merchantCode: 'PENDIENTE',         // ← Rellenar con código del banco
+      merchantCode: '363593336',
       terminal:     '1',
-      currency:     '978',              // EUR
-      secretKey:    'PENDIENTE',         // ← Rellenar con clave SHA-256 del banco
-      live:         false,              // ⚠️  cambiar a true cuando sea producción
+      currency:     '978',
+      secretKey:    'sq7HjrUOBfKmC576ILgskD5srU870gJ7', // sandbox — reemplazar con clave real de producción
+      live:         false,
     }
   },
 
@@ -48,7 +55,7 @@ async function seed() {
     await db.collection('private_config').doc(tenantId).set(data, { merge: true });
     console.log(`✅  private_config/${tenantId} guardado`);
   }
-  console.log('\nListo. Recuerda actualizar los valores PENDIENTE con los datos reales del banco.');
+  console.log('\nListo. Cambiar live:true y secretKey real cuando el banco confirme producción.');
   process.exit(0);
 }
 

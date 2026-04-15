@@ -5,3 +5,6 @@ node_modules/
 .env.local
 .DS_Store
 Thumbs.db
+
+service-account.json
+*-service-account.json
