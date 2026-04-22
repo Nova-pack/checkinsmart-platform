@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reset Caja Oculta</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:420px;margin:80px auto;padding:20px;text-align:center;}
+  h2{color:#1565c0;}
+  input{font-size:2rem;letter-spacing:12px;text-align:center;border:2px solid #ccc;border-radius:8px;padding:10px 20px;width:140px;margin:12px 0;}
+  button{background:#1565c0;color:white;border:none;border-radius:8px;padding:12px 32px;font-size:1rem;cursor:pointer;margin:8px;}
+  button.danger{background:#c62828;}
+  .msg{margin-top:20px;font-size:.95rem;padding:12px;border-radius:8px;}
+  .ok{background:#e8f5e9;color:#2e7d32;}
+  .err{background:#ffebee;color:#c62828;}
+</style>
+</head>
+<body>
+<h2>🔒 Caja Oculta — Gestión de PIN</h2>
+<p>Esta página lee y resetea el PIN de la caja oculta<br>del tenant <strong>camperpark-roquetas</strong>.</p>
+
+<div id="current" style="background:#f5f5f5;border-radius:8px;padding:12px;margin:16px 0;font-size:.9rem;"></div>
+
+<hr>
+<p><strong>Nuevo PIN (4 dígitos):</strong></p>
+<input type="password" id="newPin" maxlength="4" inputmode="numeric" placeholder="••••">
+<br>
+<button onclick="savePin()">💾 Guardar nuevo PIN</button>
+<button class="danger" onclick="resetDefault()">🔄 Resetear a 5555</button>
+
+<div id="msg" class="msg" style="display:none"></div>
+
+<script>
+var KEY = 'camperpark-roquetas_priv5';
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    var el = document.getElementById('current');
+    if(!raw){
+      el.innerHTML = '⚠️ No hay datos guardados en localStorage.<br>PIN activo: <strong>5555</strong> (valor por defecto)';
+    } else {
+      var d = JSON.parse(raw);
+      el.innerHTML = 'PIN actual guardado: <strong>' + (d.pin||'(vacío)') + '</strong><br>'
+        + 'Movimientos: ' + (d.entries?d.entries.length:0);
+    }
+  } catch(e){
+    document.getElementById('current').innerHTML = 'Error leyendo datos: '+e.message;
+  }
+}
+
+function savePin(){
+  var p = document.getElementById('newPin').value.replace(/\D/g,'');
+  if(p.length!==4){showMsg('El PIN debe ser exactamente 4 dígitos numéricos','err');return;}
+  try{
+    var raw = localStorage.getItem(KEY);
+    var d = raw ? JSON.parse(raw) : {pin:'5555',entries:[],guestRecords:[]};
+    d.pin = p;
+    localStorage.setItem(KEY, JSON.stringify(d));
+    showMsg('✅ PIN guardado correctamente: '+p,'ok');
+    load();
+  } catch(e){ showMsg('Error: '+e.message,'err'); }
+}
+
+function resetDefault(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    var d = raw ? JSON.parse(raw) : {entries:[],guestRecords:[]};
+    d.pin = '5555';
+    localStorage.setItem(KEY, JSON.stringify(d));
+    showMsg('✅ PIN reseteado a 5555','ok');
+    load();
+  } catch(e){ showMsg('Error: '+e.message,'err'); }
+}
+
+function showMsg(txt,type){
+  var el=document.getElementById('msg');
+  el.className='msg '+(type==='ok'?'ok':'err');
+  el.textContent=txt;
+  el.style.display='block';
+}
+
+load();
+</script>
+</body>
+</html>

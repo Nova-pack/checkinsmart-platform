@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listín Telefónico — Oficina</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3e;
+    --primary: #4f8ef7;
+    --text: #e8eaf0;
+    --muted: #7c8099;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; padding: 24px 16px; }
+
+  .header { text-align: center; margin-bottom: 28px; }
+  .header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: .02em; }
+  .header h1 span { color: var(--primary); }
+  .header p { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+
+  .toolbar { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; align-items: center; }
+  .search-box { flex: 1; min-width: 200px; position: relative; }
+  .search-box input {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px 10px 38px; border-radius: 8px;
+    font-size: .9rem; outline: none;
+  }
+  .search-box input:focus { border-color: var(--primary); }
+  .search-box::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .85rem; }
+  .btn {
+    padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); cursor: pointer; font-size: .83rem;
+    white-space: nowrap; transition: all .15s;
+  }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-print { background: var(--card); }
+  .btn-add { background: var(--primary); color: white; border-color: var(--primary); font-weight: 600; }
+  .btn-add:hover { background: #3b7de8; }
+
+  .categories { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cat-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer; font-size: .8rem;
+    transition: all .15s;
+  }
+  .cat-btn.active, .cat-btn:hover { background: var(--card); color: var(--text); border-color: var(--primary); }
+
+  .section { margin-bottom: 28px; }
+  .section-title {
+    font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px; padding-left: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; position: relative; transition: border-color .15s;
+  }
+  .card:hover { border-color: #3a3d55; }
+  .card .name { font-weight: 600; font-size: .92rem; margin-bottom: 3px; }
+  .card .role { color: var(--muted); font-size: .78rem; margin-bottom: 10px; }
+  .card .number {
+    font-size: 1.05rem; font-weight: 700; letter-spacing: .04em;
+    color: var(--primary); font-family: 'Consolas', monospace; cursor: pointer;
+  }
+  .card .number:hover { text-decoration: underline; }
+  .card .number.pin { color: var(--amber); }
+  .card .number.emergency { color: var(--red); }
+  .card .number.internal { color: var(--green); }
+
+  .card .ext { color: var(--muted); font-size: .78rem; margin-top: 4px; }
+  .card .tag {
+    display: inline-block; font-size: .68rem; padding: 2px 8px; border-radius: 10px;
+    font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .tag-movil { background: #1d3557; color: var(--primary); }
+  .tag-fijo { background: #1a3320; color: var(--green); }
+  .tag-pin { background: #2d2206; color: var(--amber); }
+  .tag-asistencia { background: #2d1a1a; color: var(--red); }
+  .tag-ext { background: #1e1b2e; color: var(--purple); }
+
+  .pin-mask { letter-spacing: .15em; }
+  .reveal-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: .75rem; margin-left: 8px; padding: 2px 6px;
+    border-radius: 4px; border: 1px solid var(--border);
+  }
+  .reveal-btn:hover { color: var(--amber); border-color: var(--amber); }
+
+  .card .actions { position: absolute; top: 10px; right: 10px; display: none; gap: 4px; }
+  .card:hover .actions { display: flex; }
+  .action-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: .75rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .action-btn:hover { color: var(--text); border-color: var(--text); }
+  .action-btn.del:hover { color: var(--red); border-color: var(--red); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px; width: 100%; max-width: 420px; position: relative;
+  }
+  .modal h2 { font-size: 1.1rem; margin-bottom: 20px; }
+  .modal label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 4px; margin-top: 12px; }
+  .modal input, .modal select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 9px 12px; border-radius: 8px; font-size: .9rem; outline: none;
+  }
+  .modal input:focus, .modal select:focus { border-color: var(--primary); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+  .modal-close {
+    position: absolute; top: 14px; right: 14px; background: none; border: none;
+    color: var(--muted); font-size: 1.2rem; cursor: pointer;
+  }
+
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: .9rem; }
+
+  @media print {
+    body { background: white; color: black; padding: 10px; }
+    .toolbar, .categories, .actions, .reveal-btn, .btn-add { display: none !important; }
+    .card { border: 1px solid #ddd; background: white; break-inside: avoid; }
+    .card .name, .card .number, .section-title { color: black !important; }
+    .card .role, .card .ext, .card .muted { color: #666 !important; }
+    .tag { border: 1px solid #ccc; color: #333 !important; background: #f5f5f5 !important; }
+    .pin-mask::after { content: ' [ver original]'; font-size: .7rem; color: #999; }
+    .section { page-break-inside: avoid; }
+    .header p { display: none; }
+  }
+
+  .counter { color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 Listín <span>Telefónico</span></h1>
+  <p id="last-update">Última actualización: <span id="update-date"></span></p>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Buscar nombre, número, cargo..." oninput="render()">
+  </div>
+  <span class="counter" id="counter"></span>
+  <button class="btn btn-add" onclick="openModal()">+ Añadir</button>
+  <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+  <button class="btn" onclick="exportData()">💾 Exportar</button>
+  <button class="btn" onclick="importData()">📂 Importar</button>
+</div>
+
+<div class="categories" id="cat-bar"></div>
+
+<div id="content"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modal-title">Nuevo contacto</h2>
+    <input type="hidden" id="edit-id">
+    <label>Nombre / Descripción *</label>
+    <input type="text" id="f-name" placeholder="Ej: María García / Seguridad Social">
+    <label>Cargo / Nota</label>
+    <input type="text" id="f-role" placeholder="Ej: Recepción / Tlf. urgencias">
+    <label>Número / PIN *</label>
+    <input type="text" id="f-number" placeholder="Ej: 622 123 456 / 1234">
+    <label>Extensión / Info adicional</label>
+    <input type="text" id="f-ext" placeholder="Ej: Ext. 204 / usar solo con VPN">
+    <label>Categoría *</label>
+    <select id="f-cat">
+      <option value="Oficina">📞 Oficina</option>
+      <option value="Móviles">📱 Móviles</option>
+      <option value="PINs">🔑 PINs</option>
+      <option value="Asistencia">🛟 Asistencia técnica</option>
+      <option value="Emergencias">🚨 Emergencias</option>
+      <option value="Proveedores">🤝 Proveedores</option>
+      <option value="Otros">📋 Otros</option>
+    </select>
+    <label>Tipo de número</label>
+    <select id="f-type">
+      <option value="movil">📱 Móvil</option>
+      <option value="fijo">☎️ Fijo</option>
+      <option value="pin">🔑 PIN / Código</option>
+      <option value="ext">🔌 Interno/Extensión</option>
+      <option value="asistencia">🛟 Asistencia/Emergencia</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn active" onclick="saveContact()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAT_COLORS = {
+  'Oficina':      { dot: '#34d399', tag: 'tag-fijo' },
+  'Móviles':      { dot: '#4f8ef7', tag: 'tag-movil' },
+  'PINs':         { dot: '#fbbf24', tag: 'tag-pin' },
+  'Asistencia':   { dot: '#f87171', tag: 'tag-asistencia' },
+  'Emergencias':  { dot: '#f87171', tag: 'tag-asistencia' },
+  'Proveedores':  { dot: '#a78bfa', tag: 'tag-ext' },
+  'Otros':        { dot: '#7c8099', tag: 'tag-ext' },
+};
+
+const CAT_ICONS = {
+  'Oficina':'📞','Móviles':'📱','PINs':'🔑','Asistencia':'🛟',
+  'Emergencias':'🚨','Proveedores':'🤝','Otros':'📋'
+};
+
+const TYPE_CLASS = { movil:'', fijo:'internal', pin:'pin', ext:'internal', asistencia:'emergency' };
+
+// Datos por defecto — edita aquí o usa el botón +
+let DATA = JSON.parse(localStorage.getItem('listin_data') || 'null') || [
+  { id:1, name:'Recepción', role:'Línea principal oficina', number:'91 000 00 01', ext:'', cat:'Oficina', type:'fijo' },
+  { id:2, name:'Dirección', role:'', number:'91 000 00 02', ext:'Ext. 200', cat:'Oficina', type:'fijo' },
+  { id:3, name:'David', role:'Gerente', number:'622 000 001', ext:'', cat:'Móviles', type:'movil' },
+  { id:4, name:'Almacén / Logística', role:'', number:'622 000 002', ext:'', cat:'Móviles', type:'movil' },
+  { id:5, name:'PIN móvil David', role:'', number:'0000', ext:'No compartir', cat:'PINs', type:'pin' },
+  { id:6, name:'PIN tablet recepción', role:'', number:'1234', ext:'', cat:'PINs', type:'pin' },
+  { id:7, name:'Soporte IT', role:'Incidencias informáticas', number:'900 000 001', ext:'Lunes-Viernes 9-18h', cat:'Asistencia', type:'asistencia' },
+  { id:8, name:'Seguridad Social', role:'Consultas empresa', number:'901 166 565', ext:'', cat:'Asistencia', type:'asistencia' },
+  { id:9, name:'Policía Nacional', role:'', number:'091', ext:'', cat:'Emergencias', type:'asistencia' },
+  { id:10, name:'Emergencias', role:'', number:'112', ext:'', cat:'Emergencias', type:'asistencia' },
+];
+
+let nextId = Math.max(...DATA.map(d=>d.id)) + 1;
+let activeFilter = 'Todas';
+let editingId = null;
+let revealedPins = new Set();
+
+function save() {
+  localStorage.setItem('listin_data', JSON.stringify(DATA));
+  document.getElementById('update-date').textContent = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function getAllCats() {
+  const cats = ['Todas', ...new Set(DATA.map(d => d.cat))];
+  return cats;
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+
+  // Cat bar
+  const catBar = document.getElementById('cat-bar');
+  catBar.innerHTML = getAllCats().map(c =>
+    `<button class="cat-btn ${activeFilter===c?'active':''}" onclick="setFilter('${c}')">${CAT_ICONS[c]||''} ${c}</button>`
+  ).join('');
+
+  // Filter data
+  let filtered = DATA.filter(d => {
+    const matchCat = activeFilter === 'Todas' || d.cat === activeFilter;
+    const matchQ = !q || [d.name,d.role,d.number,d.ext,d.cat].join(' ').toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  document.getElementById('counter').textContent = filtered.length + ' contacto' + (filtered.length!==1?'s':'');
+
+  // Group by cat
+  const groups = {};
+  filtered.forEach(d => { (groups[d.cat] = groups[d.cat]||[]).push(d); });
+
+  const content = document.getElementById('content');
+  if (filtered.length === 0) {
+    content.innerHTML = '<div class="empty">Sin resultados para tu búsqueda.</div>';
+    return;
+  }
+
+  content.innerHTML = Object.entries(groups).map(([cat, items]) => {
+    const cc = CAT_COLORS[cat] || { dot: '#7c8099', tag: 'tag-ext' };
+    return `
+      <div class="section" data-cat="${cat}">
+        <div class="section-title">
+          <span class="dot" style="background:${cc.dot}"></span>
+          ${CAT_ICONS[cat]||''} ${cat}
+        </div>
+        <div class="grid">
+          ${items.map(d => cardHTML(d, cc)).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function cardHTML(d, cc) {
+  const isPin = d.type === 'pin';
+  const numClass = TYPE_CLASS[d.type] || '';
+  const tag = (CAT_COLORS[d.cat] || {tag:'tag-ext'}).tag;
+  const revealed = revealedPins.has(d.id);
+  const numDisplay = isPin
+    ? `<span class="number pin ${revealed?'':'pin-mask'}" id="pin-${d.id}">${revealed ? d.number : '••••'}</span>
+       <button class="reveal-btn" onclick="togglePin(${d.id})">${revealed?'🙈 Ocultar':'👁 Ver'}</button>`
+    : `<span class="number ${numClass}" onclick="copyNum(this,'${d.number}')" title="Copiar">${d.number}</span>`;
+
+  return `
+    <div class="card" data-id="${d.id}">
+      <div class="actions">
+        <button class="action-btn" onclick="editContact(${d.id})" title="Editar">✏️</button>
+        <button class="action-btn del" onclick="deleteContact(${d.id})" title="Eliminar">🗑</button>
+      </div>
+      <div class="name">${esc(d.name)}</div>
+      ${d.role ? `<div class="role">${esc(d.role)}</div>` : ''}
+      <div>${numDisplay}</div>
+      ${d.ext ? `<div class="ext">${esc(d.ext)}</div>` : ''}
+      <span class="tag ${tag}">${d.cat}</span>
+    </div>`;
+}
+
+function esc(s) { return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function setFilter(cat) { activeFilter = cat; render(); }
+
+function togglePin(id) {
+  revealedPins.has(id) ? revealedPins.delete(id) : revealedPins.add(id);
+  render();
+}
+
+function copyNum(el, num) {
+  navigator.clipboard.writeText(num).catch(()=>{});
+  const orig = el.textContent;
+  el.textContent = '✓ Copiado';
+  setTimeout(() => { el.textContent = orig; }, 1200);
+}
+
+function openModal(id) {
+  editingId = id || null;
+  document.getElementById('modal-title').textContent = id ? 'Editar contacto' : 'Nuevo contacto';
+  document.getElementById('edit-id').value = id || '';
+  if (id) {
+    const d = DATA.find(x => x.id === id);
+    document.getElementById('f-name').value = d.name;
+    document.getElementById('f-role').value = d.role;
+    document.getElementById('f-number').value = d.number;
+    document.getElementById('f-ext').value = d.ext;
+    document.getElementById('f-cat').value = d.cat;
+    document.getElementById('f-type').value = d.type;
+  } else {
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-role').value = '';
+    document.getElementById('f-number').value = '';
+    document.getElementById('f-ext').value = '';
+    document.getElementById('f-cat').value = 'Oficina';
+    document.getElementById('f-type').value = 'fijo';
+  }
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('f-name').focus();
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function saveContact() {
+  const name = document.getElementById('f-name').value.trim();
+  const number = document.getElementById('f-number').value.trim();
+  if (!name || !number) { alert('Nombre y número son obligatorios.'); return; }
+  const d = {
+    id: editingId || nextId++,
+    name, number,
+    role: document.getElementById('f-role').value.trim(),
+    ext:  document.getElementById('f-ext').value.trim(),
+    cat:  document.getElementById('f-cat').value,
+    type: document.getElementById('f-type').value,
+  };
+  if (editingId) {
+    const idx = DATA.findIndex(x => x.id === editingId);
+    DATA[idx] = d;
+  } else {
+    DATA.push(d);
+  }
+  save(); closeModal(); render();
+}
+
+function editContact(id) { openModal(id); }
+
+function deleteContact(id) {
+  if (!confirm('¿Eliminar este contacto?')) return;
+  DATA = DATA.filter(d => d.id !== id);
+  save(); render();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'listin_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const fr = new FileReader();
+    fr.onload = ev => {
+      try {
+        const arr = JSON.parse(ev.target.result);
+        if (!Array.isArray(arr)) throw new Error();
+        DATA = arr;
+        nextId = Math.max(...DATA.map(d=>d.id)) + 1;
+        save(); render();
+        alert('Importado correctamente: ' + arr.length + ' contactos.');
+      } catch { alert('Archivo no válido.'); }
+    };
+    fr.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// Init
+document.getElementById('update-date').textContent = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+render();
+</script>
+</body>
+</html>
