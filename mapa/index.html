@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano Interactivo — Camper Park Roquetas</title>
+<script src="/assets/config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="/assets/firestore-db.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF8EE; --surface:#FFFFFF; --surface-alt:#F7EEDE;
+    --text:#2A2420; --text-sec:#6B5640; --text-ter:#9A876E;
+    --border:#E5D5BB; --gold:#B88848; --gold-dark:#8F6930;
+    --free:#3FA966; --free-dark:#2C7E47;
+    --occ:#D64545;  --occ-dark:#AA2E2E;
+    --res:#EE9A2E;  --res-dark:#B56C10;
+    --mnt:#8593A0;  --mnt-dark:#5A6872;
+    --tra:#8668C7;  --tra-dark:#5E48A8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow-x:hidden;}
+
+  /* ── Header ─────────────────────────────────────────── */
+  .header{background:#FFFFFF;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .header-left{display:flex;align-items:center;gap:12px;min-width:0;}
+  .header-logo{width:38px;height:38px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-dark) 100%);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:14px;color:#FFF8EE;letter-spacing:-.5px;flex-shrink:0;}
+  .header h1{font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .header h1 span{font-weight:400;color:var(--text-ter);margin-left:6px;font-size:12px;}
+  .header-stats{display:flex;gap:18px;align-items:center;}
+  .stat-box{text-align:center;line-height:1;}
+  .stat-box .num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--text);}
+  .stat-box .num.ok{color:var(--free-dark);}
+  .stat-box .num.busy{color:var(--occ-dark);}
+  .stat-box .num.res{color:var(--res-dark);}
+  .stat-box .lbl{font-size:10px;color:var(--text-ter);text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600;}
+
+  /* ── Filter bar ─────────────────────────────────────── */
+  .filter-bar{background:var(--surface-alt);border-bottom:1px solid var(--border);padding:8px 18px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .filter-lbl{font-size:11px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-right:6px;}
+  .fc{padding:5px 12px;border-radius:18px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#FFF;color:var(--text-sec);transition:all .18s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px;}
+  .fc:hover{border-color:var(--gold);color:var(--gold-dark);}
+  .fc.on{background:var(--gold);border-color:var(--gold);color:#FFF8EE;}
+  .fc .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .fc[data-f="libre"] .dot{background:var(--free);}
+  .fc[data-f="ocupada"] .dot{background:var(--occ);}
+  .fc[data-f="reservada"] .dot{background:var(--res);}
+  .fc[data-f="mant"] .dot{background:var(--mnt);}
+  .fc .cnt{color:inherit;opacity:.7;font-weight:500;}
+
+  /* ── Map area ─────────────────────────────────────── */
+  .map-container{flex:1;padding:12px;overflow:auto;background:var(--bg);display:flex;justify-content:center;align-items:flex-start;}
+  .map-wrapper{position:relative;width:100%;max-width:1400px;aspect-ratio:2400/1371;background:#FFF;border-radius:12px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.1);border:1px solid var(--border);}
+  .map-wrapper img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none;}
+  .map-wrapper svg.overlay{position:absolute;inset:0;width:100%;height:100%;}
+  .parcela{cursor:pointer;pointer-events:auto;}
+  .parcela .pbg{fill:rgba(255,255,255,0);stroke-width:0;transition:fill .15s, stroke-width .15s;}
+  .parcela .pborder{fill:none;stroke-width:0;transition:stroke-width .15s, stroke .15s;}
+  .parcela .pdot{opacity:1;transition:opacity .15s, r .15s;}
+  .parcela:hover .pbg{fill:rgba(255,255,255,.25);}
+  .parcela:hover .pborder{stroke-width:4;}
+  .parcela:hover .pdot{r:14;}
+
+  /* Status → color del borde y dot */
+  .parcela-libre    .pborder{stroke:var(--free);} .parcela-libre    .pdot{fill:var(--free);}
+  .parcela-ocupada  .pborder{stroke:var(--occ);}  .parcela-ocupada  .pdot{fill:var(--occ);}
+  .parcela-reservada.pborder{stroke:var(--res);}  .parcela-reservada.pdot{fill:var(--res);}
+  .parcela-mant     .pborder{stroke:var(--mnt);}  .parcela-mant     .pdot{fill:var(--mnt);}
+  .parcela-transit  .pborder{stroke:var(--tra);}  .parcela-transit  .pdot{fill:var(--tra);}
+
+  /* Filtered-out */
+  .parcela.dim{opacity:.15;pointer-events:none;}
+
+  /* ── SELECT MODE (embebido en modal Mover/Ampliar) ──────────────── */
+  body.select-mode .header,
+  body.select-mode .filter-bar{display:none;}
+  body.select-mode .map-container{padding:0;}
+  body.select-mode .map-wrapper{border-radius:0;box-shadow:none;border:none;max-width:none;}
+  .parcela.sel-available .pbg{fill:rgba(63,169,102,.22);stroke:var(--free);stroke-width:3;}
+  .parcela.sel-available .pborder{stroke:var(--free);stroke-width:4;}
+  .parcela.sel-available .pdot{animation:selPulse 1.4s ease-in-out infinite;}
+  .parcela.sel-available:hover .pbg{fill:rgba(63,169,102,.45);}
+  .parcela.sel-unavailable{cursor:not-allowed;opacity:.35;}
+  .parcela.sel-unavailable .pdot{animation:none;}
+  .parcela.sel-unavailable:hover .pbg{fill:rgba(255,255,255,0);}
+  .parcela.sel-unavailable:hover .pborder{stroke-width:0;}
+  .parcela.sel-unavailable:hover .pdot{r:6;}
+  .parcela.sel-current .pbg{fill:rgba(184,136,72,.22);}
+  .parcela.sel-current .pborder{stroke:var(--gold);stroke-width:5;stroke-dasharray:8 4;}
+  .parcela.sel-current .pdot{fill:var(--gold);}
+  .parcela.sel-chosen .pbg{fill:rgba(63,169,102,.55);}
+  .parcela.sel-chosen .pborder{stroke:var(--free-dark);stroke-width:6;}
+  .parcela.sel-chosen .pdot{r:14;fill:var(--free-dark);animation:none;}
+  @keyframes selPulse{0%,100%{r:7;}50%{r:12;}}
+
+  /* Dot numérico indicador */
+  .pdot{stroke:#FFF;stroke-width:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));}
+  .pnum{font-family:'Outfit',sans-serif;font-weight:800;fill:#FFF;text-anchor:middle;dominant-baseline:central;pointer-events:none;font-size:14px;paint-order:stroke;stroke:rgba(0,0,0,.3);stroke-width:.5;}
+
+  /* ── Tooltip ─────────────────────────────────────── */
+  #tooltip{
+    position:fixed;background:var(--surface);border:1px solid var(--gold);border-radius:12px;
+    padding:12px 16px;pointer-events:none;opacity:0;transform:translateY(6px);
+    transition:opacity .18s,transform .18s;z-index:500;min-width:200px;max-width:260px;
+    box-shadow:0 12px 32px rgba(42,36,32,.18);
+  }
+  #tooltip.vis{opacity:1;transform:translateY(0);}
+  .tt-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--gold-dark);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .tt-title .tt-num{background:var(--gold);color:#FFF;padding:2px 10px;border-radius:12px;font-size:14px;min-width:32px;text-align:center;}
+  .tt-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text);padding:2px 0;}
+  .tt-key{color:var(--text-ter);flex-shrink:0;margin-right:10px;}
+  .tt-val{font-weight:600;text-align:right;}
+  .tt-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+  .badge-libre    {background:rgba(63,169,102,.15);color:var(--free-dark);}
+  .badge-ocupada  {background:rgba(214,69,69,.15);color:var(--occ-dark);}
+  .badge-reservada{background:rgba(238,154,46,.15);color:var(--res-dark);}
+  .badge-mant     {background:rgba(133,147,160,.18);color:var(--mnt-dark);}
+  .badge-transit  {background:rgba(134,104,199,.15);color:var(--tra-dark);}
+  .tt-hint{margin-top:8px;font-size:11px;color:var(--text-ter);border-top:1px solid var(--border);padding-top:6px;}
+
+  /* ── Loader ─────────────────────────────────────── */
+  #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,248,238,.95);z-index:10;color:var(--text-sec);font-size:13px;font-weight:500;gap:10px;}
+  #loader.hidden{display:none;}
+  .spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ── Responsive ─────────────────────────────────────── */
+  @media (max-width: 800px){
+    .header h1{font-size:14px;}
+    .header h1 span{display:none;}
+    .header-stats{gap:12px;}
+    .stat-box .num{font-size:18px;}
+    .stat-box .lbl{font-size:9px;}
+    .pnum{font-size:10px;}
+    .parcela .pdot{r:7;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">CP</div>
+    <h1>Plano Interactivo <span>Camper Park Roquetas</span></h1>
+  </div>
+  <div class="header-stats">
+    <div class="stat-box"><div class="num ok" id="sLibres">0</div><div class="lbl">Libres</div></div>
+    <div class="stat-box"><div class="num busy" id="sOcupadas">0</div><div class="lbl">Ocupadas</div></div>
+    <div class="stat-box"><div class="num res" id="sReservadas">0</div><div class="lbl">Reservadas</div></div>
+    <div class="stat-box"><div class="num" id="sTotal">70 + 4</div><div class="lbl">Parcelas / Parking</div></div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <span class="filter-lbl">Filtrar</span>
+  <button class="fc on" data-f="all" onclick="doFilter('all')">Todas <span class="cnt" id="cAll">(74)</span></button>
+  <button class="fc" data-f="libre" onclick="doFilter('libre')"><span class="dot"></span>Libres <span class="cnt" id="cLibre"></span></button>
+  <button class="fc" data-f="ocupada" onclick="doFilter('ocupada')"><span class="dot"></span>Ocupadas <span class="cnt" id="cOcupada"></span></button>
+  <button class="fc" data-f="reservada" onclick="doFilter('reservada')"><span class="dot"></span>Reservadas <span class="cnt" id="cReservada"></span></button>
+  <button class="fc" data-f="mant" onclick="doFilter('mant')"><span class="dot"></span>Mantenim. <span class="cnt" id="cMant"></span></button>
+</div>
+
+<!-- Map -->
+<div class="map-container">
+  <div class="map-wrapper" id="mapWrap">
+    <img class="bg" src="plano-camperpark.jpg" alt="Plano Camper Park Roquetas" id="bgImg">
+    <svg class="overlay" id="overlay" viewBox="0 0 4800 2742" preserveAspectRatio="none"></svg>
+    <div id="loader"><div class="spin"></div><span>Cargando plano…</span></div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────
+var IMG_W = 4800, IMG_H = 2742;
+var COORDS = null;   // loaded from parcelas-coords.json
+var DATA = {};       // DATA[n] = {status, guest, electricity, water}  (parcelas 1-70)
+var PDATA = {};      // PDATA[code] = {status, guest}  (parkings P1..P4)
+var tipEl = document.getElementById('tooltip');
+var overlay = document.getElementById('overlay');
+
+// ─── Select mode (embebido desde modal Mover/Ampliar) ────────────────────
+var SELECT_MODE = false;       // true si ?mode=select
+var SELECT_EXCLUDE = null;     // código de parcela actual del huésped (ACTUAL)
+var SELECT_CONFLICTS = {};     // { '23': true } códigos no disponibles en fechas
+var SELECT_CHOSEN = null;      // parcela seleccionada temporalmente
+(function parseSelectParams(){
+  try {
+    var q = new URLSearchParams(window.location.search);
+    if (q.get('mode') === 'select') {
+      SELECT_MODE = true;
+      document.body.classList.add('select-mode');
+      var exc = q.get('exclude');
+      if (exc) SELECT_EXCLUDE = String(exc).toUpperCase();
+      var cf = q.get('conflicts');
+      if (cf) cf.split(',').forEach(function(c){ if(c) SELECT_CONFLICTS[c.toUpperCase()] = true; });
+    }
+  } catch(e) {}
+})();
+
+// ─── Initialize default state for all 70 parcels ─────────────────────────
+for (var i=1; i<=70; i++) DATA[i] = { status:'libre', guest:null, electricity:true, water:false };
+// Parkings por defecto
+['P1','P2','P3','P4'].forEach(function(c){ PDATA[c] = { status:'libre', guest:null }; });
+
+// ─── Load coords JSON ────────────────────────────────────────────────────
+function loadCoords() {
+  return fetch('parcelas-coords.json?v=1')
+    .then(function(r){ return r.json(); })
+    .then(function(j){ COORDS = j; });
+}
+
+// ─── Build SVG overlay from coords ───────────────────────────────────────
+function build() {
+  if (!COORDS) return;
+  // Recalcular usando el viewBox del SVG (4800x2742 originales)
+  var W = COORDS.imagen_w || IMG_W;
+  var H = COORDS.imagen_h || IMG_H;
+  overlay.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  overlay.innerHTML = '';
+  var ns = 'http://www.w3.org/2000/svg';
+
+  Object.keys(COORDS.parcelas).sort(function(a,b){return +a-+b;}).forEach(function(k){
+    var p = COORDS.parcelas[k];
+    var n = p.n;
+    var d = DATA[n] || { status:'libre' };
+    var x = p.x_pct/100 * W;
+    var y = p.y_pct/100 * H;
+    var w = p.w_pct/100 * W;
+    var h = p.h_pct/100 * H;
+    var cx = p.cx_pct/100 * W;
+    var cy = p.cy_pct/100 * H;
+
+    var g = document.createElementNS(ns, 'g');
+    g.setAttribute('class', 'parcela parcela-' + d.status);
+    g.setAttribute('data-num', n);
+    g.setAttribute('data-status', d.status);
+
+    // Fondo invisible click-target (usa el bbox entero de la parcela)
+    var bg = document.createElementNS(ns, 'rect');
+    bg.setAttribute('class', 'pbg');
+    bg.setAttribute('x', x); bg.setAttribute('y', y);
+    bg.setAttribute('width', w); bg.setAttribute('height', h);
+    bg.setAttribute('rx', 8); bg.setAttribute('ry', 8);
+    g.appendChild(bg);
+
+    // Borde sutil color según estado (oculto por defecto, aparece en hover)
+    var border = document.createElementNS(ns, 'rect');
+    border.setAttribute('class', 'pborder');
+    border.setAttribute('x', x); border.setAttribute('y', y);
+    border.setAttribute('width', w); border.setAttribute('height', h);
+    border.setAttribute('rx', 8); border.setAttribute('ry', 8);
+    g.appendChild(border);
+
+    // Dot indicador de estado en esquina superior derecha
+    var dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('class', 'pdot');
+    dot.setAttribute('cx', x + w - 26);
+    dot.setAttribute('cy', y + 26);
+    dot.setAttribute('r', 11);
+    g.appendChild(dot);
+
+    // Eventos
+    g.addEventListener('mouseenter', function(ev){ showTip(n, ev); });
+    g.addEventListener('mouseleave', hideTip);
+    g.addEventListener('mousemove', moveTip);
+    g.addEventListener('click', function(){ handleClick(n); });
+
+    overlay.appendChild(g);
+  });
+
+  // ─── Renderizar parkings ────────────────────────────────────────────────
+  var parkings = COORDS.parkings || {};
+  Object.keys(parkings).forEach(function(code){
+    var p = parkings[code];
+    var d = PDATA[code] || { status:'libre' };
+    var x = p.x_pct/100 * W;
+    var y = p.y_pct/100 * H;
+    var w = p.w_pct/100 * W;
+    var h = p.h_pct/100 * H;
+
+    var g = document.createElementNS(ns, 'g');
+    g.setAttribute('class', 'parcela parking parking-' + code + ' parcela-' + d.status);
+    g.setAttribute('data-code', code);
+    g.setAttribute('data-status', d.status);
+
+    var bg = document.createElementNS(ns, 'rect');
+    bg.setAttribute('class', 'pbg');
+    bg.setAttribute('x', x); bg.setAttribute('y', y);
+    bg.setAttribute('width', w); bg.setAttribute('height', h);
+    bg.setAttribute('rx', 6); bg.setAttribute('ry', 6);
+    g.appendChild(bg);
+
+    var border = document.createElementNS(ns, 'rect');
+    border.setAttribute('class', 'pborder');
+    border.setAttribute('x', x); border.setAttribute('y', y);
+    border.setAttribute('width', w); border.setAttribute('height', h);
+    border.setAttribute('rx', 6); border.setAttribute('ry', 6);
+    g.appendChild(border);
+
+    var dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('class', 'pdot');
+    dot.setAttribute('cx', x + w - 16);
+    dot.setAttribute('cy', y + 16);
+    dot.setAttribute('r', 8);
+    g.appendChild(dot);
+
+    g.addEventListener('mouseenter', (function(c){ return function(ev){ showTipParking(c, ev); }; })(code));
+    g.addEventListener('mouseleave', hideTip);
+    g.addEventListener('mousemove', moveTip);
+    g.addEventListener('click', (function(c){ return function(){ handleClickParking(c); }; })(code));
+
+    overlay.appendChild(g);
+  });
+
+  document.getElementById('loader').classList.add('hidden');
+  updateStats();
+}
+
+// ─── Tooltip ─────────────────────────────────────────────────────────────
+function showTip(n, ev) {
+  var d = DATA[n];
+  var st = d.status;
+  var stLbl = { libre:'Libre', ocupada:'Ocupada', reservada:'Reservada', mant:'Mantenimiento', transit:'Tránsito' }[st] || st;
+  var html = '<div class="tt-title"><span class="tt-num">' + n + '</span> Parcela</div>';
+  html += '<div class="tt-row"><span class="tt-key">Estado</span><span class="tt-val"><span class="tt-badge badge-' + st + '">' + stLbl + '</span></span></div>';
+
+  var g = d.guest;
+  if (g && (st === 'ocupada' || st === 'reservada')) {
+    var fullName = ((g.name||'') + ' ' + (g.surname||'')).trim();
+    if (fullName) html += row('Huésped', '<strong>' + esc(fullName) + '</strong>');
+    if (g.nationality) html += row('Nac.', esc(g.nationality));
+    if (g.vehicleType) html += row('Vehículo', '<span style="text-transform:capitalize;">' + esc(g.vehicleType) + '</span>');
+    if (g.plate) html += row('Matrícula', '<span style="font-family:monospace;font-size:11px;">' + esc(g.plate) + '</span>');
+    if (g.dateIn)  html += row('Entrada', fmtDate(g.dateIn));
+    if (g.dateOut) {
+      html += row('Salida', fmtDate(g.dateOut));
+      var now = new Date(); now.setHours(0,0,0,0);
+      var dout = new Date(g.dateOut);
+      var diffD = Math.round((dout - now) / 86400000);
+      if (diffD >= 0) {
+        var col = diffD <= 1 ? 'var(--occ-dark)' : diffD <= 3 ? 'var(--res-dark)' : 'var(--free-dark)';
+        html += row('Días rest.', '<span style="font-weight:800;color:' + col + ';">' + diffD + ' día' + (diffD!==1?'s':'') + '</span>');
+      } else {
+        html += row('Aviso', '<span style="color:var(--occ-dark);font-weight:700;">⚠️ Estancia vencida</span>');
+      }
+    }
+    if (g.nights) html += row('Noches', g.nights);
+    if (g.adults) html += row('Viajeros', g.adults + ' ad.' + (g.children ? ' + ' + g.children + ' niños':''));
+    html += '<div class="tt-hint">📋 Clic para abrir ficha completa</div>';
+  } else {
+    if (d.electricity !== undefined) html += row('Electricidad', d.electricity ? '⚡ Incluida' : 'No');
+    if (d.water !== undefined) html += row('Agua', d.water ? 'Sí ✓' : 'No');
+  }
+
+  tipEl.innerHTML = html;
+  tipEl.classList.add('vis');
+  moveTip(ev);
+}
+function row(k, v) { return '<div class="tt-row"><span class="tt-key">' + k + '</span><span class="tt-val">' + v + '</span></div>'; }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function fmtDate(s) {
+  if (!s) return '—';
+  var parts = String(s).split('-');
+  return (parts[2]||'?') + '/' + (parts[1]||'?') + '/' + (parts[0]||'?');
+}
+function moveTip(e) {
+  var x = e.clientX + 16, y = e.clientY - 12;
+  var r = tipEl.getBoundingClientRect();
+  if (x + r.width  + 10 > window.innerWidth)  x = e.clientX - r.width  - 14;
+  if (y + r.height + 10 > window.innerHeight) y = e.clientY - r.height - 10;
+  if (y < 8) y = 8;
+  tipEl.style.left = x + 'px';
+  tipEl.style.top = y + 'px';
+}
+function hideTip() { tipEl.classList.remove('vis'); }
+
+// ─── Click handler: abre ficha 360 en app padre ──────────────────────────
+function handleClick(n) {
+  hideTip();
+  var d = DATA[n];
+  if (SELECT_MODE) {
+    var code = String(n);
+    if (SELECT_CONFLICTS[code.toUpperCase()]) return;
+    if (SELECT_EXCLUDE && code.toUpperCase() === SELECT_EXCLUDE) return;
+    if (d.status !== 'libre') return;
+    selectParcela(code);
+    return;
+  }
+  if (!d.guest) return;   // parcelas libres: solo tooltip, sin acción
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'openGuestDetail', guestId: d.guest.id, pitchNum: n }, '*');
+  }
+}
+function handleClickParking(code) {
+  hideTip();
+  var d = PDATA[code];
+  if (SELECT_MODE) {
+    if (!d) return;
+    if (SELECT_CONFLICTS[code.toUpperCase()]) return;
+    if (SELECT_EXCLUDE && code.toUpperCase() === SELECT_EXCLUDE) return;
+    if (d.status !== 'libre') return;
+    selectParcela(code);
+    return;
+  }
+  if (!d || !d.guest) return;
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'openGuestDetail', guestId: d.guest.id, parkingCode: code }, '*');
+  }
+}
+
+// Selección en modo select → actualiza UI y notifica al parent
+function selectParcela(code) {
+  SELECT_CHOSEN = String(code).toUpperCase();
+  refreshParcelas();
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'selectParcela', code: String(code) }, '*');
+  }
+}
+
+// ─── Tooltip parkings ───────────────────────────────────────────────────
+function showTipParking(code, ev) {
+  var d = PDATA[code] || { status:'libre' };
+  var st = d.status;
+  var stLbl = { libre:'Libre', ocupada:'Ocupada', reservada:'Reservada', mant:'Mantenimiento' }[st] || st;
+  var html = '<div class="tt-title"><span class="tt-num">🅿️ ' + code + '</span> Parking</div>';
+  html += '<div class="tt-row"><span class="tt-key">Estado</span><span class="tt-val"><span class="tt-badge badge-' + st + '">' + stLbl + '</span></span></div>';
+  var g = d.guest;
+  if (g && (st === 'ocupada' || st === 'reservada')) {
+    var fullName = ((g.name||'') + ' ' + (g.surname||'')).trim();
+    if (fullName) html += row('Huésped', '<strong>' + esc(fullName) + '</strong>');
+    if (g.plate) html += row('Matrícula', '<span style="font-family:monospace;font-size:11px;">' + esc(g.plate) + '</span>');
+    if (g.vehicleType) html += row('Vehículo', esc(g.vehicleType));
+    if (g.dateIn)  html += row('Entrada', fmtDate(g.dateIn));
+    if (g.dateOut) html += row('Salida',  fmtDate(g.dateOut));
+    html += '<div class="tt-hint">📋 Clic para abrir ficha completa</div>';
+  } else {
+    html += '<div class="tt-hint">Plaza de parking — gestionar desde lista de plazas</div>';
+  }
+  tipEl.innerHTML = html;
+  tipEl.classList.add('vis');
+  moveTip(ev);
+}
+
+// ─── Filter ──────────────────────────────────────────────────────────────
+function doFilter(f) {
+  document.querySelectorAll('.fc').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-f') === f);
+  });
+  document.querySelectorAll('.parcela').forEach(function(g){
+    var st = g.getAttribute('data-status');
+    var match = f === 'all' || st === f;
+    g.classList.toggle('dim', !match);
+  });
+}
+
+// ─── Stats ───────────────────────────────────────────────────────────────
+function updateStats() {
+  var cnt = { libre:0, ocupada:0, reservada:0, mant:0, transit:0 };
+  for (var i=1; i<=70; i++) {
+    var s = DATA[i].status;
+    if (cnt[s] !== undefined) cnt[s]++;
+  }
+  // Parkings también cuentan
+  Object.keys(PDATA).forEach(function(k){
+    var s = PDATA[k].status;
+    if (cnt[s] !== undefined) cnt[s]++;
+  });
+  setNum('sLibres', cnt.libre);
+  setNum('sOcupadas', cnt.ocupada);
+  setNum('sReservadas', cnt.reservada);
+  var setCnt = function(id, v){ var el = document.getElementById(id); if(el) el.textContent = '(' + v + ')'; };
+  setCnt('cLibre', cnt.libre);
+  setCnt('cOcupada', cnt.ocupada);
+  setCnt('cReservada', cnt.reservada);
+  setCnt('cMant', cnt.mant);
+}
+function setNum(id, n) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var cur = parseInt(el.textContent) || 0;
+  if (cur === n) { el.textContent = n; return; }
+  var diff = n - cur, steps = Math.min(Math.abs(diff), 8);
+  if (steps === 0) { el.textContent = n; return; }
+  var s = 0;
+  var t = setInterval(function(){
+    s++;
+    el.textContent = Math.round(cur + diff * (s/steps));
+    if (s >= steps) { clearInterval(t); el.textContent = n; }
+  }, 35);
+}
+
+// ─── Refresh parcela render (después de cargar datos) ────────────────────
+function refreshParcelas() {
+  document.querySelectorAll('.parcela:not(.parking)').forEach(function(g){
+    var n = parseInt(g.getAttribute('data-num'), 10);
+    var d = DATA[n];
+    if (!d) return;
+    var cls = 'parcela parcela-' + d.status;
+    if (SELECT_MODE) cls += ' ' + selClassForParcela(String(n), d);
+    g.setAttribute('class', cls);
+    g.setAttribute('data-status', d.status);
+  });
+  document.querySelectorAll('.parcela.parking').forEach(function(g){
+    var code = g.getAttribute('data-code');
+    var d = PDATA[code];
+    if (!d) return;
+    var cls = 'parcela parking parking-' + code + ' parcela-' + d.status;
+    if (SELECT_MODE) cls += ' ' + selClassForParcela(code, d);
+    g.setAttribute('class', cls);
+    g.setAttribute('data-status', d.status);
+  });
+  updateStats();
+}
+
+// Devuelve clase de selección según estado en modo select
+function selClassForParcela(code, d) {
+  var cu = String(code).toUpperCase();
+  if (SELECT_CHOSEN && cu === SELECT_CHOSEN) return 'sel-chosen';
+  if (SELECT_EXCLUDE && cu === SELECT_EXCLUDE) return 'sel-current';
+  if (SELECT_CONFLICTS[cu]) return 'sel-unavailable';
+  if (d.status !== 'libre') return 'sel-unavailable';
+  return 'sel-available';
+}
+
+// ─── Load live data from Firestore ──────────────────────────────────────
+function loadData() {
+  if (!window.Checksmart || !window.Checksmart.db) { setTimeout(loadData, 400); return; }
+  var db = window.Checksmart.db;
+  var tid = window.Checksmart.tenantId || (window.Checksmart.config && window.Checksmart.config.tenantId);
+  if (!tid) return;
+
+  db.collection('tenants').doc(tid).collection('guests').get().then(function(snap){
+    var byCode = {};
+    snap.forEach(function(d){
+      var g = d.data();
+      if (g.status === 'checkedIn' || g.status === 'confirmed') {
+        if (g.pitchCode) byCode[g.pitchCode] = Object.assign({ id: d.id }, g);
+      }
+    });
+    return db.collection('tenants').doc(tid).collection('pitches').get().then(function(ps){
+      ps.forEach(function(d){
+        var p = d.data();
+        // Excluir solo tránsito/virtual (no parking — ahora va también en el mapa)
+        if (p.zone === 'TRÁNSITO' || p.size === 'virtual') return;
+        var code = p.code || d.id || '';
+        if (/^ESPERA[-_]/i.test(code)) return;
+
+        var statusMap = { free:'libre', occupied:'ocupada', reserved:'reservada', maintenance:'mant' };
+        var stTrans = statusMap[p.status] || 'libre';
+
+        // ¿Es una plaza de parking?
+        var isParking = (p.zone === 'PARKING' || p.size === 'parking' || /^PK[-_]/i.test(code));
+        if (isParking) {
+          // Mapear PK-01 → P1, PK-02 → P2, etc (solo las 4 primeras visibles en el plano)
+          var pkNum = parseInt(code.replace(/\D/g, ''), 10);
+          if (pkNum >= 1 && pkNum <= 4) {
+            var pcode = 'P' + pkNum;
+            var pd = PDATA[pcode];
+            if (pd) {
+              pd.status = stTrans;
+              var g = byCode[code] || byCode[pcode];
+              if (g) {
+                pd.guest = g;
+                if (g.status === 'checkedIn' && pd.status !== 'mant') pd.status = 'ocupada';
+                else if (g.status === 'confirmed' && pd.status !== 'mant') pd.status = 'reservada';
+              }
+            }
+          }
+          return;   // no procesar como parcela
+        }
+
+        // Plaza regular (parcela 1-70)
+        var num = parseInt(code.replace(/\D/g, ''), 10);
+        if (num >= 1 && num <= 70) {
+          var pd2 = DATA[num];
+          if (pd2) {
+            pd2.status = stTrans;
+            if (p.electricity !== undefined) pd2.electricity = !!p.electricity;
+            if (p.water !== undefined) pd2.water = !!p.water;
+            var g = byCode[p.code] || byCode[String(num)];
+            if (g) {
+              pd2.guest = g;
+              if (g.status === 'checkedIn' && pd2.status !== 'mant') pd2.status = 'ocupada';
+              else if (g.status === 'confirmed' && pd2.status !== 'mant') pd2.status = 'reservada';
+            }
+          }
+        }
+      });
+      refreshParcelas();
+    });
+  }).catch(function(err){
+    console.warn('[MAPA] Error Firestore:', err);
+    refreshParcelas();
+  });
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────
+loadCoords().then(function(){
+  build();
+  // Lanzar carga de datos en cuanto Firestore esté listo
+  window.addEventListener('cs:db-ready', loadData);
+  if (window.Checksmart && window.Checksmart.db) loadData();
+  // En select mode, avisar al parent que el mapa ya carga
+  if (SELECT_MODE && window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'mapaReady', mode: 'select' }, '*');
+  }
+});
+
+// Permitir al parent actualizar conflictos/exclusión dinámicamente
+window.addEventListener('message', function(ev){
+  var m = ev && ev.data;
+  if (!m || typeof m !== 'object') return;
+  if (m.type === 'setSelectParams') {
+    if (m.exclude !== undefined) SELECT_EXCLUDE = m.exclude ? String(m.exclude).toUpperCase() : null;
+    if (Array.isArray(m.conflicts)) {
+      SELECT_CONFLICTS = {};
+      m.conflicts.forEach(function(c){ if(c) SELECT_CONFLICTS[String(c).toUpperCase()] = true; });
+    }
+    if (m.reset) SELECT_CHOSEN = null;
+    refreshParcelas();
+  } else if (m.type === 'clearSelectChoice') {
+    SELECT_CHOSEN = null;
+    refreshParcelas();
+  }
+});
+</script>
+</body>
+</html>
