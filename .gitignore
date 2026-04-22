@@ -6,5 +6,31 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Service accounts — nunca al repo
 service-account.json
 *-service-account.json
+service-account-*.json
+
+# Migración
+functions/migration/backup/
+functions/migration/service-account-*.json
+
+# Scripts locales con credenciales (PowerNet, Redsys, etc.)
+[0-9]-*.js
+[0-9][0-9]-*.js
+
+# Batch files de desarrollo (solo se ejecutan localmente en Windows)
+*.bat
+
+# Artefactos de FUSE / mount
+.fuse_hidden*
+
+# Basura residual de heredocs rotos
+console.error(*
+{
+Parte
+Selecciona
+"Generar borrador"
+
+# Seed de Redsys — contiene sandbox keys pero ya no se usa
+functions/seed-redsys.js

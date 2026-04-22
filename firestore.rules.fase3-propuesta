@@ -1,0 +1,104 @@
+// ═════════════════════════════════════════════════════════════════════════════
+// FIRESTORE RULES — Fase 3 (PROPUESTA, aún no desplegada)
+//
+// Objetivo: cerrar el acceso anónimo a `tenants/{tid}/{document=**}` que hoy
+// permite a cualquier usuario con auth (incluso anónimo) leer/escribir en
+// cualquier tenant conocido solo con el tenantId.
+//
+// Bloqueantes antes de poder desplegar esto en producción:
+//
+//  1. BOOKING ENGINE — confirmación post-Redsys (booking/index.html:670/706)
+//     Actualmente el browser ejecuta:
+//       db.collection('tenants').doc(tid).collection('guests')
+//         .where('redsysOrder','==',order).limit(1).get()
+//     con el usuario anónimo. Con Fase 3 esto dejará de funcionar.
+//     → Mover a Cloud Function `confirmBookingByRedsysOrder(tenantId, order)`
+//       que verifica la firma Redsys del redirect y devuelve los datos
+//       de la reserva al browser.
+//
+//  2. BOOKING ENGINE — cálculo de disponibilidad
+//     Si el motor de reservas lee `guests` para calcular disponibilidad por
+//     fecha (verificar en booking/index.html), moverlo a Cloud Function
+//     `getAvailability(tenantId, dateIn, dateOut)` que devuelva solo nº de
+//     parcelas libres — sin PII.
+//
+//  3. BOOKING ENGINE — precios y parcelas
+//     `config/prices` y `pitches` SÍ se pueden mantener como read público
+//     (ver reglas específicas abajo). No contienen PII.
+//
+//  4. MIGRACIÓN DE USUARIOS EXISTENTES
+//     assignTenantClaim ya está desplegada y se llama en login. Verificar
+//     que TODOS los usuarios activos tienen claim asignado antes de migrar.
+//     Los usuarios anónimos (booking engine) NO tendrán claim y perderán
+//     el acceso — es el comportamiento deseado tras implementar 1 y 2.
+//
+// Estado: 2026-04-22 — Propuesta. NO desplegar hasta completar 1, 2 y 3.
+// ═════════════════════════════════════════════════════════════════════════════
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function hasTenantClaim(tenantId) {
+      return isAuth()
+          && request.auth.token.get('tenantId', null) == tenantId;
+    }
+
+    function isSuperAdmin() {
+      return isAuth()
+          && request.auth.token.get('role', null) == 'superadmin';
+    }
+
+    function validTenantId(tenantId) {
+      return tenantId.matches('[a-z0-9\\-]{2,50}');
+    }
+
+    // ─── Datos de cada tenant ──────────────────────────────────────────────
+    // Regla general: solo admin del tenant o superadmin.
+    match /tenants/{tenantId}/{document=**} {
+      allow read, write: if validTenantId(tenantId)
+                         && (hasTenantClaim(tenantId) || isSuperAdmin());
+    }
+
+    // ─── Excepciones públicas para el booking engine ───────────────────────
+    // Reads necesarios por booking/index.html sin usuario logueado.
+    // No contienen PII.
+
+    match /tenants/{tenantId}/config/prices {
+      allow read: if validTenantId(tenantId);
+    }
+
+    match /tenants/{tenantId}/pitches/{pitchId} {
+      allow read: if validTenantId(tenantId);
+    }
+
+    // Crear reserva públicamente (booking engine)
+    // Requiere campos mínimos; el resto los validan las Cloud Functions.
+    match /tenants/{tenantId}/guests/{guestId} {
+      allow create: if validTenantId(tenantId)
+                 && request.resource.data.keys().hasAll(['name', 'dateIn', 'dateOut']);
+      // Read/update/delete solo admin — los lookups post-Redsys van por CF.
+    }
+
+    // ─── Cuentas SaaS (login portal) ──────────────────────────────────────
+    match /saas_accounts/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // ─── Config privada (credenciales Redsys, PowerNet) ───────────────────
+    // Solo accesible desde Cloud Functions (server-side).
+    match /private_config/{document=**} {
+      allow read, write: if false;
+    }
+
+    // ─── Bloquear todo lo demás ────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
