@@ -34,3 +34,10 @@ Selecciona
 
 # Seed de Redsys — contiene sandbox keys pero ya no se usa
 functions/seed-redsys.js
+
+# Scripts con credenciales en claro (ejecutar solo localmente)
+reset-password-amb.js
+
+# Logs de ejecución puntuales
+run-precios-log.txt
+*-log.txt

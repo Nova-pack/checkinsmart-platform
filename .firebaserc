@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "area-malaga-beach"
+    "default": "checkingsmart-564a0",
+    "prod":    "checkingsmart-564a0",
+    "dev":     "checkingsmart-dev",
+    "legacy":  "area-malaga-beach"
   }
 }

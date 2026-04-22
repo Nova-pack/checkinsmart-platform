@@ -13,6 +13,8 @@
   const CUSTOM_DOMAIN_MAP = {
     'camperparkroquetas.com':     'camperpark-roquetas',
     'www.camperparkroquetas.com': 'camperpark-roquetas',
+    'areamalagabeach.com':        'area-malaga-beach',
+    'www.areamalagabeach.com':    'area-malaga-beach',
   };
 
   function detectTenantId() {
@@ -32,7 +34,7 @@
     // 2. Dominio propio del cliente (camperparkroquetas.com, etc.)
     if (CUSTOM_DOMAIN_MAP[host]) return CUSTOM_DOMAIN_MAP[host];
 
-    // 3. Subdominio: camperpark-roquetas.checksmart.com → "camperpark-roquetas"
+    // 3. Subdominio: camperpark-roquetas.checkingsmart.com → "camperpark-roquetas"
     const parts = host.split('.');
     if (parts.length >= 3 && !['web', 'firebaseapp'].includes(parts[1])) return parts[0];
 

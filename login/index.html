@@ -106,7 +106,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
 
     <div class="footer">
       ¿Problemas de acceso?
-      <a href="mailto:soporte@checkingsmart.com">Contactar soporte</a>
+      <a href="mailto:checkingsmart.soporte@gmail.com">Contactar soporte</a>
+      <div style="margin-top:10px;font-size:.72rem;color:var(--text-ter);opacity:.75">
+        © 2026 David Jiménez del Castillo — CheckinSmart™ — Todos los derechos reservados<br>
+        Safe Creative nº 2604225360000
+      </div>
     </div>
   </div>
 </div>
@@ -119,19 +123,62 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
 
   var PLATFORM_DOMAIN = 'checkingsmart.com';
 
-  var FIREBASE_CONFIG = {
-    apiKey:            'AIzaSyDP9yWuhGPmHUByb-N7Qynh7Lc1OGZHE7k',
-    authDomain:        'area-malaga-beach.firebaseapp.com',
-    projectId:         'area-malaga-beach',
-    storageBucket:     'area-malaga-beach.firebasestorage.app',
-    messagingSenderId: '559229870217',
-    appId:             '1:559229870217:web:dfa860e653300ef5efa658'
+  // ─── Config Firebase por entorno ──────────────────────────────────────────
+  var FIREBASE_CONFIGS = {
+    prod: {
+      apiKey:            'AIzaSyDI-kBozFUQvR3AKhe3MbVPfuVibd9S56o',
+      authDomain:        'checkingsmart-564a0.firebaseapp.com',
+      projectId:         'checkingsmart-564a0',
+      storageBucket:     'checkingsmart-564a0.firebasestorage.app',
+      messagingSenderId: '424641633126',
+      appId:             '1:424641633126:web:d9db0dbd363364773cc6a7'
+    },
+    dev: {
+      apiKey:            'AIzaSyDWIWspL6esaPOhNzuxcbjUgSzZ_I-6Yp0',
+      authDomain:        'checkingsmart-dev.firebaseapp.com',
+      projectId:         'checkingsmart-dev',
+      storageBucket:     'checkingsmart-dev.firebasestorage.app',
+      messagingSenderId: '1014452832497',
+      appId:             '1:1014452832497:web:07197b232f544ea90cc150'
+    },
+    legacy: {
+      apiKey:            'AIzaSyDP9yWuhGPmHUByb-N7Qynh7Lc1OGZHE7k',
+      authDomain:        'area-malaga-beach.firebaseapp.com',
+      projectId:         'area-malaga-beach',
+      storageBucket:     'area-malaga-beach.firebasestorage.app',
+      messagingSenderId: '559229870217',
+      appId:             '1:559229870217:web:dfa860e653300ef5efa658'
+    }
   };
+
+  function detectEnv(){
+    try {
+      var p = new URLSearchParams(window.location.search).get('env');
+      if (p && FIREBASE_CONFIGS[p]) {
+        try { localStorage.setItem('cs_env', p); } catch(e) {}
+        return p;
+      }
+    } catch(e) {}
+    try {
+      var saved = localStorage.getItem('cs_env');
+      if (saved && FIREBASE_CONFIGS[saved]) return saved;
+    } catch(e) {}
+    var h = (window.location.hostname || '').toLowerCase();
+    if (h.indexOf('checkingsmart-dev') !== -1 || h.indexOf('-dev.') !== -1) return 'dev';
+    if (h.indexOf('area-malaga-beach') !== -1) return 'legacy';
+    return 'prod';
+  }
+
+  var CS_ENV          = detectEnv();
+  var FIREBASE_CONFIG = FIREBASE_CONFIGS[CS_ENV];
+  var CS_PROJECT_ID   = FIREBASE_CONFIG.projectId;
+  var CS_FN_BASE      = 'https://europe-west1-' + CS_PROJECT_ID + '.cloudfunctions.net';
 
   // Mapa email → tenant (añadir aquí cada nuevo cliente)
   var EMAIL_MAP = {
-    'info@areamalagabeach.com':     { tenantId: 'demo',               nombre: 'Area Málaga Beach' },
-    'camperparkroquetas@gmail.com': { tenantId: 'camperpark-roquetas', nombre: 'Camper Park Roquetas' }
+    'info@areamalagabeach.com':      { tenantId: 'area-malaga-beach',  nombre: 'Área Málaga Beach' },
+    'areamalagabeach@gmail.com':     { tenantId: 'area-malaga-beach',  nombre: 'Área Málaga Beach' },
+    'camperparkroquetas@gmail.com':  { tenantId: 'camperpark-roquetas', nombre: 'Camper Park Roquetas' }
   };
 
   firebase.initializeApp(FIREBASE_CONFIG);
@@ -176,10 +223,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
     btn.innerHTML = '<span class="spinner"></span>Verificando...';
 
     auth.signInWithEmailAndPassword(email, pass)
-      .then(function(){
+      .then(function(userCredential){
         var tenant = EMAIL_MAP[email];
         if(!tenant){
-          // Email no registrado en el mapa → buscar por prefijo de dominio como fallback
           var domain = email.split('@')[1] || '';
           for(var k in EMAIL_MAP){
             if(k.split('@')[1] === domain){ tenant = EMAIL_MAP[k]; break; }
@@ -190,6 +236,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
           showError('Cuenta sin área asignada. Contacta con soporte.');
           return;
         }
+        // ── Fase 3: asignar custom claim de tenant en servidor ──────────────
+        // La sesión Firebase se mantiene viva — firestore-db.js la usará en /app/
+        // para tener request.auth != null en las reglas de Firestore.
+        var user = userCredential.user;
+        var fnUrl = CS_FN_BASE + '/assignTenantClaim';
+        user.getIdToken().then(function(token) {
+          fetch(fnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ tenantId: tenant.tenantId })
+          }).catch(function(){
+            // Si la función no existe aún, no bloquear el login
+          });
+        }).catch(function(){});
+
         redirect(tenant.tenantId, tenant.nombre);
       })
       .catch(function(err){
@@ -217,9 +278,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
   inpEmail.addEventListener('keydown', function(e){ if(e.key==='Enter') inpPass.focus(); });
   inpPass.addEventListener('keydown',  function(e){ if(e.key==='Enter') doLogin(); });
 
-  // Cerrar siempre la sesión anterior al entrar en el login
-  // Evita que una sesión de un cliente redirija automáticamente a otro cliente
-  auth.signOut();
+  // Limpiamos sesiones anónimas pero conservamos sesiones reales (de otros tenants)
+  // para evitar que un cliente se "cuele" en otro tenant.
+  auth.onAuthStateChanged(function(user) {
+    if (user && user.isAnonymous) auth.signOut();
+  });
 
 })();
 </script>

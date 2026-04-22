@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 112" width="460" height="112" role="img" aria-label="Checksmart">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 490 112" width="490" height="112" role="img" aria-label="CheckingSmart">
   <defs>
     <!-- Pin gradient: bright sky → brand blue → deep navy -->
     <linearGradient id="pg" x1="20%" y1="0%" x2="80%" y2="100%">
@@ -79,7 +79,7 @@
         letter-spacing="-0.5">
     <tspan x="121"
            font-weight="200"
-           fill="#1a1a2e">Checkin</tspan><tspan font-weight="800"
+           fill="#1a1a2e">Checking</tspan><tspan font-weight="800"
            fill="#0288d1"
            letter-spacing="-1.2">Smart</tspan>
   </text>

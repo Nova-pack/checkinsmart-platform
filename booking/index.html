@@ -306,33 +306,100 @@ function _csTel(){ return _csConfig().telefono || ''; }
 function _csDominio(){ return _csConfig().dominio || 'checkingsmart.com'; }
 function _csSlogan(){ return _csConfig().slogan || ''; }
 function _csKey(k){ var tid=(_csConfig().tenantId||'cs'); return tid+'_'+k; }
+// ── Verificación de lista negra — invisible al usuario ────────────────────
+function _isBannedDoc(idDoc){
+  if(!idDoc) return false;
+  try{
+    var bans=JSON.parse(localStorage.getItem(_csKey('banned_docs')))||[];
+    var u=String(idDoc).trim().toUpperCase();
+    return bans.some(function(b){return b.idDoc&&String(b.idDoc).trim().toUpperCase()===u;});
+  }catch(e){return false;}
+}
+function _checkBanAndBlock(idDoc, scannedDocs, lang){
+  // Verificar titular
+  if(_isBannedDoc(idDoc)) return true;
+  // Verificar acompañantes escaneados
+  if(scannedDocs&&scannedDocs.length){
+    for(var i=0;i<scannedDocs.length;i++){
+      var d=scannedDocs[i];
+      var docNum=(d.extractedData&&d.extractedData.docNumber)||'';
+      if(docNum&&_isBannedDoc(docNum)) return true;
+    }
+  }
+  return false;
+}
 (function(){
 "use strict";
 var ce=React.createElement,us=React.useState,ue=React.useEffect,um=React.useMemo,ur=React.useRef,uc=React.useCallback;
 
 var T={
 es:{bookYourStay:'Reserva tu Estancia',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Duchas',blackWater:'Aguas Negras',greyWater:'Aguas Grises',freshWater:'Agua Potable',electricity:'Electricidad',wifi:'WiFi',step1:'Fechas',step2:'Vehículo',step3:'Datos e ID',step4:'Pago',step5:'Confirmación',checkIn:'Entrada',checkOut:'Salida',adults:'Adultos',children:'Niños',pets:'Mascotas',selectDates:'Selecciona tus fechas de estancia',selectVehicle:'Selecciona tu tipo de vehículo',selectPitch:'Elige tu parcela en el mapa',motorhome:'Autocaravana',camper:'Camper',caravan:'Caravana',perNight:'/noche',zone:'Zona',free:'Libre',taken:'Ocupada',selected:'Seleccionada',large:'Grande',standard:'Estándar',withElec:'Con electricidad',next:'Siguiente',back:'Atrás',yourData:'Introduce tus datos personales',name:'Nombre',surname:'Apellidos',email:'Email',phone:'Teléfono',nationality:'Nacionalidad',idDoc:'Nº Documento',plate:'Matrícula del Vehículo',notes:'Notas o peticiones',summary:'Resumen',nights:'noches',pitch:'Parcela',vehicle:'Vehículo',guests:'Viajeros',elecSupplement:'Suplemento electricidad',total:'Total',paymentMethod:'Método de Pago',creditCard:'Tarjeta',payOnArrival:'Pagar a la Llegada',cardNumber:'Nº Tarjeta',expiry:'Caducidad',cvv:'CVV',nameOnCard:'Titular',confirmPay:'Confirmar y Pagar',confirmReserve:'Confirmar Reserva',bookingConfirmed:'¡Reserva Confirmada!',bookingCode:'Tu Código de Reserva',showQR:'Muestra este código QR a tu llegada',bookingDetails:'Detalles',printConfirm:'Imprimir',newBooking:'Nueva Reserva',thankYou:'¡Gracias por elegirnos!',emailSent:'Email de confirmación enviado a',adult:'adulto',child:'niño',pet:'mascota',
-scanTitle:'Escanea tu Documento de Identidad',scanDesc:'Usa la cámara de tu dispositivo para escanear tu DNI o pasaporte. Los datos se rellenarán automáticamente.',scanDNI:'DNI / ID Card',scanPassport:'Pasaporte',openCamera:'Abrir Cámara',takePhoto:'Tomar Foto',retake:'Repetir',processing:'Procesando documento con OCR...',scanComplete:'Documento escaneado correctamente',extractedData:'Datos extraídos del documento',docFront:'Frontal del documento',docType:'Tipo de documento',manualEntry:'Rellenar manualmente',orManual:'o rellena los campos manualmente abajo',docScanned:'Documento escaneado',verifyData:'Verifica que los datos extraídos son correctos',adminDocs:'Documentos del huésped (Admin)',downloadDoc:'Descargar',docRegistered:'Documento registrado',allGuests:'Todos los viajeros deben escanear su documento',addGuest:'Añadir viajero',guestDoc:'Documento viajero',scanAnother:'Escanear otro documento',closeCamera:'Cerrar cámara'
+scanTitle:'Escanea tu Documento de Identidad',scanDesc:'Usa la cámara de tu dispositivo para escanear tu DNI o pasaporte. Los datos se rellenarán automáticamente.',scanDNI:'DNI / ID Card',scanPassport:'Pasaporte',openCamera:'Abrir Cámara',takePhoto:'Tomar Foto',retake:'Repetir',processing:'Procesando documento con OCR...',scanComplete:'Documento escaneado correctamente',extractedData:'Datos extraídos del documento',docFront:'Frontal del documento',docType:'Tipo de documento',manualEntry:'Rellenar manualmente',orManual:'o rellena los campos manualmente abajo',docScanned:'Documento escaneado',verifyData:'Verifica que los datos extraídos son correctos',adminDocs:'Documentos del huésped (Admin)',downloadDoc:'Descargar',docRegistered:'Documento registrado',allGuests:'Todos los viajeros deben escanear su documento',addGuest:'Añadir viajero',guestDoc:'Documento viajero',scanAnother:'Escanear otro documento',closeCamera:'Cerrar cámara',optional:'opcional',fieldRequired:'Este campo es obligatorio',fillRequired:'Rellena todos los campos obligatorios (*) para continuar.'
 },
 en:{bookYourStay:'Book Your Stay',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Showers',blackWater:'Black Water',greyWater:'Grey Water',freshWater:'Fresh Water',electricity:'Electricity',wifi:'WiFi',step1:'Dates',step2:'Vehicle',step3:'Details & ID',step4:'Payment',step5:'Confirmation',checkIn:'Check-in',checkOut:'Check-out',adults:'Adults',children:'Children',pets:'Pets',selectDates:'Select your stay dates',selectVehicle:'Select your vehicle type',selectPitch:'Choose your pitch on the map',motorhome:'Motorhome',camper:'Camper',caravan:'Caravan',perNight:'/night',zone:'Zone',free:'Free',taken:'Taken',selected:'Selected',large:'Large',standard:'Standard',withElec:'With electricity',next:'Next',back:'Back',yourData:'Enter your personal details',name:'First Name',surname:'Last Name',email:'Email',phone:'Phone',nationality:'Nationality',idDoc:'ID / Passport No.',plate:'License Plate',notes:'Special requests',summary:'Summary',nights:'nights',pitch:'Pitch',vehicle:'Vehicle',guests:'Guests',elecSupplement:'Electricity supplement',total:'Total',paymentMethod:'Payment Method',creditCard:'Credit Card',payOnArrival:'Pay on Arrival',cardNumber:'Card Number',expiry:'Expiry',cvv:'CVV',nameOnCard:'Name on Card',confirmPay:'Confirm & Pay',confirmReserve:'Confirm Booking',bookingConfirmed:'Booking Confirmed!',bookingCode:'Your Booking Code',showQR:'Show this QR at arrival',bookingDetails:'Details',printConfirm:'Print',newBooking:'New Booking',thankYou:'¡Gracias por elegirnos!',emailSent:'Confirmation email sent to',adult:'adult',child:'child',pet:'pet',
-scanTitle:'Scan Your ID Document',scanDesc:'Use your device camera to scan your ID card or passport. Data will be filled automatically.',scanDNI:'ID Card / DNI',scanPassport:'Passport',openCamera:'Open Camera',takePhoto:'Take Photo',retake:'Retake',processing:'Processing document with OCR...',scanComplete:'Document scanned successfully',extractedData:'Data extracted from document',docFront:'Document front',docType:'Document type',manualEntry:'Fill manually',orManual:'or fill in the fields manually below',docScanned:'Document scanned',verifyData:'Verify the extracted data is correct',adminDocs:'Guest documents (Admin)',downloadDoc:'Download',docRegistered:'Document registered',allGuests:'All guests must scan their document',addGuest:'Add guest',guestDoc:'Guest document',scanAnother:'Scan another document',closeCamera:'Close camera'
+scanTitle:'Scan Your ID Document',scanDesc:'Use your device camera to scan your ID card or passport. Data will be filled automatically.',scanDNI:'ID Card / DNI',scanPassport:'Passport',openCamera:'Open Camera',takePhoto:'Take Photo',retake:'Retake',processing:'Processing document with OCR...',scanComplete:'Document scanned successfully',extractedData:'Data extracted from document',docFront:'Document front',docType:'Document type',manualEntry:'Fill manually',orManual:'or fill in the fields manually below',docScanned:'Document scanned',verifyData:'Verify the extracted data is correct',adminDocs:'Guest documents (Admin)',downloadDoc:'Download',docRegistered:'Document registered',allGuests:'All guests must scan their document',addGuest:'Add guest',guestDoc:'Guest document',scanAnother:'Scan another document',closeCamera:'Close camera',optional:'optional',fieldRequired:'This field is required',fillRequired:'Please fill in all required fields (*) to continue.'
 },
 de:{bookYourStay:'Stellplatz Buchen',heroDesc:_csSlogan()||'Sistema de gestión para áreas de autocaravanas',showers:'Duschen',blackWater:'Schwarzwasser',greyWater:'Grauwasser',freshWater:'Frischwasser',electricity:'Strom',wifi:'WLAN',step1:'Daten',step2:'Fahrzeug',step3:'Daten & ID',step4:'Zahlung',step5:'Bestätigung',checkIn:'Anreise',checkOut:'Abreise',adults:'Erwachsene',children:'Kinder',pets:'Haustiere',selectDates:'Wählen Sie Ihre Daten',selectVehicle:'Fahrzeugtyp wählen',selectPitch:'Stellplatz wählen',motorhome:'Wohnmobil',camper:'Camper',caravan:'Wohnwagen',perNight:'/Nacht',zone:'Zone',free:'Frei',taken:'Belegt',selected:'Gewählt',large:'Groß',standard:'Standard',withElec:'Mit Strom',next:'Weiter',back:'Zurück',yourData:'Geben Sie Ihre Daten ein',name:'Vorname',surname:'Nachname',email:'E-Mail',phone:'Telefon',nationality:'Nationalität',idDoc:'Ausweis-Nr.',plate:'Kennzeichen',notes:'Besondere Wünsche',summary:'Übersicht',nights:'Nächte',pitch:'Stellplatz',vehicle:'Fahrzeug',guests:'Gäste',elecSupplement:'Stromzuschlag',total:'Gesamt',paymentMethod:'Zahlungsmethode',creditCard:'Kreditkarte',payOnArrival:'Zahlung bei Ankunft',cardNumber:'Kartennummer',expiry:'Gültig bis',cvv:'CVV',nameOnCard:'Karteninhaber',confirmPay:'Bestätigen & Bezahlen',confirmReserve:'Reservierung Bestätigen',bookingConfirmed:'Buchung Bestätigt!',bookingCode:'Ihr Buchungscode',showQR:'Zeigen Sie diesen QR-Code bei Ankunft',bookingDetails:'Details',printConfirm:'Drucken',newBooking:'Neue Buchung',thankYou:'¡Gracias por elegirnos!',emailSent:'Bestätigungsmail gesendet an',adult:'Erwachsener',child:'Kind',pet:'Haustier',
-scanTitle:'Ausweis scannen',scanDesc:'Scannen Sie Ihren Ausweis oder Reisepass mit der Kamera. Daten werden automatisch ausgefüllt.',scanDNI:'Personalausweis',scanPassport:'Reisepass',openCamera:'Kamera öffnen',takePhoto:'Foto aufnehmen',retake:'Wiederholen',processing:'Dokument wird verarbeitet...',scanComplete:'Dokument erfolgreich gescannt',extractedData:'Extrahierte Daten',docFront:'Dokumentvorderseite',docType:'Dokumenttyp',manualEntry:'Manuell ausfüllen',orManual:'oder füllen Sie die Felder manuell aus',docScanned:'Dokument gescannt',verifyData:'Überprüfen Sie die extrahierten Daten',adminDocs:'Gästedokumente (Admin)',downloadDoc:'Herunterladen',docRegistered:'Dokument registriert',allGuests:'Alle Gäste müssen ihr Dokument scannen',addGuest:'Gast hinzufügen',guestDoc:'Gast-Dokument',scanAnother:'Weiteres Dokument scannen',closeCamera:'Kamera schließen'
+scanTitle:'Ausweis scannen',scanDesc:'Scannen Sie Ihren Ausweis oder Reisepass mit der Kamera. Daten werden automatisch ausgefüllt.',scanDNI:'Personalausweis',scanPassport:'Reisepass',openCamera:'Kamera öffnen',takePhoto:'Foto aufnehmen',retake:'Wiederholen',processing:'Dokument wird verarbeitet...',scanComplete:'Dokument erfolgreich gescannt',extractedData:'Extrahierte Daten',docFront:'Dokumentvorderseite',docType:'Dokumenttyp',manualEntry:'Manuell ausfüllen',orManual:'oder füllen Sie die Felder manuell aus',docScanned:'Dokument gescannt',verifyData:'Überprüfen Sie die extrahierten Daten',adminDocs:'Gästedokumente (Admin)',downloadDoc:'Herunterladen',docRegistered:'Dokument registriert',allGuests:'Alle Gäste müssen ihr Dokument scannen',addGuest:'Gast hinzufügen',guestDoc:'Gast-Dokument',scanAnother:'Weiteres Dokument scannen',closeCamera:'Kamera schließen',optional:'optional',fieldRequired:'Dieses Feld ist erforderlich',fillRequired:'Bitte füllen Sie alle Pflichtfelder (*) aus.'
 },
 fr:{bookYourStay:'Réservez Votre Séjour',heroDesc:"Aire premium pour camping-cars, campers et caravanes sur la plage de Málaga.",showers:'Douches',blackWater:'Eaux Noires',greyWater:'Eaux Grises',freshWater:'Eau Potable',electricity:'Électricité',wifi:'WiFi',step1:'Dates',step2:'Véhicule',step3:'Données & ID',step4:'Paiement',step5:'Confirmation',checkIn:'Arrivée',checkOut:'Départ',adults:'Adultes',children:'Enfants',pets:'Animaux',selectDates:'Sélectionnez vos dates',selectVehicle:'Sélectionnez votre véhicule',selectPitch:'Choisissez votre emplacement',motorhome:'Camping-car',camper:'Camper',caravan:'Caravane',perNight:'/nuit',zone:'Zone',free:'Libre',taken:'Occupé',selected:'Sélectionné',large:'Grand',standard:'Standard',withElec:'Avec électricité',next:'Suivant',back:'Retour',yourData:'Entrez vos coordonnées',name:'Prénom',surname:'Nom',email:'Email',phone:'Téléphone',nationality:'Nationalité',idDoc:'N° Pièce d\'Identité',plate:'Immatriculation',notes:'Demandes spéciales',summary:'Résumé',nights:'nuits',pitch:'Emplacement',vehicle:'Véhicule',guests:'Voyageurs',elecSupplement:'Supplément électricité',total:'Total',paymentMethod:'Mode de Paiement',creditCard:'Carte',payOnArrival:"Payer à l'Arrivée",cardNumber:'N° Carte',expiry:'Expiration',cvv:'CVV',nameOnCard:'Titulaire',confirmPay:'Confirmer et Payer',confirmReserve:'Confirmer Réservation',bookingConfirmed:'Réservation Confirmée!',bookingCode:'Code de Réservation',showQR:"Montrez ce QR à votre arrivée",bookingDetails:'Détails',printConfirm:'Imprimer',newBooking:'Nouvelle Réservation',thankYou:"Thank you for choosing us!",emailSent:'Email de confirmation envoyé à',adult:'adulte',child:'enfant',pet:'animal',
-scanTitle:'Scannez votre Pièce d\'Identité',scanDesc:'Utilisez la caméra pour scanner votre carte d\'identité ou passeport.',scanDNI:'Carte d\'Identité',scanPassport:'Passeport',openCamera:'Ouvrir Caméra',takePhoto:'Prendre Photo',retake:'Recommencer',processing:'Traitement du document...',scanComplete:'Document scanné avec succès',extractedData:'Données extraites',docFront:'Recto du document',docType:'Type de document',manualEntry:'Saisie manuelle',orManual:'ou remplissez les champs manuellement',docScanned:'Document scanné',verifyData:'Vérifiez les données extraites',adminDocs:'Documents du voyageur (Admin)',downloadDoc:'Télécharger',docRegistered:'Document enregistré',allGuests:'Tous les voyageurs doivent scanner leur document',addGuest:'Ajouter voyageur',guestDoc:'Document voyageur',scanAnother:'Scanner un autre document',closeCamera:'Fermer caméra'
+scanTitle:'Scannez votre Pièce d\'Identité',scanDesc:'Utilisez la caméra pour scanner votre carte d\'identité ou passeport.',scanDNI:'Carte d\'Identité',scanPassport:'Passeport',openCamera:'Ouvrir Caméra',takePhoto:'Prendre Photo',retake:'Recommencer',processing:'Traitement du document...',scanComplete:'Document scanné avec succès',extractedData:'Données extraites',docFront:'Recto du document',docType:'Type de document',manualEntry:'Saisie manuelle',orManual:'ou remplissez les champs manuellement',docScanned:'Document scanné',verifyData:'Vérifiez les données extraites',adminDocs:'Documents du voyageur (Admin)',downloadDoc:'Télécharger',docRegistered:'Document enregistré',allGuests:'Tous les voyageurs doivent scanner leur document',addGuest:'Ajouter voyageur',guestDoc:'Document voyageur',scanAnother:'Scanner un autre document',closeCamera:'Fermer caméra',optional:'optionnel',fieldRequired:'Ce champ est obligatoire',fillRequired:'Veuillez remplir tous les champs obligatoires (*) pour continuer.'
 }
 };
 
 var NATS=['España','Alemania','Francia','Reino Unido','Países Bajos','Italia','Portugal','Bélgica','Suiza','Dinamarca','Suecia','Noruega','Austria','Polonia','Irlanda','República Checa','Rumanía','Hungría','Finlandia','Grecia','Croacia','Bulgaria','Eslovaquia','Eslovenia','Lituania','Letonia','Estonia','Luxemburgo','Chipre','Malta','Marruecos','Estados Unidos','Canadá','Argentina','Brasil','México','Australia','Japón','China','Rusia','Otro'];
+// SVG icons for vehicle types — clean, recognizable, not emojis
+var VEH_SVG = {
+  motorhome: '<svg viewBox="0 0 80 44" width="100%" height="56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+    '<rect x="2" y="8" width="56" height="26" rx="3" fill="#0288d1"/>'+
+    '<path d="M58 14 L72 14 L76 20 L76 34 L58 34 Z" fill="#01579b"/>'+
+    '<rect x="6" y="12" width="8" height="10" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="18" y="12" width="16" height="10" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="38" y="12" width="16" height="10" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="62" y="18" width="10" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="2" y="26" width="56" height="3" fill="#01579b" opacity=".3"/>'+
+    '<circle cx="16" cy="37" r="5" fill="#263238"/><circle cx="16" cy="37" r="2" fill="#546e7a"/>'+
+    '<circle cx="64" cy="37" r="5" fill="#263238"/><circle cx="64" cy="37" r="2" fill="#546e7a"/>'+
+    '</svg>',
+  camper: '<svg viewBox="0 0 72 44" width="100%" height="56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+    '<path d="M8 18 L8 12 Q8 8 12 8 L52 8 Q56 8 56 12 L56 18 Z" fill="#01579b"/>'+
+    '<rect x="2" y="18" width="64" height="18" rx="3" fill="#0288d1"/>'+
+    '<rect x="12" y="12" width="12" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="28" y="12" width="24" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="6" y="22" width="14" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="24" y="22" width="18" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="46" y="22" width="16" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<circle cx="16" cy="38" r="5" fill="#263238"/><circle cx="16" cy="38" r="2" fill="#546e7a"/>'+
+    '<circle cx="52" cy="38" r="5" fill="#263238"/><circle cx="52" cy="38" r="2" fill="#546e7a"/>'+
+    '</svg>',
+  caravan: '<svg viewBox="0 0 96 44" width="100%" height="56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+    // Car (tow vehicle)
+    '<path d="M4 24 L4 20 Q4 17 7 17 L12 17 L16 13 L22 13 L26 17 L28 17 Q30 17 30 20 L30 30 L4 30 Z" fill="#37474f"/>'+
+    '<rect x="13" y="15" width="8" height="4" rx="1" fill="#b3e5fc"/>'+
+    // Hitch
+    '<rect x="30" y="26" width="8" height="3" fill="#455a64"/>'+
+    // Caravan body
+    '<rect x="38" y="10" width="56" height="22" rx="4" fill="#0288d1"/>'+
+    '<rect x="42" y="14" width="10" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="56" y="14" width="14" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="74" y="14" width="16" height="8" rx="1" fill="#b3e5fc"/>'+
+    '<rect x="38" y="24" width="56" height="3" fill="#01579b" opacity=".3"/>'+
+    // Door
+    '<rect x="82" y="18" width="6" height="10" rx="1" fill="#01579b"/>'+
+    // Wheels
+    '<circle cx="12" cy="33" r="4" fill="#263238"/><circle cx="12" cy="33" r="1.5" fill="#546e7a"/>'+
+    '<circle cx="24" cy="33" r="4" fill="#263238"/><circle cx="24" cy="33" r="1.5" fill="#546e7a"/>'+
+    '<circle cx="66" cy="35" r="5" fill="#263238"/><circle cx="66" cy="35" r="2" fill="#546e7a"/>'+
+    '</svg>'
+};
 var VEHICLES=[
-  {id:'motorhome',icon:'🚐',price:18},
-  {id:'camper',icon:'🚌',price:16},
-  {id:'caravan',icon:'🚛',price:17}
+  {id:'motorhome',icon:VEH_SVG.motorhome,price:19},
+  {id:'camper',icon:VEH_SVG.camper,price:19},
+  {id:'caravan',icon:VEH_SVG.caravan,price:19}
 ];
 var ZONES=['A','B','C','D','E'];
-var ELEC_PRICE=3;
+var ELEC_PRICE=0;
+var _PRICE30_DEFAULT=0; // tarifa estancia larga ≥30 noches (cargada desde Firestore)
 
 function genPitches(){
   var p=[],id=1;
@@ -506,6 +573,7 @@ function App(){
   var _no=us(''),notes=_no[0],setNotes=_no[1];
   var _pm=us('card'),payMethod=_pm[0],setPayMethod=_pm[1];
   var _bc=us(''),bookCode=_bc[0],setBookCode=_bc[1];
+  var _payErr=us(''),payError=_payErr[0],setPayError=_payErr[1];
 
   // Scanner state
   var _camOn=us(false),camOn=_camOn[0],setCamOn=_camOn[1];
@@ -535,6 +603,10 @@ function App(){
   });
   var activeZones=_zns[0],setActiveZones=_zns[1];
   var _ep=us(ELEC_PRICE),elecPriceRt=_ep[0],setElecPriceRt=_ep[1];
+  var _p30=us(0),price30dias=_p30[0],setPrice30dias=_p30[1]; // €/noche para estancias ≥30 noches
+  // Hook movido a App scope: antes estaba dentro de Step3() y al llamarse Step3 condicionalmente
+  // (step===3?Step3():null) el número de hooks cambiaba entre renders → React error #310.
+  var _sub3=us(false),submitted3=_sub3[0],setSubmitted3=_sub3[1];
 
   ue(function(){
     var today=new Date();var tmr=new Date(today);tmr.setDate(tmr.getDate()+1);
@@ -557,8 +629,14 @@ function App(){
         .onSnapshot(function(snap){
           if(!snap.exists) return;
           var p=snap.data();
-          setVehicles(function(prev){return prev.map(function(v){return p[v.id]!=null?Object.assign({},v,{price:p[v.id]}):v;});});
+          // Precio base por tipo de vehículo
+          setVehicles(function(prev){return prev.map(function(v){
+            var pr=p[v.id]!=null?p[v.id]:(p.pernocta!=null?p.pernocta:v.price);
+            return Object.assign({},v,{price:pr});
+          });});
           if(p.electricity!=null) setElecPriceRt(p.electricity);
+          // Tarifa estancia larga (≥30 noches)
+          if(p.pernocta30dias!=null) setPrice30dias(p.pernocta30dias);
         });
     }
     function onDbReady(ev){setupPricesListener(ev.detail&&ev.detail.db);}
@@ -578,14 +656,127 @@ function App(){
   // Cleanup camera on unmount
   ue(function(){return function(){if(streamRef.current){streamRef.current.getTracks().forEach(function(t){t.stop()});}};},[]);
 
+  // ── Retorno desde Redsys: confirmar pago en Firestore ──────────────────────
+  // Cuando Redsys redirige a ?pago=ok&order=XXXX, buscamos la reserva y la confirmamos
+  ue(function(){
+    var params=new URLSearchParams(window.location.search);
+    var pagResult=params.get('pago');
+    if(pagResult==='ko'){
+      // Pago rechazado o cancelado — volver al step 4 con mensaje
+      window.history.replaceState({},'',window.location.pathname);
+      var order=params.get('order')||'';
+      var tid=_csConfig().tenantId||'demo';
+      function doRestore(db){
+        db.collection('tenants').doc(tid).collection('guests')
+          .where('redsysOrder','==',order).limit(1).get()
+          .then(function(snap){
+            if(!snap.empty){
+              var data=snap.docs[0].data();
+              if(data.name) setFname(data.name);
+              if(data.surname) setSname(data.surname);
+              if(data.email) setEmail(data.email);
+              if(data.phone) setPhone(data.phone);
+              if(data.dateIn) setCheckIn(data.dateIn);
+              if(data.dateOut) setCheckOut(data.dateOut);
+              if(data.adults) setAdults(data.adults);
+              if(data.children!=null) setChildren(data.children);
+              if(data.pets!=null) setPets(data.pets);
+              if(data.vehicleType) setVehicleType(data.vehicleType);
+              if(data.bookCode) setBookCode(data.bookCode);
+            }
+          }).catch(function(){});
+      }
+      setPayError('Pago no completado. Puedes intentarlo de nuevo o pagar a la llegada.');
+      var db=window.Checksmart&&window.Checksmart.db;
+      if(db&&tid!=='demo') doRestore(db);
+      else {
+        function onDbKo(ev){window.removeEventListener('cs:db-ready',onDbKo);var d=ev.detail&&ev.detail.db;if(d&&tid!=='demo')doRestore(d);}
+        window.addEventListener('cs:db-ready',onDbKo);
+      }
+      setStep(4);
+      return;
+    }
+    if(pagResult!=='ok') return;
+    var order=params.get('order')||'';
+    if(!order) return;
+    // Limpiar URL para que no se reprocese en recarga
+    window.history.replaceState({},'',window.location.pathname);
+    var tid=_csConfig().tenantId||'demo';
+    function doConfirm(db){
+      db.collection('tenants').doc(tid).collection('guests')
+        .where('redsysOrder','==',order).limit(1).get()
+        .then(function(snap){
+          var data={};
+          if(!snap.empty){
+            var docRef=snap.docs[0];
+            data=docRef.data();
+            docRef.ref.update({paid:true,status:'confirmed',paidAt:new Date()})
+              .then(function(){console.log('[CS] Reserva confirmada:',data.bookCode);})
+              .catch(function(e){console.error('[CS] Error actualizando reserva:',e);});
+          }
+          if(data.bookCode) setBookCode(data.bookCode);
+          if(data.name) setFname(data.name);
+          if(data.surname) setSname(data.surname);
+          if(data.email) setEmail(data.email);
+          if(data.phone) setPhone(data.phone);
+          if(data.dateIn) setCheckIn(data.dateIn);
+          if(data.dateOut) setCheckOut(data.dateOut);
+          if(data.adults) setAdults(data.adults);
+          if(data.children!=null) setChildren(data.children);
+          if(data.pets!=null) setPets(data.pets);
+          if(data.vehicleType) setVehicleType(data.vehicleType);
+          if(data.idDoc) setIdDoc(data.idDoc);
+          if(data.plate) setPlate(data.plate);
+          if(data.notes) setNotes(data.notes);
+          setStep(5);
+        })
+        .catch(function(e){
+          console.error('[CS] Error confirmando reserva por order:',e);
+          setStep(5);
+        });
+    }
+    var db=window.Checksmart&&window.Checksmart.db;
+    if(db&&tid!=='demo'){doConfirm(db);return;}
+    if(tid==='demo'){setStep(5);return;}
+    // Esperar a que Firestore esté listo
+    function onDbReady(ev){
+      window.removeEventListener('cs:db-ready',onDbReady);
+      var d=ev.detail&&ev.detail.db;
+      if(d) doConfirm(d); else setStep(5);
+    }
+    window.addEventListener('cs:db-ready',onDbReady);
+  },[]);
+
   var nights=0;
   if(checkIn&&checkOut){var d1=new Date(checkIn),d2=new Date(checkOut);nights=Math.max(1,Math.round((d2-d1)/86400000))}
+  var minNoches=(_csConfig().condiciones&&_csConfig().condiciones.minimoNoches)||1;
+  var nightsOk=nights>=minNoches;
   var veh=vehicles.find(function(v){return v.id===vehicleType})||vehicles[0];
-  var basePrice=nights*(veh?veh.price:0);
+  var precioNoche=(nights>=30&&price30dias>0)?price30dias:(veh?veh.price:0);
+  var basePrice=nights*precioNoche;
   var elecPrice=selPitch&&selPitch.electricity?nights*elecPriceRt:0;
   var totalPrice=basePrice+elecPrice;
 
-  function genCode(){var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';var c='AMB-';var buf=new Uint32Array(6);crypto.getRandomValues(buf);for(var i=0;i<6;i++) c+=chars[buf[i]%chars.length];return c;}
+  function genCode(){
+    var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    // Prefijo tenant-aware: usa nombreCorto del tenant (ej: 'CPR' para Camper Park Roquetas, 'AMB' para Área Málaga Beach).
+    var prefix=(_csConfig().nombreCorto||'').toString().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)||'RES';
+    var c=prefix+'-';
+    var buf=new Uint32Array(6);crypto.getRandomValues(buf);
+    for(var i=0;i<6;i++) c+=chars[buf[i]%chars.length];
+    return c;
+  }
+  // Detectar dispositivo móvil (iOS / Android) para usar cámara nativa
+  var IS_MOBILE = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+  // Genera un número de pedido 100% numérico compatible con Redsys:
+  // - 8 dígitos de timestamp (segundos) + 4 dígitos random = 12 dígitos
+  // - Siempre empieza por dígitos ✓  Sin letras ni guiones ✓
+  function genRedsysOrder(){
+    var ts=String(Math.floor(Date.now()/1000)).slice(-8);
+    var buf=new Uint32Array(1);crypto.getRandomValues(buf);
+    var rand=String(buf[0]%10000).padStart(4,'0');
+    return ts+rand; // "4543210012345" → slice a 12 chars
+  }
 
   // Camera functions
   var startCamera=uc(function(){
@@ -629,44 +820,58 @@ function App(){
     runOCR(dataUrl);
   },[]);
 
+  function saveDocWithData(imageData, extracted, rawText){
+    var newDoc={
+      id:Date.now(), type:docType, image:imageData,
+      extractedText:rawText||'', extractedData:extracted||{},
+      timestamp:new Date().toISOString(),
+      guestName:(extracted&&extracted.name||fname)+' '+(extracted&&extracted.surname||sname)
+    };
+    setScannedDocs(function(prev){return prev.concat([newDoc])});
+    if(extracted){
+      if(extracted.name&&!fname) setFname(extracted.name);
+      if(extracted.surname&&!sname) setSname(extracted.surname);
+      if(extracted.docNumber) setIdDoc(extracted.docNumber);
+      if(extracted.nationality){var found=NATS.find(function(n){return n===extracted.nationality});if(found) setNat(found);}
+    }
+    setOcrDone(true);
+    setOcrProgress('');
+  }
+
   function runOCR(imageData){
     setOcrProgress(t.processing);
+
+    // Timeout de seguridad: si OCR tarda más de 20s, guardamos la foto sin datos
+    var ocrTimeout=setTimeout(function(){
+      console.warn('[OCR] Timeout — guardando foto sin datos extraídos');
+      saveDocWithData(imageData, {}, '');
+    }, 20000);
+
     if(typeof Tesseract!=='undefined'){
-      Tesseract.recognize(imageData,'eng+spa+fra+deu+ita+por',{
-        logger:function(m){if(m.status==='recognizing text') setOcrProgress(t.processing+' ('+Math.round((m.progress||0)*100)+'%)');}
+      // Solo 'eng': el MRZ de pasaportes y DNI es siempre ASCII — más rápido y fiable en móvil
+      // Rutas CDN explícitas necesarias para Tesseract.js v5 cargado desde CDN externo
+      Tesseract.recognize(imageData, 'eng', {
+        workerPath:  'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+        corePath:    'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd-lstm.wasm.js',
+        langPath:    'https://tessdata.projectnaptha.com/4.0.0_fast',
+        logger: function(m){
+          if(m.status==='recognizing text')
+            setOcrProgress(t.processing+' ('+Math.round((m.progress||0)*100)+'%)');
+        }
       }).then(function(result){
+        clearTimeout(ocrTimeout);
         var text=result.data.text||'';
         var extracted=extractDocData(text,docType);
-        // Auto-fill fields
-        if(extracted.name&&!fname) setFname(extracted.name);
-        if(extracted.surname&&!sname) setSname(extracted.surname);
-        if(extracted.docNumber) setIdDoc(extracted.docNumber);
-        if(extracted.nationality){
-          var found=NATS.find(function(n){return n===extracted.nationality});
-          if(found) setNat(found);
-        }
-        // Save scanned doc
-        var newDoc={
-          id:Date.now(),
-          type:docType,
-          image:imageData,
-          extractedText:text,
-          extractedData:extracted,
-          timestamp:new Date().toISOString(),
-          guestName:(extracted.name||fname)+' '+(extracted.surname||sname)
-        };
-        setScannedDocs(function(prev){return prev.concat([newDoc])});
-        setOcrDone(true);
-        setOcrProgress('');
+        saveDocWithData(imageData, extracted, text);
       }).catch(function(err){
-        setOcrProgress('');
-        setOcrDone(true);
+        clearTimeout(ocrTimeout);
+        console.warn('[OCR] Error Tesseract:', err);
+        saveDocWithData(imageData, {}, '');
       });
     }else{
-      // Tesseract not loaded - just save the image
-      var newDoc={id:Date.now(),type:docType,image:imageData,extractedText:'',extractedData:{},timestamp:new Date().toISOString(),guestName:fname+' '+sname};
-      setScannedDocs(function(prev){return prev.concat([newDoc])});
-      setOcrProgress('');setOcrDone(true);
+      clearTimeout(ocrTimeout);
+      // Tesseract no cargado — guardar foto para revisión manual por recepción
+      saveDocWithData(imageData, {}, '');
     }
   }
 
@@ -729,52 +934,42 @@ function App(){
           ce('input',{type:'date',className:'date-input',value:checkOut,onChange:function(ev){setCheckOut(ev.target.value)}})
         )
       ),
-      nights>0?ce('div',{style:{textAlign:'center',marginBottom:16,fontSize:'.88rem',color:'var(--primary)',fontWeight:600}},nights+' '+t.nights):null,
+      nights>0?ce('div',{style:{textAlign:'center',marginBottom:16,fontSize:'.88rem',fontWeight:600,color:nightsOk?'var(--primary)':'#e53935'}},
+        nightsOk?nights+' '+t.nights:'⚠️ Mínimo '+minNoches+' noches'+(nights>0?' (seleccionadas: '+nights+')':'')):null,
       ce('div',{className:'guest-row'},
         ce(Counter,{label:t.adults,value:adults,min:1,max:6,onChange:setAdults}),
         ce(Counter,{label:t.children,value:children,min:0,max:5,onChange:setChildren}),
         ce(Counter,{label:t.pets,value:pets,min:0,max:3,onChange:setPets})
       ),
       ce('div',{className:'btn-row',style:{justifyContent:'flex-end'}},
-        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(checkIn&&checkOut&&nights>0)setStep(2)}},t.next+' →')
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',
+          style:{opacity:(checkIn&&checkOut&&nightsOk)?1:0.5,cursor:(checkIn&&checkOut&&nightsOk)?'pointer':'not-allowed'},
+          onClick:function(){if(checkIn&&checkOut&&nightsOk)setStep(2)}},t.next+' →')
       )
     );
   }
 
   // STEP 2
   function Step2(){
-    var zonePitches=pitches.filter(function(p){return p.zone===selZone&&p.status==='free'});
     return ce('div',{className:'step-panel'},
       ce('h2',{className:'step-title'},t.step2),
       ce('p',{className:'step-desc'},t.selectVehicle),
       ce('div',{className:'vehicle-grid'},vehicles.map(function(v){
+        var isSvg=typeof v.icon==='string' && v.icon.indexOf('<svg')===0;
         return ce('div',{key:v.id,className:'vehicle-card'+(vehicleType===v.id?' selected':''),onClick:function(){setVehicleType(v.id)}},
-          ce('div',{className:'vehicle-icon'},v.icon),
+          isSvg
+            ?ce('div',{className:'vehicle-icon',dangerouslySetInnerHTML:{__html:v.icon}})
+            :ce('div',{className:'vehicle-icon'},v.icon),
           ce('div',{className:'vehicle-name'},t[v.id]||v.id),
           ce('div',{className:'vehicle-price'},'€'+v.price+t.perNight)
         );
       })),
-      ce('p',{className:'step-desc',style:{marginTop:4}},t.selectPitch),
-      ce('div',{className:'pitch-legend'},
-        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'#e8f5e9',border:'1px solid #c8e6c9'}}),t.free),
-        ce('div',{className:'pitch-legend-item'},ce('div',{className:'pitch-legend-dot',style:{background:'var(--primary)'}}),t.selected)
+      ce('div',{style:{background:'var(--primary-l)',padding:14,borderRadius:'var(--r)',marginTop:16,marginBottom:8,fontSize:'.85rem',border:'1px solid var(--primary)',lineHeight:1.5}},
+        'ℹ️ ',ce('strong',null,'La parcela se asigna a tu llegada'),' según disponibilidad y el tipo de vehículo seleccionado. Recibirás los detalles por email antes de tu estancia.'
       ),
-      ce('div',{className:'zone-tabs'},activeZones.map(function(z){
-        return ce('button',{key:z,className:'zone-tab'+(selZone===z?' active':''),onClick:function(){setSelZone(z)},type:'button'},t.zone+' '+z);
-      })),
-      ce('div',{className:'pitch-map-grid'},zonePitches.map(function(p){
-        var isSel=selPitch&&selPitch.id===p.id;
-        return ce('div',{key:p.id,className:'pm-cell '+(isSel?'selected':'free'),onClick:function(){setSelPitch(p)}},
-          ce('div',{className:'pm-cell-num'},p.code),
-          ce('div',{className:'pm-cell-info'},(p.size==='large'?'L':'S')+(p.electricity?'⚡':''))
-        );
-      })),
-      selPitch?ce('div',{style:{background:'var(--primary-l)',padding:10,borderRadius:'var(--r)',marginBottom:8,fontSize:'.82rem'}},
-        '✓ ',t.pitch,': ',ce('strong',null,selPitch.code),' — ',t.zone,' ',selPitch.zone,' — ',selPitch.size==='large'?t.large:t.standard,selPitch.electricity?' — ⚡ '+t.withElec:''
-      ):null,
       ce('div',{className:'btn-row'},
         ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(1)}},'← '+t.back),
-        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(selPitch)setStep(3)},style:{opacity:selPitch?1:.5}},t.next+' →')
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(vehicleType)setStep(3)},style:{opacity:vehicleType?1:.5}},t.next+' →')
       )
     );
   }
@@ -791,13 +986,32 @@ function App(){
 
   // STEP 3 - Personal Data + Document Scanner
   function Step3(){
-    function inp(label,val,set,type,ph){
+    // Flag que se activa al pulsar "Siguiente" con campos vacíos
+    // para marcar en rojo los que falten (mejor UX que el alert solo)
+    // Hooks viven en App scope (submitted3/setSubmitted3) para evitar React error #310.
+    var submitted=submitted3, setSubmitted=setSubmitted3;
+    // Email válido básico: x@y.z
+    var emailOk = !!(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    // Teléfono válido: al menos 7 dígitos (tolera espacios, +, -)
+    var phoneOk = !!(phone && phone.replace(/[^0-9]/g,'').length >= 7);
+    // Documento: mínimo 5 caracteres alfanuméricos
+    var idOk = !!(idDoc && idDoc.replace(/[^A-Za-z0-9]/g,'').length >= 5);
+    var allOk = !!(fname && sname && emailOk && phoneOk && nat && idOk);
+
+    function inp(label,val,set,type,ph,required,valid){
       var handleChange = function(ev){ set(sanitizeInput(ev.target.value, type||'text')); };
-      return ce('div',{className:'form-group'},ce('label',{className:'form-label'},label),
-        type==='select'?ce('select',{className:'form-input',value:val,onChange:function(ev){set(ev.target.value)}},
+      var showError = !!(required && submitted && !valid);
+      var lbl = required
+        ? ce('label',{className:'form-label'},label,' ',ce('span',{style:{color:'#c62828'}},'*'))
+        : ce('label',{className:'form-label'},label,' ',ce('span',{style:{color:'var(--text-ter)',fontWeight:400,fontSize:'.78em'}},'('+(t.optional||'opcional')+')'));
+      var errStyle = showError ? {borderColor:'#c62828',background:'#fff5f5'} : {};
+      return ce('div',{className:'form-group'},lbl,
+        type==='select'?ce('select',{className:'form-input',style:errStyle,value:val,onChange:function(ev){set(ev.target.value)}},
           ph.map(function(o){return ce('option',{key:o,value:o},o)})):
-        type==='textarea'?ce('textarea',{className:'form-input',rows:2,value:val,placeholder:ph||'',maxLength:FIELD_LIMITS.textarea,onChange:handleChange}):
-        ce('input',{className:'form-input',type:type||'text',value:val,placeholder:ph||'',maxLength:FIELD_LIMITS[type]||FIELD_LIMITS.default,onChange:handleChange}));
+        type==='textarea'?ce('textarea',{className:'form-input',style:errStyle,rows:2,value:val,placeholder:ph||'',maxLength:FIELD_LIMITS.textarea,onChange:handleChange}):
+        ce('input',{className:'form-input',style:errStyle,type:type||'text',value:val,placeholder:ph||'',maxLength:FIELD_LIMITS[type]||FIELD_LIMITS.default,onChange:handleChange}),
+        showError?ce('div',{style:{color:'#c62828',fontSize:'.72rem',marginTop:4}},t.fieldRequired||'Este campo es obligatorio'):null
+      );
     }
 
     // Scanner UI
@@ -834,26 +1048,58 @@ function App(){
         ),
         ocrProgress?ce('div',{className:'ocr-status'},ce('div',{className:'ocr-spinner'}),ocrProgress):null,
         ocrDone?ce('div',{className:'scan-result'},
-          ce('div',{className:'scan-result-title'},'✅ ',t.scanComplete),
-          ce('p',{style:{fontSize:'.78rem',color:'var(--text-sec)',marginBottom:8}},t.verifyData),
-          idDoc?ce('div',{className:'scan-result-item'},ce('span',null,t.idDoc),ce('strong',null,idDoc)):null,
-          fname?ce('div',{className:'scan-result-item'},ce('span',null,t.name),ce('strong',null,fname)):null,
-          sname?ce('div',{className:'scan-result-item'},ce('span',null,t.surname),ce('strong',null,sname)):null,
-          nat?ce('div',{className:'scan-result-item'},ce('span',null,t.nationality),ce('strong',null,nat)):null
+          // Si OCR extrajo datos: mostrarlos. Si no: pedir que rellene manualmente
+          (idDoc||fname||sname)
+            ? ce('div',null,
+                ce('div',{className:'scan-result-title'},'✅ ',t.scanComplete),
+                ce('p',{style:{fontSize:'.78rem',color:'var(--text-sec)',marginBottom:8}},t.verifyData),
+                idDoc?ce('div',{className:'scan-result-item'},ce('span',null,t.idDoc),ce('strong',null,idDoc)):null,
+                fname?ce('div',{className:'scan-result-item'},ce('span',null,t.name),ce('strong',null,fname)):null,
+                sname?ce('div',{className:'scan-result-item'},ce('span',null,t.surname),ce('strong',null,sname)):null,
+                nat?ce('div',{className:'scan-result-item'},ce('span',null,t.nationality),ce('strong',null,nat)):null
+              )
+            : ce('div',null,
+                ce('div',{className:'scan-result-title'},'📸 ',
+                  lang==='de'?'Foto gespeichert':lang==='en'?'Photo saved':lang==='fr'?'Photo enregistrée':'Foto guardada'),
+                ce('p',{style:{fontSize:'.78rem',color:'var(--text-sec)',marginTop:4}},
+                  lang==='de'?'Daten konnten nicht automatisch erkannt werden. Bitte fülle die Felder unten aus.':
+                  lang==='en'?'Data could not be read automatically. Please fill in the fields below.':
+                  lang==='fr'?'Les données n\'ont pas pu être lues automatiquement. Veuillez remplir les champs ci-dessous.':
+                  'Los datos no se pudieron leer automáticamente. Por favor rellena los campos abajo.')
+              )
         ):null,
         ce('div',{style:{display:'flex',gap:8,justifyContent:'center',marginTop:12,flexWrap:'wrap'}},
-          ce('button',{className:'scan-btn outline',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'🔄 '+t.retake),
-          scannedDocs.length<adults+children?ce('button',{className:'scan-btn secondary',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'➕ '+t.scanAnother):null
+          IS_MOBILE
+            ? ce('label',{className:'scan-btn outline',style:{cursor:'pointer'}},
+                '🔄 '+t.retake,
+                ce('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:function(ev){setCapturedImg(null);setOcrDone(false);handleFileCapture(ev);}})
+              )
+            : ce('button',{className:'scan-btn outline',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'🔄 '+t.retake),
+          scannedDocs.length<adults+children
+            ? IS_MOBILE
+              ? ce('label',{className:'scan-btn secondary',style:{cursor:'pointer'}},
+                  '➕ '+t.scanAnother,
+                  ce('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:function(ev){setCapturedImg(null);setOcrDone(false);handleFileCapture(ev);}})
+                )
+              : ce('button',{className:'scan-btn secondary',onClick:function(){setCapturedImg(null);setOcrDone(false);startCamera()},type:'button'},'➕ '+t.scanAnother)
+            : null
         )
       ):null,
 
       // Initial state - buttons to start
+      // En móvil: usar <input file capture> que abre la cámara nativa (evita problemas getUserMedia en iOS/Android)
+      // En desktop: usar getUserMedia para control total de la cámara
       !camOn&&!capturedImg?ce('div',{style:{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}},
-        ce('button',{className:'scan-btn',onClick:startCamera,type:'button'},'📷 '+t.openCamera),
-        ce('label',{className:'scan-btn outline',style:{cursor:'pointer'}},
+        IS_MOBILE
+          ? ce('label',{className:'scan-btn',style:{cursor:'pointer'}},
+              '📷 '+t.openCamera,
+              ce('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:handleFileCapture})
+            )
+          : ce('button',{className:'scan-btn',onClick:startCamera,type:'button'},'📷 '+t.openCamera),
+        !IS_MOBILE?ce('label',{className:'scan-btn outline',style:{cursor:'pointer'}},
           '📁 '+t.manualEntry,
-          ce('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:handleFileCapture})
-        )
+          ce('input',{type:'file',accept:'image/*',style:{display:'none'},onChange:handleFileCapture})
+        ):null
       ):null,
 
       // Already scanned docs list
@@ -882,18 +1128,31 @@ function App(){
 
       // Form fields
       ce('div',{className:'form-grid'},
-        inp(t.name,fname,setFname,'text',''),
-        inp(t.surname,sname,setSname,'text',''),
-        inp(t.email,email,setEmail,'email','email@example.com'),
-        inp(t.phone,phone,setPhone,'tel','+34 600 000 000'),
-        inp(t.nationality,nat,setNat,'select',NATS),
-        inp(t.idDoc,idDoc,setIdDoc,'text',''),
-        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.plate),ce('input',{className:'form-input',value:plate,placeholder:'AB-1234-CD',maxLength:20,onChange:function(ev){setPlate(sanitizeInput(ev.target.value,'text'))}})),
-        ce('div',{className:'form-group full'},ce('label',{className:'form-label'},t.notes),ce('textarea',{className:'form-input',rows:2,value:notes,maxLength:FIELD_LIMITS.textarea,onChange:function(ev){setNotes(sanitizeInput(ev.target.value,'textarea'))}}))
+        inp(t.name,       fname, setFname, 'text',   '',                  true,  !!fname),
+        inp(t.surname,    sname, setSname, 'text',   '',                  true,  !!sname),
+        inp(t.email,      email, setEmail, 'email',  'email@example.com', true,  emailOk),
+        inp(t.phone,      phone, setPhone, 'tel',    '+34 600 000 000',   true,  phoneOk),
+        inp(t.nationality,nat,   setNat,   'select', NATS,                true,  !!nat),
+        inp(t.idDoc,      idDoc, setIdDoc, 'text',   '',                  true,  idOk),
+        ce('div',{className:'form-group full'},
+          ce('label',{className:'form-label'},t.plate,' ',ce('span',{style:{color:'var(--text-ter)',fontWeight:400,fontSize:'.78em'}},'('+(t.optional||'opcional')+')')),
+          ce('input',{className:'form-input',value:plate,placeholder:'AB-1234-CD',maxLength:20,onChange:function(ev){setPlate(sanitizeInput(ev.target.value,'text'))}})),
+        ce('div',{className:'form-group full'},
+          ce('label',{className:'form-label'},t.notes,' ',ce('span',{style:{color:'var(--text-ter)',fontWeight:400,fontSize:'.78em'}},'('+(t.optional||'opcional')+')')),
+          ce('textarea',{className:'form-input',rows:2,value:notes,maxLength:FIELD_LIMITS.textarea,onChange:function(ev){setNotes(sanitizeInput(ev.target.value,'textarea'))}}))
       ),
+      // Banner rojo si se pulsa "Siguiente" con campos vacíos
+      submitted&&!allOk?ce('div',{style:{margin:'12px 0',padding:'10px 14px',background:'#fdecea',border:'1px solid #ef9a9a',borderRadius:6,color:'#c62828',fontSize:'.85rem'}},
+        '⚠️ '+(t.fillRequired||'Rellena todos los campos obligatorios (*) para continuar.')
+      ):null,
       ce('div',{className:'btn-row'},
         ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(2)}},'← '+t.back),
-        ce('button',{className:'btn btn-primary btn-lg',type:'button',onClick:function(){if(fname&&sname&&email)setStep(4)}},t.next+' →')
+        ce('button',{className:'btn btn-primary btn-lg',type:'button',
+          style:{opacity:allOk?1:0.6},
+          onClick:function(){
+            setSubmitted(true);
+            if(allOk) setStep(4);
+          }},t.next+' →')
       )
     );
   }
@@ -916,32 +1175,22 @@ function App(){
     rl.last = now;
     sessionStorage.setItem(RL_KEY, JSON.stringify(rl));
 
+    // Verificación silenciosa lista negra
+    if(_checkBanAndBlock(idDoc, scannedDocs, lang)){
+      alert(lang==='es'?'Lo sentimos, no hay plazas disponibles para las fechas seleccionadas.\n\nPuedes llamarnos directamente para más información.':
+            lang==='de'?'Es tut uns leid, für die gewählten Daten sind keine Stellplätze verfügbar.':
+            lang==='fr'?'Désolé, aucune disponibilité pour les dates sélectionnées.':
+            'Sorry, no availability for the selected dates.\n\nPlease contact us directly for more information.');
+      return;
+    }
+
     setTpvLoading(true);
 
-    // Generar código de reserva antes del pago
-    var bc = genCode();
+    // Generar código de reserva (mostrado al cliente) + número de pedido Redsys (distinto)
+    // Redsys exige: empieza por 4 dígitos, máx 12 chars, sin guiones ni espacios
+    var bc = genCode();           // "CPR-XXXXXX" / "AMB-XXXXXX" — prefijo según nombreCorto del tenant
+    var redsysOrder = genRedsysOrder(); // "17454321ABCD" — para el TPV bancario
     setBookCode(bc);
-
-    // Guardar la reserva en estado "pendiente de pago"
-    try{
-      var db = JSON.parse(localStorage.getItem(_csKey('global_database'))) || { bookings: [] };
-      var gStr = adults+' '+t.adult+(adults>1?'s':'');
-      if(children>0) gStr+=', '+children+' '+t.child+(children>1?'s':'');
-      if(pets>0) gStr+=', '+pets+' '+t.pet+(pets>1?'s':'');
-      db.bookings.push({
-        id: Date.now(), bookCode: bc, name: fname, surname: sname,
-        email: email, phone: phone, nationality: nat, idDoc: idDoc,
-        vehicleType: vehicleType, plate: plate,
-        pitchCode: selPitch?selPitch.code:'', pitchId: selPitch?selPitch.id:'',
-        dateIn: checkIn, dateOut: checkOut,
-        adults: adults, children: children, pets: pets,
-        status: 'pending_payment', priceTotal: totalPrice,
-        paid: false, paidMethod: 'redsys_tpv',
-        nights: nights, notes: notes,
-        createdTs: new Date().toISOString()
-      });
-      localStorage.setItem(_csKey('global_database'), JSON.stringify(db));
-    }catch(e2){console.error(e2)}
 
     // Mapa de idiomas Redsys: 001=ES, 002=EN, 003=CA, 004=FR, 005=DE
     var redsysLangMap = {es:'001',en:'002',fr:'004',de:'005'};
@@ -950,37 +1199,63 @@ function App(){
     // Descripción del pago
     var desc = 'Reserva '+(selPitch?selPitch.code:'')+' '+checkIn+'/'+checkOut+' '+fname+' '+sname;
 
-    // Enviar al backend PHP para firmar y redirigir
-    var payload = JSON.stringify({
-      amount: totalPrice,
-      order: bc,
-      description: desc,
-      email: email,
-      lang: redsysLang
-    });
-
-    // Generar CSRF nonce criptográfico — se almacena en sessionStorage y se incluye
-    // en los parámetros para que el gateway PHP pueda verificarlo antes de procesar.
-    var csrfBuf = new Uint8Array(16);
-    crypto.getRandomValues(csrfBuf);
-    var csrfToken = Array.from(csrfBuf).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+    // MerchantData: solo el bookCode — Redsys exige alfanumérico sin chars especiales
+    // La Cloud Function lo usa para localizar la reserva en Firestore
+    var tid = _csConfig().tenantId || 'demo';
+    var csrfToken = bc;   // "CPR-XXXXXX" / prefijo tenant — sencillo, Redsys lo devuelve intacto
     sessionStorage.setItem('cs_csrf_'+bc, csrfToken);
 
-    // Crear formulario oculto y enviar al gateway PHP
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://europe-west1-area-malaga-beach.cloudfunctions.net/redsysGateway';
-    form.style.display = 'none';
+    var bookingData = {
+      id: Date.now(), bookCode: bc, redsysOrder: redsysOrder, name: fname, surname: sname,
+      email: email, phone: phone, nationality: nat, idDoc: idDoc,
+      vehicleType: vehicleType, plate: plate,
+      pitchCode: selPitch?selPitch.code:'', pitchId: selPitch?selPitch.id:'',
+      dateIn: checkIn, dateOut: checkOut,
+      adults: adults, children: children, pets: pets,
+      status: 'pending_payment', priceTotal: totalPrice,
+      paid: false, paidMethod: 'redsys_tpv',
+      nights: nights, notes: notes,
+      createdTs: new Date().toISOString()
+    };
 
-    var fields = {amount:totalPrice,order:bc,description:desc,email:email,lang:redsysLang,type:'payment',csrf_token:csrfToken};
-    Object.keys(fields).forEach(function(k){
-      var inp = document.createElement('input');
-      inp.type='hidden'; inp.name=k; inp.value=fields[k];
-      form.appendChild(inp);
+    // Guardar en Firestore directamente (garantizado antes de la redirección al banco)
+    // Si falla, fallback a localStorage + sync async
+    var fsDb = window.Checksmart && window.Checksmart.db;
+    var savePromise;
+    if(fsDb && tid !== 'demo'){
+      savePromise = fsDb.collection('tenants').doc(tid).collection('guests')
+        .doc(String(bookingData.id))
+        .set(Object.assign({}, bookingData, {_updatedAt: new Date()}))
+        .catch(function(e){ console.warn('[CS] Firestore directo falló, usando localStorage:', e); });
+    } else {
+      savePromise = Promise.resolve();
+    }
+    // También guardar en localStorage para consistencia con la app
+    try{
+      var lsDb = JSON.parse(localStorage.getItem(_csKey('global_database'))) || { bookings: [] };
+      lsDb.bookings.push(bookingData);
+      localStorage.setItem(_csKey('global_database'), JSON.stringify(lsDb));
+    }catch(e2){console.error(e2)}
+
+    // Esperar a que Firestore confirme la escritura antes de redirigir al banco
+    savePromise.then(function(){
+      // Crear formulario oculto y enviar al gateway Redsys
+      var form = document.createElement('form');
+      form.method = 'POST';
+      var _pid = (window.Checksmart && window.Checksmart.firebaseProjectId) || 'checkingsmart-564a0';
+      form.action = 'https://europe-west1-' + _pid + '.cloudfunctions.net/redsysGateway';
+      form.style.display = 'none';
+
+      var fields = {amount:totalPrice,order:redsysOrder,description:desc,email:email,lang:redsysLang,type:'payment',csrf_token:csrfToken,tenantId:tid};
+      Object.keys(fields).forEach(function(k){
+        var inp = document.createElement('input');
+        inp.type='hidden'; inp.name=k; inp.value=fields[k];
+        form.appendChild(inp);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
     });
-
-    document.body.appendChild(form);
-    form.submit();
   }
 
   function Step4(){
@@ -1003,14 +1278,16 @@ function App(){
 
     return ce('div',{className:'step-panel'},
       ce('h2',{className:'step-title'},t.step4),
+      payError?ce('div',{style:{background:'#fff3cd',border:'1px solid #ffc107',borderRadius:8,padding:'10px 14px',marginBottom:16,color:'#856404',fontSize:'.88rem',display:'flex',alignItems:'center',gap:8}},
+        ce('span',null,'⚠️'),ce('span',null,payError)
+      ):null,
       ce('div',{className:'summary-card'},
         ce('h3',{style:{marginBottom:10,fontSize:'.9rem'}},t.summary),
-        ce('div',{className:'summary-row'},ce('span',null,t.pitch),ce('strong',null,selPitch?selPitch.code:'—')),
-        ce('div',{className:'summary-row'},ce('span',null,t.vehicle),ce('span',null,veh.icon+' '+t[vehicleType])),
+        ce('div',{className:'summary-row'},ce('span',null,t.vehicle),ce('span',null,t[vehicleType])),
         ce('div',{className:'summary-row'},ce('span',null,t.checkIn+' → '+t.checkOut),ce('span',null,checkIn+' → '+checkOut)),
         ce('div',{className:'summary-row'},ce('span',null,t.guests),ce('span',null,guestStr)),
         scannedDocs.length>0?ce('div',{className:'summary-row'},ce('span',null,'📷 '+t.docScanned),ce('span',{className:'doc-badge'},'✓ '+scannedDocs.length+' doc'+(scannedDocs.length>1?'s':''))):null,
-        ce('div',{className:'summary-row'},ce('span',null,nights+' '+t.nights+' × €'+veh.price),ce('span',null,'€'+basePrice)),
+        ce('div',{className:'summary-row'},ce('span',null,nights+' '+t.nights+' × €'+precioNoche),ce('span',null,'€'+basePrice)),
         elecPrice>0?ce('div',{className:'summary-row'},ce('span',null,'⚡ '+t.elecSupplement),ce('span',null,'€'+elecPrice)):null,
         ce('div',{className:'summary-row total'},ce('span',null,t.total+' ('+t.vehicle+')'),ce('span',{className:'summary-total-val'},'€'+totalPrice)),
         // Fianza
@@ -1140,9 +1417,18 @@ function App(){
       rl.last = now;
       sessionStorage.setItem(RL_KEY, JSON.stringify(rl));
 
+      // Verificación silenciosa lista negra
+      if(_checkBanAndBlock(idDoc, scannedDocs, lang)){
+        alert(lang==='es'?'Lo sentimos, no hay plazas disponibles para las fechas seleccionadas.\n\nPuedes llamarnos directamente para más información.':
+              lang==='de'?'Es tut uns leid, für die gewählten Daten sind keine Stellplätze verfügbar.':
+              lang==='fr'?'Désolé, aucune disponibilité pour les dates sélectionnées.':
+              'Sorry, no availability for the selected dates.\n\nPlease contact us directly for more information.');
+        return;
+      }
+
       var bc = genCode();
       setBookCode(bc);
-      
+
       // SAVE TO GLOBAL DATABASE
       try{
         var db = JSON.parse(localStorage.getItem(_csKey('global_database'))) || { bookings: [] };
@@ -1215,8 +1501,8 @@ function App(){
         ce('p',{style:{fontSize:'.8rem',color:'var(--text-sec)',marginBottom:12}},t.showQR),
         ce(QRCode,{code:bookCode,size:140}),
         ce('div',{className:'confirm-details'},
-          ce('div',{className:'confirm-detail-row'},ce('span',null,t.pitch),ce('strong',null,selPitch?selPitch.code:'—')),
-          ce('div',{className:'confirm-detail-row'},ce('span',null,t.vehicle),ce('span',null,veh.icon+' '+t[vehicleType])),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.pitch),ce('strong',{style:{color:'#e65100'}},'Por asignar')),
+          ce('div',{className:'confirm-detail-row'},ce('span',null,t.vehicle),ce('span',null,t[vehicleType])),
           ce('div',{className:'confirm-detail-row'},ce('span',null,t.checkIn),ce('span',null,checkIn)),
           ce('div',{className:'confirm-detail-row'},ce('span',null,t.checkOut),ce('span',null,checkOut)),
           ce('div',{className:'confirm-detail-row'},ce('span',null,t.nights),ce('span',null,nights)),
@@ -1279,20 +1565,22 @@ function App(){
         }))
       )
     ),
-    step<5?ce('div',{className:'hero'},ce('h1',null,t.bookYourStay),ce('p',null,t.heroDesc),ce(ServicesBar)):null,
+    step<5?ce('div',{className:'hero'},ce('h1',null,t.bookYourStay),ce('p',null,t.heroDesc),ServicesBar()):null,
     ce('div',{className:'container'},
       ce('div',{className:'wizard'},
-        ce(WizardSteps),
-        step===1?ce(Step1):null,
-        step===2?ce(Step2):null,
-        step===3?ce(Step3):null,
-        step===4?ce(Step4):null,
-        step===5?ce(Step5):null
+        WizardSteps(),
+        step===1?Step1():null,
+        step===2?Step2():null,
+        step===3?Step3():null,
+        step===4?Step4():null,
+        step===5?Step5():null
       )
     ),
     ce('footer',{className:'footer'},
       ce('div',null,'© 2026 '+_csNombre()),
-      ce('div',{style:{marginTop:4}},_csEmail()+' | '+_csTel())
+      ce('div',{style:{marginTop:4}},_csEmail()+' | '+_csTel()),
+      ce('div',{style:{marginTop:8,fontSize:'.68rem',opacity:.6}},
+        'Plataforma CheckinSmart\u2122 — © 2026 David Jim\u00e9nez del Castillo — Safe Creative n\u00ba 2604225360000')
     )
   );
 }

@@ -2,25 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    // Usuario autenticado (real o anónimo)
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Usuario con claim de tenant válido y coincidente con el path
+    // (se activa en Fase 3 tras assignTenantClaim)
+    function hasTenantClaim(tenantId) {
+      return isAuth()
+          && request.auth.token.get('tenantId', null) == tenantId;
+    }
+
+    // Superadmin (eldarvi30) puede acceder a cualquier tenant
+    function isSuperAdmin() {
+      return isAuth()
+          && request.auth.token.get('role', null) == 'superadmin';
+    }
+
     // ─── Datos de cada tenant ──────────────────────────────────────────────
-    // Acceso por tenantId válido (aislamiento por namespace)
-    // TODO FASE 3: añadir Firebase Auth custom claims para seguridad plena
     match /tenants/{tenantId}/{document=**} {
 
-      // Cualquier lectura/escritura con tenantId válido
-      allow read, write: if tenantId.matches('[a-z0-9\\-]{2,50}');
+      // FASE 2 → FASE 3: Acceso con tenantId válido Y auth (real o anónima)
+      // En Fase 3 reemplazar por: hasTenantClaim(tenantId) || isSuperAdmin()
+      allow read, write: if isAuth()
+                         && tenantId.matches('[a-z0-9\\-]{2,50}');
 
-      // Excepción: crear reservas online sin autenticación (motor de reservas público)
-      // Solo permite create en guests con campos mínimos obligatorios
+      // Motor de reservas público: crear reserva sin auth completa
+      // Solo permite create con campos mínimos obligatorios
       allow create: if tenantId.matches('[a-z0-9\\-]{2,50}')
         && request.resource.data.keys().hasAll(['name', 'dateIn', 'dateOut']);
     }
 
     // ─── Cuentas SaaS (login portal) ──────────────────────────────────────
-    // Solo el propio usuario Firebase Auth puede leer su cuenta
     match /saas_accounts/{userId} {
       allow read, write: if request.auth != null
                          && request.auth.uid == userId;
+    }
+
+    // ─── Config privada (credenciales Redsys, PowerNet) ───────────────────
+    // Solo accesible desde Cloud Functions (server-side), nunca desde browser
+    match /private_config/{document=**} {
+      allow read, write: if false;
     }
 
     // ─── Bloquear todo lo demás ────────────────────────────────────────────

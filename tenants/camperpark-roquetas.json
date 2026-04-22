@@ -1,9 +1,10 @@
 {
   "tenantId": "camperpark-roquetas",
   "nombre": "Camper Park Roquetas",
+  "razonSocial": "Camper Parvip Roquetas de Mar, S.L.",
   "nombreCorto": "CPR",
   "slogan": "Soñando sobre ruedas",
-  "logo": "/tenants/camperpark-roquetas/logo.jpg",
+  "logo": "/tenants/camperpark-roquetas/logo.png",
   "colores": {
     "primario":         "#1A3A8F",
     "primarioDark":     "#0D2568",
@@ -28,13 +29,13 @@
     "heroBg":           "linear-gradient(135deg,#0D2050 0%,#1A3A8F 60%,#2A4FA0 100%)"
   },
   "plan": "essential",
-  "parcelas": 50,
+  "parcelas": 70,
   "zonas": ["A"],
   "dominio": "camperparkroquetas.com",
   "telefono": "+34 722 16 83 07",
   "email": "camperparkroquetas@gmail.com",
-  "direccion": "Carretera la Marina, 9, 04740 Roquetas de Mar, Almería",
-  "cif": "",
+  "direccion": "Ctra. de La Marina, 9, 04740 Roquetas de Mar, Almería",
+  "cif": "B04919304",
   "idiomas": ["es", "en", "nl", "fr", "de"],
   "idiomaDefault": "es",
   "moneda": "EUR",
@@ -47,27 +48,40 @@
     "instagram": "https://www.instagram.com/camperparkroquetas/"
   },
   "precios": {
-    "autocaravana": 0,
-    "camper": 0,
-    "caravana": 0,
-    "electricidad": 4,
-    "ducha": 1,
-    "adultoExtra": 4,
-    "fianza": 0
+    "pernocta":           19,
+    "autocaravana":       19,
+    "camper":             19,
+    "caravana":           19,
+    "furgoneta":          19,
+    "tienda":             19,
+    "pernocta30dias":     17,
+    "electricidadKwh":    4,
+    "ducha":              1,
+    "adultoExtra":        4,
+    "adultoExtraMax":     4,
+    "lavadora":           5,
+    "secadora":           5,
+    "fianza":             0
   },
   "condiciones": {
-    "minimoNoches": 3,
+    "minimoNoches":           1,
+    "estanciaLargaNochesMin": 30,
+    "estanciaLargaPrecio":    17,
+    "electricidadIncluidaKwh": 4,
     "electricidadGratis30dias": true,
+    "nochesGratisElectricidadLarga": true,
     "admiteMascotas": true,
-    "abierto365": true
+    "abierto365": true,
+    "niniosGratis": true,
+    "adultoExtraMax": 4
   },
   "servicios": [
-    "Electricidad 6A y 10A en todas las parcelas (6x12m)",
+    "Electricidad incluida hasta 4 kWh/día",
     "Agua potable",
     "Vaciado de aguas grises (2 puntos)",
     "Vaciado de WC químico (3 puntos)",
     "Duchas con vestuario privado (1€/5min)",
-    "Lavandería (lavadora y secadora 10kg, 4€)",
+    "Lavandería: lavadora 5€ · secadora 5€",
     "WiFi gratuito 365/24",
     "Admite mascotas",
     "Tienda con bebidas y artículos básicos",
@@ -76,5 +90,21 @@
     "Alquiler de bicicletas",
     "Transporte público cercano"
   ],
-  "web": "https://camperparkroquetas.com"
+  "web": "https://camperparkroquetas.com",
+
+  "powernet": {
+    "enabled": true,
+    "baseUrl": "https://app.powernet-camping.com",
+    "parcelMap": {
+      "1":657,"2":658,"3":659,"4":660,"5":653,"6":654,"7":655,"8":656,
+      "9":641,"10":643,"11":642,"12":644,"13":627,"14":628,"15":629,"16":630,
+      "17":617,"18":618,"19":614,"20":615,"21":616,"22":645,"23":646,"24":649,
+      "25":650,"26":631,"27":633,"28":635,"29":636,"30":639,"31":621,"32":619,
+      "33":613,"34":612,"35":609,"36":647,"37":648,"38":651,"39":652,"40":632,
+      "41":634,"42":637,"43":638,"44":640,"45":622,"46":620,"47":611,"48":610,
+      "49":608,"50":587,"51":588,"52":591,"53":592,"54":589,"55":590,"56":595,
+      "57":596,"58":593,"59":594,"60":598,"61":600,"62":597,"63":599,"64":602,
+      "65":601,"66":604,"67":603,"68":605,"69":606,"70":607
+    }
+  }
 }
