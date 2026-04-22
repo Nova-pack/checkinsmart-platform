@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Recepción — CheckingSmart</title>
+<style>
+  /* ── BASE ── */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1a1a2e;background:#f0f2f5;line-height:1.55}
+  a{color:#0066cc;text-decoration:none}
+
+  /* ── LAYOUT ── */
+  .page-wrap{max-width:900px;margin:0 auto;padding:24px 16px}
+
+  /* ── COVER ── */
+  .cover{background:linear-gradient(135deg,#0d2050 0%,#1a3a8f 60%,#2a4fa0 100%);color:#fff;border-radius:16px;padding:40px 36px;margin-bottom:32px;text-align:center}
+  .cover h1{font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+  .cover .sub{font-size:.95rem;opacity:.75;margin-bottom:20px}
+  .cover .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:.78rem;font-weight:600}
+
+  /* ── TOC ── */
+  .toc{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:28px;border:1px solid #e0e4f0}
+  .toc h3{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:12px}
+  .toc ol{padding-left:20px}
+  .toc li{margin-bottom:5px;font-size:.88rem}
+  .toc a{color:#1a3a8f;font-weight:500}
+
+  /* ── SECTIONS ── */
+  .section{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid #e0e4f0;page-break-inside:avoid}
+  .section-title{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8edf8}
+  .section-title .icon{font-size:1.4rem}
+  .section-title h2{font-size:1.05rem;font-weight:700;color:#0d2050}
+  .section-title .num{background:#1a3a8f;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+
+  /* ── STEPS ── */
+  .steps{counter-reset:step}
+  .step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+  .step-num{background:#1a3a8f;color:#fff;border-radius:50%;width:22px;height:22px;min-width:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;margin-top:1px}
+  .step-body{flex:1}
+  .step-body strong{color:#0d2050}
+
+  /* ── ALERTS ── */
+  .alert{border-radius:8px;padding:12px 14px;margin:12px 0;font-size:.83rem}
+  .alert-warn{background:#fff8e1;border-left:4px solid #ffc107;color:#7a5c00}
+  .alert-info{background:#e3f2fd;border-left:4px solid #1976d2;color:#0d47a1}
+  .alert-danger{background:#ffebee;border-left:4px solid #e53935;color:#7f0000}
+  .alert-success{background:#e8f5e9;border-left:4px solid #43a047;color:#1b5e20}
+  .alert-secret{background:#f3e5f5;border-left:4px solid #7b1fa2;color:#4a0072}
+
+  /* ── TABLES ── */
+  table{width:100%;border-collapse:collapse;font-size:.83rem;margin:12px 0}
+  th{background:#eef1fb;color:#0d2050;font-weight:700;padding:7px 10px;text-align:left;border-bottom:2px solid #d0d8f0}
+  td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafbff}
+
+  /* ── COLS ── */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+  /* ── CARDS SMALL ── */
+  .mini-card{background:#f8f9ff;border:1px solid #dde2f5;border-radius:8px;padding:12px 14px}
+  .mini-card h4{font-size:.82rem;font-weight:700;color:#1a3a8f;margin-bottom:5px}
+  .mini-card p{font-size:.78rem;color:#555}
+
+  /* ── SHORTCUT BOX ── */
+  .shortcuts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .sc{background:#1a3a8f;color:#fff;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600}
+  .sc.red{background:#c62828}
+  .sc.green{background:#2e7d32}
+  .sc.purple{background:#6a1b9a}
+  .sc.orange{background:#e65100}
+
+  /* ── TIP ── */
+  .tip{font-size:.78rem;color:#888;font-style:italic;margin-top:6px}
+
+  /* ── FOOTER ── */
+  .guide-footer{text-align:center;padding:20px;font-size:.75rem;color:#aaa;margin-top:12px}
+
+  /* ── PRINT ── */
+  @media print{
+    body{background:#fff;font-size:11px}
+    .page-wrap{max-width:100%;padding:0}
+    .cover{border-radius:0;margin-bottom:20px;padding:28px 20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .section{border-radius:0;margin-bottom:16px;padding:16px;break-inside:avoid}
+    .toc{display:none}
+    .no-print{display:none}
+    a{color:#000}
+    .section-title{border-bottom:1px solid #ccc}
+    .sc{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .alert{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cover{background:#1a3a8f !important}
+  }
+
+  @media(max-width:600px){
+    .two-col,.three-col{grid-template-columns:1fr}
+    .cover h1{font-size:1.5rem}
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- COVER -->
+<div class="cover">
+  <h1>📋 Guía de Recepción</h1>
+  <div class="sub">CheckingSmart · Sistema de Gestión de Áreas</div>
+  <div class="badges">
+    <span class="badge">v1.0 · Abril 2026</span>
+    <span class="badge">🖨️ Imprimible</span>
+    <span class="badge">📱 Digital</span>
+    <span class="badge">🔒 Confidencial</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc no-print">
+  <h3>Índice de contenidos</h3>
+  <ol>
+    <li><a href="#acceso">Acceso al sistema (Login)</a></li>
+    <li><a href="#panel">Panel principal</a></li>
+    <li><a href="#checkin">Check-in de huéspedes</a></li>
+    <li><a href="#cobro">Cobro y facturación</a></li>
+    <li><a href="#checkout">Check-out</a></li>
+    <li><a href="#confirmacion">Correos de confirmación automáticos</a></li>
+    <li><a href="#masivos">Correos masivos (Comunicaciones)</a></li>
+    <li><a href="#motor">Motor de reservas online</a></li>
+    <li><a href="#incidencias">Incidencias frecuentes</a></li>
+    <li><a href="#contacto">Contacto y soporte</a></li>
+  </ol>
+</div>
+
+
+<!-- 1. ACCESO -->
+<div class="section" id="acceso">
+  <div class="section-title">
+    <span class="num">1</span>
+    <span class="icon">🔑</span>
+    <h2>Acceso al sistema</h2>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre el navegador y ve a la URL del panel de tu área<br><span class="tip">Ej: camperpark-roquetas.checkingsmart.com/app/ — guárdala como favorito</span></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Introduce el email del área (lo facilita el administrador)</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Selecciona tu usuario en la pantalla de PINs y escribe tu <strong>PIN de 4 dígitos</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Pulsa <strong>Iniciar turno</strong> — verás la pantalla de bienvenida</div></div>
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>⚠️ Importante:</strong> Nunca compartas tu PIN con otros. Cada acción queda registrada con tu usuario. Al acabar el turno pulsa <strong>Cerrar turno</strong> (arriba a la derecha).
+  </div>
+
+  <table>
+    <tr><th>Rol</th><th>Qué puede hacer</th></tr>
+    <tr><td><strong>Administrador</strong></td><td>Todo: configuración, usuarios, facturas, estadísticas, comunicaciones, copias de seguridad</td></tr>
+    <tr><td><strong>Recepcionista</strong></td><td>Check-in/out, cobros, tienda, reservas, notebook, <strong>comunicaciones</strong></td></tr>
+  </table>
+</div>
+
+
+<!-- 2. PANEL PRINCIPAL -->
+<div class="section" id="panel">
+  <div class="section-title">
+    <span class="num">2</span>
+    <span class="icon">🏠</span>
+    <h2>Panel principal</h2>
+  </div>
+
+  <div class="two-col">
+    <div class="mini-card">
+      <h4>📊 Dashboard</h4>
+      <p>Vista rápida: ocupación, llegadas hoy, salidas hoy, ingresos del día, parcelas libres.</p>
+    </div>
+    <div class="mini-card">
+      <h4>👥 Huéspedes</h4>
+      <p>Lista completa de todas las reservas. Filtra por estado, fecha o busca por nombre/matrícula/DNI.</p>
+    </div>
+    <div class="mini-card">
+      <h4>💰 Caja Diaria</h4>
+      <p>Registro de ingresos y gastos del día. Cierre de caja al finalizar turno.</p>
+    </div>
+    <div class="mini-card">
+      <h4>🏪 Tienda</h4>
+      <p>Venta de productos y servicios (duchas, lavandería, etc.).</p>
+    </div>
+    <div class="mini-card">
+      <h4>📋 Listados</h4>
+      <p>Partes de policía, ocupación, facturas emitidas.</p>
+    </div>
+    <div class="mini-card">
+      <h4>📧 Comunicaciones</h4>
+      <p>Envío masivo de emails a huéspedes seleccionados (solo admin).</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- 3. CHECK-IN -->
+<div class="section" id="checkin">
+  <div class="section-title">
+    <span class="num">3</span>
+    <span class="icon">🚐</span>
+    <h2>Check-in de huéspedes</h2>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <strong style="font-size:.85rem;display:block;margin-bottom:8px">A · Reserva ya existente (online)</strong>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">Busca al huésped por nombre, matrícula o código de reserva</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">Pulsa <strong>Gestionar</strong> → verifica datos (parcela, fechas, vehículo)</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">Pulsa <strong>Check-in</strong> → el estado cambia a 🟢 En el área</div></div>
+      </div>
+    </div>
+    <div>
+      <strong style="font-size:.85rem;display:block;margin-bottom:8px">B · Llegada sin reserva previa</strong>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">Pulsa <strong>+ Nueva Reserva</strong> (botón superior)</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">Rellena: nombre, apellidos, DNI/pasaporte, matrícula, fechas, parcela, tipo de vehículo</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">Guarda → realiza el check-in desde la ficha</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>💡 Escáner DNI:</strong> Dentro de la ficha del huésped, pulsa el icono de cámara 📷 para escanear el documento de identidad y autorellenar los campos automáticamente.
+  </div>
+</div>
+
+
+<!-- 4. COBRO -->
+<div class="section" id="cobro">
+  <div class="section-title">
+    <span class="num">4</span>
+    <span class="icon">🧾</span>
+    <h2>Cobro y facturación</h2>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha del huésped → pestaña <strong>Cobro</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Revisa el importe calculado: alojamiento + extras de tienda</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Selecciona el método de pago: <strong>Efectivo</strong>, <strong>Tarjeta</strong>, <strong>Bizum</strong>, <strong>Transferencia</strong> o <strong>Mixto</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Pulsa <strong>🧾 Emitir Factura</strong> → la factura queda registrada y el huésped aparece como <em>Pagado</em></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Imprime la factura si el cliente la solicita con el botón <strong>🖨️ Imprimir Factura</strong></div></div>
+  </div>
+
+  <table>
+    <tr><th>Método</th><th>Qué registra el sistema</th></tr>
+    <tr><td>💵 Efectivo</td><td>Suma al arqueo de caja del día</td></tr>
+    <tr><td>💳 Tarjeta</td><td>Marcado como cobrado; no conectado a TPV físico</td></tr>
+    <tr><td>📱 Bizum</td><td>Registrado como cobro digital</td></tr>
+    <tr><td>🏦 Transferencia</td><td>Marcado pendiente hasta confirmación</td></tr>
+    <tr><td>🔀 Mixto</td><td>Introduce los importes de tarjeta y efectivo por separado</td></tr>
+  </table>
+
+  <div class="alert alert-warn">
+    <strong>⚠️ Si el pago fue online (motor de reservas):</strong> El huésped ya aparece como <em>Pagado</em> con el tag <span style="background:#e8f5e9;padding:1px 6px;border-radius:4px;font-size:.8rem">💳 Pagado online</span>. No volver a cobrar.
+  </div>
+</div>
+
+
+<!-- 5. CHECK-OUT -->
+<div class="section" id="checkout">
+  <div class="section-title">
+    <span class="num">5</span>
+    <span class="icon">🏁</span>
+    <h2>Check-out</h2>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Busca al huésped → verifica que la factura esté emitida (pestaña Cobro)</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Si hay consumos de tienda pendientes, cóbralos primero</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Pulsa <strong>Check-out</strong> → confirma en el diálogo</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">La parcela queda libre automáticamente en el mapa</div></div>
+  </div>
+
+  <div class="alert alert-info">
+    Si el huésped quiere ampliar su estancia, usa la pestaña <strong>Ampliar</strong> dentro de su ficha antes de hacer el check-out.
+  </div>
+</div>
+
+
+<!-- 6. CORREOS DE CONFIRMACIÓN -->
+<div class="section" id="confirmacion">
+  <div class="section-title">
+    <span class="num">6</span>
+    <span class="icon">📩</span>
+    <h2>Correos de confirmación automáticos</h2>
+  </div>
+
+  <p style="margin-bottom:12px">Cuando un cliente completa una reserva a través del <strong>motor de reservas online</strong>, el sistema envía automáticamente un email de confirmación con:</p>
+
+  <div class="three-col" style="margin-bottom:14px">
+    <div class="mini-card"><h4>📋 Datos de la reserva</h4><p>Nombre, parcela, fechas, tipo de vehículo, número de personas</p></div>
+    <div class="mini-card"><h4>💰 Resumen de pago</h4><p>Importe total, método de pago, estado (pagado / pendiente)</p></div>
+    <div class="mini-card"><h4>🏕️ Información del área</h4><p>Logo, dirección, teléfono y enlace al área</p></div>
+  </div>
+
+  <table>
+    <tr><th>Cuándo se envía</th><th>A quién</th><th>Contenido</th></tr>
+    <tr><td>Al completar la reserva online</td><td>Email del cliente</td><td>Confirmación + resumen completo</td></tr>
+    <tr><td>Tras pago Redsys exitoso</td><td>Email del cliente</td><td>Confirmación de pago + datos reserva</td></tr>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Remitente:</strong> Los emails salen desde <strong>noreply@checkingsmart.com</strong> con el nombre de tu área. El cliente puede responder directamente al email del área.
+  </div>
+</div>
+
+
+<!-- 7. CORREOS MASIVOS -->
+<div class="section" id="masivos">
+  <div class="section-title">
+    <span class="num">7</span>
+    <span class="icon">📧</span>
+    <h2>Correos masivos — Comunicaciones</h2>
+  </div>
+
+  <p style="margin-bottom:12px">Permite enviar un email personalizado a múltiples huéspedes a la vez. Ideal para solicitar pagos pendientes, recordar fechas, o enviar información.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Ve a <strong>Comunicaciones</strong> en el menú lateral</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Filtra los destinatarios:</strong> por fechas de entrada, estado de la reserva (Confirmada, Check-in, Pendiente...)</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Marca los huéspedes a los que quieres escribir (o usa <em>Seleccionar todo</em>)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Escribe el <strong>asunto</strong> del email</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Redacta el <strong>cuerpo del mensaje</strong> usando las variables para personalizar</div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body">Pulsa <strong>Enviar email a N destinatarios</strong></div></div>
+  </div>
+
+  <strong style="font-size:.82rem;display:block;margin:12px 0 6px">Variables disponibles — se sustituyen automáticamente por los datos de cada huésped:</strong>
+  <div class="shortcuts">
+    <span class="sc">&#123;&#123;nombre&#125;&#125;</span>
+    <span class="sc">&#123;&#123;fechaEntrada&#125;&#125;</span>
+    <span class="sc">&#123;&#123;fechaSalida&#125;&#125;</span>
+    <span class="sc">&#123;&#123;parcela&#125;&#125;</span>
+    <span class="sc">&#123;&#123;importe&#125;&#125;</span>
+    <span class="sc">&#123;&#123;codigo&#125;&#125;</span>
+    <span class="sc green">&#123;&#123;linkPago&#125;&#125;</span>
+  </div>
+
+  <div class="alert alert-success">
+    <strong>💡 &#123;&#123;linkPago&#125;&#125;</strong> inserta automáticamente un botón de pago personalizado para cada cliente. Al hacer clic, el cliente accede a su reserva y puede pagar con tarjeta de forma segura. El pago queda reflejado en el panel en tiempo real.
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Consejo:</strong> Haz clic en los botones de variables (arriba del área de texto) para insertarlas en la posición del cursor. Usa el botón <em>👁️ Vista previa</em> para ver cómo quedará el email antes de enviarlo.
+  </div>
+</div>
+
+
+<!-- 8. MOTOR DE RESERVAS -->
+<div class="section" id="motor">
+  <div class="section-title">
+    <span class="num">8</span>
+    <span class="icon">🌐</span>
+    <h2>Motor de reservas online</h2>
+  </div>
+
+  <p style="margin-bottom:12px">El motor de reservas es la página pública donde los clientes pueden hacer y pagar su reserva directamente desde internet, sin llamar ni escribir.</p>
+
+  <strong style="font-size:.82rem;display:block;margin-bottom:8px">Proceso que sigue el cliente:</strong>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Selecciona fechas</strong> y número de personas (mínimo 3 noches)</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Elige parcela</strong> disponible en el plano interactivo</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Introduce sus datos</strong>: nombre, apellidos, documento, matrícula (opcionalmente escanea su DNI con la cámara)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Resumen y confirmación</strong>: ve el desglose de precio antes de pagar</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Pago con tarjeta</strong> a través de Redsys (TPV bancario seguro)</div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body">Recibe el <strong>email de confirmación</strong> automáticamente</div></div>
+  </div>
+
+  <div class="two-col" style="margin-top:12px">
+    <div class="alert alert-success" style="margin:0">
+      <strong>✅ En el panel (recepción):</strong> La reserva aparece automáticamente con estado <em>Pendiente de pago</em> → al confirmar el banco cambia a <em>Confirmada</em> y marcada como pagada online.
+    </div>
+    <div class="alert alert-warn" style="margin:0">
+      <strong>⚠️ Pago online ya efectuado:</strong> No volver a cobrar en recepción. El sistema lo indica claramente con el tag <em>💳 Pagado online</em>.
+    </div>
+  </div>
+</div>
+
+
+<!-- 9. SISTEMA DE SEGURIDAD — 5 CLICS (OCULTO: se revela con 5 clicks sobre el icono del footer) -->
+<div class="section" id="seguridad-5clicks" style="display:none">
+  <div class="section-title">
+    <span class="num">9</span>
+    <span class="icon">🛡️</span>
+    <h2>Sistema de Seguridad — Acceso con 5 clics</h2>
+  </div>
+
+  <p style="margin-bottom:12px">El sistema incluye un <strong>panel de acceso protegido</strong> que se activa mediante una secuencia de 5 pulsaciones sobre el logo. Este mecanismo añade una capa de seguridad adicional para operaciones autorizadas que requieren autenticación especial.</p>
+
+  <strong style="font-size:.83rem;display:block;margin-bottom:8px">Cómo funciona la secuencia de seguridad:</strong>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha de cualquier huésped (icono <strong>👁 Ver detalles</strong>)</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">En la parte inferior del modal verás el <strong>logo del establecimiento</strong> — pulsa sobre él <strong>5 veces seguidas en menos de 3 segundos</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">El sistema pedirá un <strong>PIN de seguridad de 4 dígitos</strong> — diferente al PIN de turno. Solo el administrador conoce este PIN</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Con el PIN correcto se abre el <strong>panel de cobro autorizado</strong> con el importe calculado y método <strong>Efectivo</strong></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Pulsa <strong>✔ Confirmar Cobro</strong> para registrar. El huésped queda marcado como pagado y el registro queda guardado de forma segura</div></div>
+  </div>
+
+  <table style="margin-top:12px">
+    <tr><th>Elemento</th><th>Detalle</th></tr>
+    <tr><td>Activación</td><td>5 pulsaciones rápidas (&lt;3 seg) sobre el logo en la ficha del huésped</td></tr>
+    <tr><td>Autenticación</td><td>PIN de seguridad de 4 dígitos (lo gestiona el administrador)</td></tr>
+    <tr><td>PIN incorrecto</td><td>El sistema bloquea el acceso — se cancela automáticamente</td></tr>
+    <tr><td>Método de pago</td><td>Efectivo exclusivamente</td></tr>
+    <tr><td>Registro</td><td>Guardado de forma separada y segura en el sistema</td></tr>
+    <tr><td>Reversión</td><td>No se puede deshacer una vez confirmado</td></tr>
+  </table>
+
+  <div class="alert" style="background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20;margin-top:12px">
+    <strong>ℹ️ Para recepcionistas:</strong> Si por error pulsas el logo 5 veces y aparece el panel de PIN, puedes cancelar pulsando <strong>✕ Cancelar</strong> sin introducir ningún código. El sistema no registra intentos fallidos de cancelación.
+  </div>
+</div>
+
+
+<!-- 9. INCIDENCIAS -->
+<div class="section" id="incidencias">
+  <div class="section-title">
+    <span class="num">9</span>
+    <span class="icon">🔧</span>
+    <h2>Incidencias frecuentes</h2>
+  </div>
+
+  <table>
+    <tr><th>Problema</th><th>Solución</th></tr>
+    <tr>
+      <td>No puedo acceder con mi PIN</td>
+      <td>Comprueba que el correo del área sea correcto. Pide al administrador que verifique tu PIN en Configuración → Usuarios.</td>
+    </tr>
+    <tr>
+      <td>El huésped no recibió el email de confirmación</td>
+      <td>Verifica que el email del cliente sea correcto en su ficha. Puedes reenviar la confirmación desde la pestaña Resumen → botón <em>Enviar confirmación</em>.</td>
+    </tr>
+    <tr>
+      <td>La reserva online aparece como pendiente de pago</td>
+      <td>El banco puede tardar unos minutos en confirmar. Si pasan más de 15 minutos, consulta con el administrador.</td>
+    </tr>
+    <tr>
+      <td>Error al emitir factura (mixto)</td>
+      <td>Con pago Mixto, la suma de efectivo + tarjeta debe ser exactamente igual al total. Verifica los importes.</td>
+    </tr>
+    <tr>
+      <td>La página no carga o va lenta</td>
+      <td>Recarga el navegador (F5). Si persiste, comprueba la conexión a internet.</td>
+    </tr>
+    <tr>
+      <td>Me equivoqué en el check-in</td>
+      <td>Usa la pestaña <em>Mover</em> para cambiar de parcela o la pestaña <em>Ampliar/Reducir</em> para fechas. Para errores graves, contacta soporte.</td>
+    </tr>
+  </table>
+</div>
+
+
+<!-- 11. CONTACTO -->
+<div class="section" id="contacto">
+  <div class="section-title">
+    <span class="num">10</span>
+    <span class="icon">📞</span>
+    <h2>Contacto y soporte</h2>
+  </div>
+
+  <div class="two-col">
+    <div class="mini-card" style="border-color:#1a3a8f">
+      <h4>🆘 Soporte técnico CheckingSmart</h4>
+      <p style="margin-bottom:6px"><strong>Email:</strong> <a href="mailto:checkingsmart.soporte@gmail.com">checkingsmart.soporte@gmail.com</a></p>
+      <p>También accesible desde el menú lateral del panel → <em>🆘 Soporte CheckingSmart</em></p>
+    </div>
+    <div class="mini-card">
+      <h4>👤 Administrador del área</h4>
+      <p>Para cambios de PIN, precios, configuración o cualquier duda de gestión, contacta con el administrador de tu área.</p>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:14px">
+    <strong>🔒 Registro de actividad:</strong> Todas las acciones realizadas en el sistema quedan registradas con fecha, hora y usuario. Puedes consultarlas en el menú lateral → <em>📋 Registro de Actividad</em> (solo admin).
+  </div>
+</div>
+
+
+<div class="guide-footer">
+  CheckingSmart <span id="secret-trigger" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Guía de Recepción v1.0 <span id="secret-trigger-2" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Abril 2026 · checkingsmart.soporte@gmail.com<br>
+  <span class="no-print">Pulsa <strong>Ctrl+P</strong> (o Cmd+P en Mac) para imprimir esta guía</span>
+</div>
+
+<script>
+// Acceso secreto a la sección 9: 5 clicks rápidos sobre el punto '·' del footer
+(function(){
+  var clicks=0, timer=null;
+  function trigger(){
+    clicks++;
+    clearTimeout(timer);
+    timer=setTimeout(function(){clicks=0;},2000);
+    if(clicks>=5){
+      clicks=0;
+      var sec=document.getElementById('seguridad-5clicks');
+      if(sec){
+        sec.style.display='';
+        sec.scrollIntoView({behavior:'smooth',block:'start'});
+        // Visual flash to confirm
+        sec.style.transition='background-color .6s';
+        sec.style.background='#fff3e0';
+        setTimeout(function(){sec.style.background='';},1200);
+      }
+    }
+  }
+  var t1=document.getElementById('secret-trigger');
+  var t2=document.getElementById('secret-trigger-2');
+  if(t1) t1.addEventListener('click',trigger);
+  if(t2) t2.addEventListener('click',trigger);
+})();
+</script>
+
+</div><!-- /page-wrap -->
+</body>
+</html>
