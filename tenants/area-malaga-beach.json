@@ -1,0 +1,58 @@
+{
+  "tenantId": "area-malaga-beach",
+  "nombre": "Área Málaga Beach",
+  "razonSocial": "LAGIPI, S.L.",
+  "nombreCorto": "AMB",
+  "slogan": "Primera línea de playa en Málaga",
+  "logo": "/clients/area-malaga-beach/assets/LOGO AMB.jpg",
+  "colores": {
+    "primario": "#0288d1",
+    "primarioDark": "#0277bd",
+    "secundario": "#e67e22",
+    "acento": "#00C851",
+    "fondo": "#f8f9fa",
+    "sidebar": "#1a1a2e",
+    "sidebarTexto": "#ffffff",
+    "texto": "#333333"
+  },
+  "plan": "essential",
+  "parcelas": 40,
+  "zonas": ["A", "B", "C", "D", "E"],
+  "dominio": "area-malaga-beach.checkingsmart.com",
+  "telefono": "+34 951 904 391",
+  "email": "info@areamalagabeach.com",
+  "direccion": "Diseminado R10, 44, 29017 Málaga",
+  "cif": "B93425064",
+  "gps": "N 36º42'50.6\" W 004º19'01.3\"",
+  "idiomas": ["es", "en", "de", "fr"],
+  "idiomaDefault": "es",
+  "moneda": "EUR",
+  "pais": "ES",
+  "timezone": "Europe/Madrid",
+  "activo": true,
+  "fechaAlta": "2026-04-14",
+  "precios": {
+    "1lineaplaya_6a":     25,
+    "otras_4a":           22,
+    "otras_6a":           23,
+    "longbody8m_4a":      25,
+    "longbody8m_6a":      26,
+    "longbody12m_4a":     34,
+    "longbody12m_6a":     35,
+    "xxl_10a":            45
+  },
+  "extras": {
+    "duchas":             1,
+    "lavadoraSecadora":   5,
+    "personaExtra":       12,
+    "parkingCoche":       11,
+    "parkingAutocaravana":16,
+    "descargaAguas":      11
+  },
+  "servicios": [
+    "wifi", "vigilancia24h", "puntoAgua", "reciclados",
+    "vaciadoAguasGrises", "vaciadoAguasNegras", "electricidad",
+    "masajes", "panaderia", "aseosYDuchas"
+  ],
+  "pagoTarjetaDesde": 30
+}
