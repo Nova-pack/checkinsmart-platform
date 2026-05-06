@@ -50,25 +50,27 @@
     },
     "1": {
       "n": 1,
-      "cx_pct": 77.396,
+      "cx_pct": 23.18,
       "cy_pct": 20.861,
-      "x_pct": 75.625,
+      "x_pct": 21.409,
       "y_pct": 15.135,
       "w_pct": 3.542,
       "h_pct": 11.451,
       "ocr_conf": 96,
-      "interpolated": false
+      "interpolated": true,
+      "_fix_29_04_2026": "recalibrada - solapada con 17"
     },
     "6": {
       "n": 6,
-      "cx_pct": 74.083,
+      "cx_pct": 39.88,
       "cy_pct": 20.861,
-      "x_pct": 72.312,
+      "x_pct": 38.109,
       "y_pct": 15.135,
       "w_pct": 3.542,
       "h_pct": 11.451,
       "ocr_conf": 96,
-      "interpolated": false
+      "interpolated": true,
+      "_fix_29_04_2026": "recalibrada - solapada con 16"
     },
     "14": {
       "n": 14,

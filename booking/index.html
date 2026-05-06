@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CheckingSmart — Reserva tu Parcela</title>
-<script src="/assets/config.js"></script>
+<script src="/assets/config.js?v=20260422c"></script>
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="/assets/firestore-db.js"></script>
+<script src="/assets/firestore-db.js?v=20260422c"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -574,6 +574,9 @@ function App(){
   var _pm=us('card'),payMethod=_pm[0],setPayMethod=_pm[1];
   var _bc=us(''),bookCode=_bc[0],setBookCode=_bc[1];
   var _payErr=us(''),payError=_payErr[0],setPayError=_payErr[1];
+  // Aceptación de condiciones de cancelación (obligatorio antes de pagar, LSSI-CE)
+  var _cond=us(false),condicionesOk=_cond[0],setCondicionesOk=_cond[1];
+  var _spm=us(false),showPolicyModal=_spm[0],setShowPolicyModal=_spm[1];
 
   // Scanner state
   var _camOn=us(false),camOn=_camOn[0],setCamOn=_camOn[1];
@@ -666,33 +669,28 @@ function App(){
       window.history.replaceState({},'',window.location.pathname);
       var order=params.get('order')||'';
       var tid=_csConfig().tenantId||'demo';
-      function doRestore(db){
-        db.collection('tenants').doc(tid).collection('guests')
-          .where('redsysOrder','==',order).limit(1).get()
-          .then(function(snap){
-            if(!snap.empty){
-              var data=snap.docs[0].data();
-              if(data.name) setFname(data.name);
-              if(data.surname) setSname(data.surname);
-              if(data.email) setEmail(data.email);
-              if(data.phone) setPhone(data.phone);
-              if(data.dateIn) setCheckIn(data.dateIn);
-              if(data.dateOut) setCheckOut(data.dateOut);
-              if(data.adults) setAdults(data.adults);
-              if(data.children!=null) setChildren(data.children);
-              if(data.pets!=null) setPets(data.pets);
-              if(data.vehicleType) setVehicleType(data.vehicleType);
-              if(data.bookCode) setBookCode(data.bookCode);
-            }
+      // Fase 3: lookup vía Cloud Function pública (no más query directa Firestore)
+      if(order && tid!=='demo'){
+        var _pid=(window.Checksmart&&window.Checksmart.firebaseProjectId)||'checkingsmart-564a0';
+        var _fnUrl='https://europe-west1-'+_pid+'.cloudfunctions.net/getBookingByRedsysOrder';
+        fetch(_fnUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenantId:tid,order:order})})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(data){
+            if(!data||!data.ok) return;
+            if(data.name) setFname(data.name);
+            if(data.surname) setSname(data.surname);
+            if(data.email) setEmail(data.email);
+            if(data.phone) setPhone(data.phone);
+            if(data.dateIn) setCheckIn(data.dateIn);
+            if(data.dateOut) setCheckOut(data.dateOut);
+            if(data.adults) setAdults(data.adults);
+            if(data.children!=null) setChildren(data.children);
+            if(data.pets!=null) setPets(data.pets);
+            if(data.vehicleType) setVehicleType(data.vehicleType);
+            if(data.bookCode) setBookCode(data.bookCode);
           }).catch(function(){});
       }
       setPayError('Pago no completado. Puedes intentarlo de nuevo o pagar a la llegada.');
-      var db=window.Checksmart&&window.Checksmart.db;
-      if(db&&tid!=='demo') doRestore(db);
-      else {
-        function onDbKo(ev){window.removeEventListener('cs:db-ready',onDbKo);var d=ev.detail&&ev.detail.db;if(d&&tid!=='demo')doRestore(d);}
-        window.addEventListener('cs:db-ready',onDbKo);
-      }
       setStep(4);
       return;
     }
@@ -702,18 +700,17 @@ function App(){
     // Limpiar URL para que no se reprocese en recarga
     window.history.replaceState({},'',window.location.pathname);
     var tid=_csConfig().tenantId||'demo';
-    function doConfirm(db){
-      db.collection('tenants').doc(tid).collection('guests')
-        .where('redsysOrder','==',order).limit(1).get()
-        .then(function(snap){
-          var data={};
-          if(!snap.empty){
-            var docRef=snap.docs[0];
-            data=docRef.data();
-            docRef.ref.update({paid:true,status:'confirmed',paidAt:new Date()})
-              .then(function(){console.log('[CS] Reserva confirmada:',data.bookCode);})
-              .catch(function(e){console.error('[CS] Error actualizando reserva:',e);});
-          }
+    if(tid==='demo'){setStep(5);return;}
+
+    // Fase 3: lookup vía Cloud Function pública.
+    // NO marcamos paid/confirmed desde aquí — de eso se encarga
+    // redsysNotification tras verificar firma HMAC del banco.
+    var _pid=(window.Checksmart&&window.Checksmart.firebaseProjectId)||'checkingsmart-564a0';
+    var _fnUrl='https://europe-west1-'+_pid+'.cloudfunctions.net/getBookingByRedsysOrder';
+    fetch(_fnUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenantId:tid,order:order})})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(data){
+        if(data&&data.ok){
           if(data.bookCode) setBookCode(data.bookCode);
           if(data.name) setFname(data.name);
           if(data.surname) setSname(data.surname);
@@ -728,23 +725,13 @@ function App(){
           if(data.idDoc) setIdDoc(data.idDoc);
           if(data.plate) setPlate(data.plate);
           if(data.notes) setNotes(data.notes);
-          setStep(5);
-        })
-        .catch(function(e){
-          console.error('[CS] Error confirmando reserva por order:',e);
-          setStep(5);
-        });
-    }
-    var db=window.Checksmart&&window.Checksmart.db;
-    if(db&&tid!=='demo'){doConfirm(db);return;}
-    if(tid==='demo'){setStep(5);return;}
-    // Esperar a que Firestore esté listo
-    function onDbReady(ev){
-      window.removeEventListener('cs:db-ready',onDbReady);
-      var d=ev.detail&&ev.detail.db;
-      if(d) doConfirm(d); else setStep(5);
-    }
-    window.addEventListener('cs:db-ready',onDbReady);
+        }
+        setStep(5);
+      })
+      .catch(function(e){
+        console.error('[CS] Error recuperando reserva por order:',e);
+        setStep(5);
+      });
   },[]);
 
   var nights=0;
@@ -756,6 +743,17 @@ function App(){
   var basePrice=nights*precioNoche;
   var elecPrice=selPitch&&selPitch.electricity?nights*elecPriceRt:0;
   var totalPrice=basePrice+elecPrice;
+
+  // ── Regla señal (fianza parcial) ──
+  // Si el tenant tiene habilitada "fianza" en su JSON y nights >= umbralNochesSenal,
+  // al confirmar solo se cobra "porcentajeSenal"% como señal y el resto se abona al check-in.
+  // En caso contrario se cobra el 100% por adelantado (comportamiento anterior).
+  var _fianzaCfg = _csConfig().fianza || {};
+  var _umbralSenal = _fianzaCfg.habilitada ? (parseInt(_fianzaCfg.umbralNochesSenal,10) || 4) : Infinity;
+  var _pctSenal    = parseFloat(_fianzaCfg.porcentajeSenal) || 50;
+  var pagaSenal    = nights >= _umbralSenal;
+  var amountToPay  = pagaSenal ? Math.round(totalPrice * _pctSenal) / 100 : totalPrice;
+  var amountPending= pagaSenal ? Math.round((totalPrice - amountToPay) * 100) / 100 : 0;
 
   function genCode(){
     var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1205,15 +1203,26 @@ function App(){
     var csrfToken = bc;   // "CPR-XXXXXX" / prefijo tenant — sencillo, Redsys lo devuelve intacto
     sessionStorage.setItem('cs_csrf_'+bc, csrfToken);
 
+    // tipoPlaza: valor que recepción usará en ficha360 para filtrar parcelas libres
+    // al asignar. Roquetas tiene un único tipo ('estandar'). Cuando un tenant tenga
+    // feature tiposPlaza activa y el wizard de booking incorpore selector de tipo,
+    // aquí se debería leer del state correspondiente (p.ej. selectedType).
+    // pitchCode/pitchId deliberadamente vacíos: la asignación de parcela concreta
+    // la hace recepción manualmente desde ficha360 tras la confirmación de pago.
     var bookingData = {
       id: Date.now(), bookCode: bc, redsysOrder: redsysOrder, name: fname, surname: sname,
       email: email, phone: phone, nationality: nat, idDoc: idDoc,
       vehicleType: vehicleType, plate: plate,
-      pitchCode: selPitch?selPitch.code:'', pitchId: selPitch?selPitch.id:'',
+      pitchCode: '', pitchId: '',
+      tipoPlaza: 'estandar',
       dateIn: checkIn, dateOut: checkOut,
       adults: adults, children: children, pets: pets,
       status: 'pending_payment', priceTotal: totalPrice,
       paid: false, paidMethod: 'redsys_tpv',
+      // Desglose señal / pendiente (regla fianza 50% desde 4 noches)
+      senal: amountToPay,
+      pendiente: amountPending,
+      pagaSenal: pagaSenal,
       nights: nights, notes: notes,
       createdTs: new Date().toISOString()
     };
@@ -1246,7 +1255,8 @@ function App(){
       form.action = 'https://europe-west1-' + _pid + '.cloudfunctions.net/redsysGateway';
       form.style.display = 'none';
 
-      var fields = {amount:totalPrice,order:redsysOrder,description:desc,email:email,lang:redsysLang,type:'payment',csrf_token:csrfToken,tenantId:tid};
+      // amountToPay = totalPrice si paga 100%; o el 50% si aplica regla fianza (nights>=4)
+      var fields = {amount:amountToPay,order:redsysOrder,description:desc,email:email,lang:redsysLang,type:'payment',csrf_token:csrfToken,tenantId:tid};
       Object.keys(fields).forEach(function(k){
         var inp = document.createElement('input');
         inp.type='hidden'; inp.name=k; inp.value=fields[k];
@@ -1269,10 +1279,10 @@ function App(){
 
     // Traducciones específicas del TPV
     var tpvLabels = {
-      es:{securePayTitle:'Pago Seguro con TPV Bancario',securePayDesc:'Serás redirigido a la página segura de tu banco para introducir los datos de tu tarjeta. Tus datos bancarios NUNCA pasan por nuestra web.',acceptedCards:'Tarjetas aceptadas',redirectBank:'Pagar €'+totalPrice+' — Ir al Banco',redirecting:'Redirigiendo al banco...',bankSecure:'Tus datos los gestiona directamente tu banco',noCharge:'No se realizará ningún cargo hasta confirmar en la web del banco',sandbox:'⚠️ MODO PRUEBAS — Tarjeta test: 4548 8120 4940 0004 · Cad: 12/34 · CVV: 123',depositLabel:'🛡️ Fianza de seguridad',depositNote:'Retención temporal — se libera al check-out sin incidencias',depositHold:'Retención (no es un cobro)'},
-      en:{securePayTitle:'Secure Bank Payment (TPV)',securePayDesc:'You will be redirected to your bank\'s secure page to enter your card details. Your banking data NEVER passes through our website.',acceptedCards:'Accepted cards',redirectBank:'Pay €'+totalPrice+' — Go to Bank',redirecting:'Redirecting to bank...',bankSecure:'Your data is handled directly by your bank',noCharge:'No charge will be made until you confirm on the bank page',sandbox:'⚠️ TEST MODE — Test card: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Security deposit',depositNote:'Temporary hold — released at check-out if no issues',depositHold:'Hold (not a charge)'},
-      de:{securePayTitle:'Sichere Bankzahlung (TPV)',securePayDesc:'Sie werden zur sicheren Seite Ihrer Bank weitergeleitet. Ihre Bankdaten gehen NIE über unsere Website.',acceptedCards:'Akzeptierte Karten',redirectBank:'€'+totalPrice+' Bezahlen — Zur Bank',redirecting:'Weiterleitung zur Bank...',bankSecure:'Ihre Daten werden direkt von Ihrer Bank verwaltet',noCharge:'Keine Belastung bis zur Bestätigung auf der Bankseite',sandbox:'⚠️ TESTMODUS — Testkarte: 4548 8120 4940 0004 · Ablauf: 12/34 · CVV: 123',depositLabel:'🛡️ Sicherheitskaution',depositNote:'Temporäre Zurückhaltung — wird beim Check-out freigegeben',depositHold:'Zurückhaltung (keine Belastung)'},
-      fr:{securePayTitle:'Paiement Bancaire Sécurisé (TPV)',securePayDesc:'Vous serez redirigé vers la page sécurisée de votre banque. Vos données bancaires ne transitent JAMAIS par notre site.',acceptedCards:'Cartes acceptées',redirectBank:'Payer €'+totalPrice+' — Aller à la Banque',redirecting:'Redirection vers la banque...',bankSecure:'Vos données sont gérées directement par votre banque',noCharge:'Aucun débit ne sera fait avant confirmation sur la page de la banque',sandbox:'⚠️ MODE TEST — Carte test: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Caution de sécurité',depositNote:'Retenue temporaire — libérée au check-out sans incident',depositHold:'Retenue (pas un débit)'}
+      es:{securePayTitle:'Pago Seguro con TPV Bancario',securePayDesc:'Serás redirigido a la página segura de tu banco para introducir los datos de tu tarjeta. Tus datos bancarios NUNCA pasan por nuestra web.',acceptedCards:'Tarjetas aceptadas',redirectBank:'Pagar €'+amountToPay.toFixed(2)+' — Ir al Banco',redirecting:'Redirigiendo al banco...',bankSecure:'Tus datos los gestiona directamente tu banco',noCharge:'No se realizará ningún cargo hasta confirmar en la web del banco',sandbox:'⚠️ MODO PRUEBAS — Tarjeta test: 4548 8120 4940 0004 · Cad: 12/34 · CVV: 123',depositLabel:'🛡️ Fianza de seguridad',depositNote:'Retención temporal — se libera al check-out sin incidencias',depositHold:'Retención (no es un cobro)'},
+      en:{securePayTitle:'Secure Bank Payment (TPV)',securePayDesc:'You will be redirected to your bank\'s secure page to enter your card details. Your banking data NEVER passes through our website.',acceptedCards:'Accepted cards',redirectBank:'Pay €'+amountToPay.toFixed(2)+' — Go to Bank',redirecting:'Redirecting to bank...',bankSecure:'Your data is handled directly by your bank',noCharge:'No charge will be made until you confirm on the bank page',sandbox:'⚠️ TEST MODE — Test card: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Security deposit',depositNote:'Temporary hold — released at check-out if no issues',depositHold:'Hold (not a charge)'},
+      de:{securePayTitle:'Sichere Bankzahlung (TPV)',securePayDesc:'Sie werden zur sicheren Seite Ihrer Bank weitergeleitet. Ihre Bankdaten gehen NIE über unsere Website.',acceptedCards:'Akzeptierte Karten',redirectBank:'€'+amountToPay.toFixed(2)+' Bezahlen — Zur Bank',redirecting:'Weiterleitung zur Bank...',bankSecure:'Ihre Daten werden direkt von Ihrer Bank verwaltet',noCharge:'Keine Belastung bis zur Bestätigung auf der Bankseite',sandbox:'⚠️ TESTMODUS — Testkarte: 4548 8120 4940 0004 · Ablauf: 12/34 · CVV: 123',depositLabel:'🛡️ Sicherheitskaution',depositNote:'Temporäre Zurückhaltung — wird beim Check-out freigegeben',depositHold:'Zurückhaltung (keine Belastung)'},
+      fr:{securePayTitle:'Paiement Bancaire Sécurisé (TPV)',securePayDesc:'Vous serez redirigé vers la page sécurisée de votre banque. Vos données bancaires ne transitent JAMAIS par notre site.',acceptedCards:'Cartes acceptées',redirectBank:'Payer €'+amountToPay.toFixed(2)+' — Aller à la Banque',redirecting:'Redirection vers la banque...',bankSecure:'Vos données sont gérées directement par votre banque',noCharge:'Aucun débit ne sera fait avant confirmation sur la page de la banque',sandbox:'⚠️ MODE TEST — Carte test: 4548 8120 4940 0004 · Exp: 12/34 · CVV: 123',depositLabel:'🛡️ Caution de sécurité',depositNote:'Retenue temporaire — libérée au check-out sans incident',depositHold:'Retenue (pas un débit)'}
     };
     var tpv = tpvLabels[lang] || tpvLabels.es;
 
@@ -1289,7 +1299,19 @@ function App(){
         scannedDocs.length>0?ce('div',{className:'summary-row'},ce('span',null,'📷 '+t.docScanned),ce('span',{className:'doc-badge'},'✓ '+scannedDocs.length+' doc'+(scannedDocs.length>1?'s':''))):null,
         ce('div',{className:'summary-row'},ce('span',null,nights+' '+t.nights+' × €'+precioNoche),ce('span',null,'€'+basePrice)),
         elecPrice>0?ce('div',{className:'summary-row'},ce('span',null,'⚡ '+t.elecSupplement),ce('span',null,'€'+elecPrice)):null,
-        ce('div',{className:'summary-row total'},ce('span',null,t.total+' ('+t.vehicle+')'),ce('span',{className:'summary-total-val'},'€'+totalPrice)),
+        ce('div',{className:'summary-row total'},ce('span',null,t.total+' ('+t.vehicle+')'),ce('span',{className:'summary-total-val'},'€'+totalPrice.toFixed(2))),
+        // Desglose señal (si nights >= umbral)
+        pagaSenal?ce('div',{className:'summary-row',style:{borderTop:'2px solid #0288d1',marginTop:8,paddingTop:8,color:'#01579b',fontWeight:700}},
+          ce('span',null,'💳 A pagar ahora ('+_pctSenal+'% señal)'),
+          ce('span',{style:{fontWeight:800}},'€'+amountToPay.toFixed(2))
+        ):null,
+        pagaSenal?ce('div',{className:'summary-row',style:{color:'#e65100',fontWeight:600}},
+          ce('span',null,'🏁 Al llegar en recepción'),
+          ce('span',null,'€'+amountPending.toFixed(2))
+        ):null,
+        pagaSenal?ce('div',{style:{fontSize:'.72rem',color:'#666',padding:'4px 0 0',fontStyle:'italic',lineHeight:1.45}},
+          'La señal se descuenta del total — no pagas de más. El resto lo abonas a tu llegada (efectivo, tarjeta o transferencia).'
+        ):null,
         // Fianza
         DEPOSIT_ENABLED&&payMethod==='card'?ce('div',{className:'summary-row',style:{borderTop:'2px dashed #ffcc80',marginTop:8,paddingTop:8}},ce('span',{style:{color:'#e65100'}},tpv.depositLabel),ce('span',{style:{color:'#e65100',fontWeight:600}},'€'+DEPOSIT_AMOUNT)):null,
         DEPOSIT_ENABLED&&payMethod==='card'?ce('div',{style:{fontSize:'.7rem',color:'#999',padding:'2px 0 0',fontStyle:'italic'}},tpv.depositNote):null
@@ -1355,8 +1377,9 @@ function App(){
           background:'rgba(255,255,255,.8)',borderRadius:10,
           border:'1px solid #b3e5fc',marginBottom:8
         }},
-          ce('div',{style:{fontSize:'.72rem',color:'#999',textTransform:'uppercase',letterSpacing:1}},t.total+' ('+t.vehicle+')'),
-          ce('div',{style:{fontFamily:"'Space Grotesk',monospace",fontSize:'2rem',fontWeight:700,color:'#01579b'}},'€'+totalPrice)
+          ce('div',{style:{fontSize:'.72rem',color:'#999',textTransform:'uppercase',letterSpacing:1}},pagaSenal?('Señal '+_pctSenal+'% · a pagar ahora'):(t.total+' ('+t.vehicle+')')),
+          ce('div',{style:{fontFamily:"'Space Grotesk',monospace",fontSize:'2rem',fontWeight:700,color:'#01579b'}},'€'+amountToPay.toFixed(2)),
+          pagaSenal?ce('div',{style:{fontSize:'.72rem',color:'#e65100',marginTop:4,fontWeight:600}},'Pendiente en recepción: €'+amountPending.toFixed(2)):null
         ),
 
         // Fianza separada
@@ -1379,14 +1402,33 @@ function App(){
 
       ):null,
 
+      // ── Checkbox obligatorio: condiciones + política de cancelación (LSSI-CE) ──
+      (_csConfig().politicaCancelacion)?ce('div',{style:{
+        background:'#f8f9fa',border:'1px solid #dee2e6',borderRadius:10,
+        padding:'12px 14px',marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'
+      }},
+        ce('input',{type:'checkbox',id:'cs-cond-ok',checked:condicionesOk,
+          onChange:function(ev){setCondicionesOk(ev.target.checked)},
+          style:{width:20,height:20,marginTop:2,flexShrink:0,accentColor:'#0288d1',cursor:'pointer'}
+        }),
+        ce('label',{htmlFor:'cs-cond-ok',style:{fontSize:'.82rem',lineHeight:1.5,color:'#333',cursor:'pointer',userSelect:'none'}},
+          'He leído y acepto las ',
+          ce('a',{href:'#',onClick:function(ev){ev.preventDefault();setShowPolicyModal(true);},
+            style:{color:'#0288d1',fontWeight:700,textDecoration:'underline'}
+          },'condiciones de reserva y política de cancelación'),
+          ' del establecimiento.'
+        )
+      ):null,
+
       // ── Botones ──
       ce('div',{className:'btn-row'},
         ce('button',{className:'btn btn-outline btn-lg',type:'button',onClick:function(){setStep(3)}},'← '+t.back),
         payMethod==='card'?
           ce('button',{
             className:'btn btn-primary btn-lg btn-block',type:'button',
-            style:{flex:1,background:tpvLoading?'#999':'linear-gradient(135deg,#01579b,#0288d1)',border:'none',fontSize:'.95rem'},
-            disabled:tpvLoading,
+            style:{flex:1,background:(tpvLoading||(_csConfig().politicaCancelacion&&!condicionesOk))?'#999':'linear-gradient(135deg,#01579b,#0288d1)',border:'none',fontSize:'.95rem',cursor:(_csConfig().politicaCancelacion&&!condicionesOk)?'not-allowed':'pointer'},
+            disabled:tpvLoading || (_csConfig().politicaCancelacion && !condicionesOk),
+            title:(_csConfig().politicaCancelacion&&!condicionesOk)?'Marca la casilla para aceptar las condiciones':'',
             onClick:redirectToRedsys
           },tpvLoading?
             ce('span',{style:{display:'flex',alignItems:'center',gap:8}},
@@ -1395,7 +1437,9 @@ function App(){
             ):
             '🏦 '+tpv.redirectBank
           ):
-          ce('button',{className:'btn btn-primary btn-lg btn-block',type:'button',style:{flex:1},onClick:function(){goToStep(5)}},
+          ce('button',{className:'btn btn-primary btn-lg btn-block',type:'button',style:{flex:1},
+            disabled:(_csConfig().politicaCancelacion && !condicionesOk),
+            onClick:function(){goToStep(5)}},
             t.confirmReserve)
       )
     );
@@ -1436,6 +1480,8 @@ function App(){
         if(children > 0) guestStr += ', ' + children + ' ' + t.child + (children > 1 ? 's' : '');
         if(pets > 0) guestStr += ', ' + pets + ' ' + t.pet + (pets > 1 ? 's' : '');
 
+        // Reserva sin parcela concreta — la asigna recepción desde ficha360.
+        // tipoPlaza: 'estandar' por defecto para tenants sin subdivisión (Roquetas).
         var baseData = {
           id: Date.now(),
           bookCode: bc,
@@ -1447,8 +1493,9 @@ function App(){
           idDoc: idDoc,
           vehicleType: vehicleType,
           plate: plate,
-          pitchCode: selPitch ? selPitch.code : '',
-          pitchId: selPitch ? selPitch.id : '',
+          pitchCode: '',
+          pitchId: '',
+          tipoPlaza: 'estandar',
           dateIn: checkIn,
           dateOut: checkOut,
           adults: adults,
@@ -1580,7 +1627,83 @@ function App(){
       ce('div',null,'© 2026 '+_csNombre()),
       ce('div',{style:{marginTop:4}},_csEmail()+' | '+_csTel()),
       ce('div',{style:{marginTop:8,fontSize:'.68rem',opacity:.6}},
-        'Plataforma CheckinSmart\u2122 — © 2026 David Jim\u00e9nez del Castillo — Safe Creative n\u00ba 2604225360000')
+        'Plataforma CheckinSmart\u2122 — © 2026 CheckinSmart — Safe Creative n\u00ba 2604225360000')
+    ),
+    // ── Modal política de cancelación ──
+    showPolicyModal?ce(PolicyModal,{onClose:function(){setShowPolicyModal(false)}}):null
+  );
+}
+
+// ── Componente Modal Política de Cancelación ──
+function PolicyModal(props){
+  var pol = _csConfig().politicaCancelacion || {};
+  var fianza = _csConfig().fianza || {};
+  var nombre = _csNombre();
+  return ce('div',{
+    onClick:function(ev){if(ev.target===ev.currentTarget) props.onClose()},
+    style:{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,
+      display:'flex',alignItems:'center',justifyContent:'center',padding:20,overflowY:'auto'}
+  },
+    ce('div',{style:{
+      background:'#fff',borderRadius:16,maxWidth:640,width:'100%',
+      boxShadow:'0 20px 60px rgba(0,0,0,.25)',overflow:'hidden',maxHeight:'90vh',display:'flex',flexDirection:'column'
+    }},
+      ce('div',{style:{background:'linear-gradient(135deg,#01579b,#0288d1)',color:'#fff',padding:'18px 24px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+        ce('div',null,
+          ce('div',{style:{fontSize:'1.1rem',fontWeight:700}},'Condiciones de reserva'),
+          ce('div',{style:{fontSize:'.78rem',opacity:.85,marginTop:2}},nombre)
+        ),
+        ce('button',{onClick:props.onClose,
+          style:{background:'rgba(255,255,255,.2)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',fontSize:'1.2rem',cursor:'pointer',fontWeight:700}
+        },'×')
+      ),
+      ce('div',{style:{padding:24,overflowY:'auto',fontSize:'.9rem',lineHeight:1.6,color:'#333'}},
+        // Bloque fianza
+        fianza.habilitada?ce('div',{style:{background:'#e1f5fe',border:'1px solid #81d4fa',borderRadius:10,padding:'14px 16px',marginBottom:18}},
+          ce('div',{style:{fontWeight:700,color:'#01579b',marginBottom:6}},'💳 Señal / fianza al reservar'),
+          ce('div',null,'Para reservas de menos de '+(fianza.umbralNochesSenal||4)+' noches, al confirmar se cobra el ',ce('strong',null,'100% del total'),'.'),
+          ce('div',{style:{marginTop:4}},'Para reservas de ',ce('strong',null,(fianza.umbralNochesSenal||4)+' noches o más'),', al confirmar se cobra el ',ce('strong',null,(fianza.porcentajeSenal||50)+'% como señal'),' y el ',ce('strong',null,(100-(fianza.porcentajeSenal||50))+'% restante'),' se abona a la llegada en recepción (efectivo, tarjeta o transferencia). La señal se descuenta del total — no se paga de más.')
+        ):null,
+        pol.textoIntro?ce('p',{style:{marginBottom:14}},pol.textoIntro):null,
+
+        // Diaria
+        pol.diaria?ce('div',{style:{marginBottom:16}},
+          ce('div',{style:{fontWeight:700,color:'#01579b',marginBottom:8,fontSize:'1rem'}},pol.diaria.titulo||'Reservas diarias'),
+          ce('ul',{style:{paddingLeft:22,margin:0}},
+            (pol.diaria.tramos||[]).map(function(tr,i){
+              return ce('li',{key:'d'+i,style:{marginBottom:6}},
+                ce('strong',null,tr.cuando+':'),' ',tr.etiqueta
+              );
+            })
+          )
+        ):null,
+
+        // Larga
+        pol.larga?ce('div',{style:{marginBottom:16}},
+          ce('div',{style:{fontWeight:700,color:'#01579b',marginBottom:8,fontSize:'1rem'}},pol.larga.titulo||'Larga estancia'),
+          ce('ul',{style:{paddingLeft:22,margin:0}},
+            (pol.larga.tramos||[]).map(function(tr,i){
+              return ce('li',{key:'l'+i,style:{marginBottom:6}},
+                ce('strong',null,tr.cuando+':'),' ',tr.etiqueta
+              );
+            })
+          )
+        ):null,
+
+        // Notas adicionales
+        (pol.notas&&pol.notas.length)?ce('div',{style:{background:'#fff8e1',border:'1px solid #ffe082',borderRadius:8,padding:'10px 14px',marginTop:8}},
+          ce('div',{style:{fontWeight:700,color:'#e65100',marginBottom:6,fontSize:'.85rem'}},'Notas importantes'),
+          ce('ul',{style:{paddingLeft:20,margin:0,fontSize:'.82rem'}},
+            pol.notas.map(function(n,i){return ce('li',{key:'n'+i,style:{marginBottom:4}},n)})
+          )
+        ):null
+      ),
+      ce('div',{style:{background:'#f8f9fa',padding:'12px 24px',borderTop:'1px solid #dee2e6',textAlign:'right'}},
+        ce('button',{onClick:props.onClose,
+          className:'btn btn-primary',
+          style:{background:'linear-gradient(135deg,#01579b,#0288d1)',border:'none',color:'#fff',padding:'10px 28px',borderRadius:8,fontWeight:700,cursor:'pointer'}
+        },'Entendido')
+      )
     )
   );
 }

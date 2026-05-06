@@ -3,46 +3,102 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
-    // Usuario autenticado (real o anónimo)
     function isAuth() {
       return request.auth != null;
     }
 
     // Usuario con claim de tenant válido y coincidente con el path
-    // (se activa en Fase 3 tras assignTenantClaim)
     function hasTenantClaim(tenantId) {
       return isAuth()
-          && request.auth.token.get('tenantId', null) == tenantId;
+          && 'tenantId' in request.auth.token
+          && request.auth.token.tenantId == tenantId;
     }
 
-    // Superadmin (eldarvi30) puede acceder a cualquier tenant
+    // Superadmin (eldarvi30 / Servicio Técnico master) puede acceder a cualquier tenant
     function isSuperAdmin() {
       return isAuth()
-          && request.auth.token.get('role', null) == 'superadmin';
+          && 'role' in request.auth.token
+          && request.auth.token.role == 'superadmin';
     }
 
-    // ─── Datos de cada tenant ──────────────────────────────────────────────
-    match /tenants/{tenantId}/{document=**} {
+    // ─── FASE 3: Datos de cada tenant ──────────────────────────────────────
+    // En Firestore rules, los matches son OR (no override) — para BLOQUEAR
+    // delete en colecciones de contabilidad (invoices, caja_entries, caja_records)
+    // hay que EXCLUIR esas colecciones del wildcard. Si dejamos el wildcard
+    // como `{document=**}` con `write` permitido, cualquier regla específica
+    // que diga `allow delete: if false` queda sobreescrita por el OR.
+    //
+    // Estructura final:
+    //   - Wildcard cubre todas las colecciones planas EXCEPTO contabilidad.
+    //   - Reglas dedicadas para invoices/caja_entries/caja_records permiten
+    //     read+create+update pero NO delete.
+    //   - El config + cualquier subcoleccion anidada profunda (rara) cae en
+    //     el match catchall final con document=** que solo da read/create/update
+    //     sin delete (mas seguro por defecto).
+    function isAccountingCollection(c) {
+      return c == 'invoices' || c == 'caja_entries' || c == 'caja_records';
+    }
+    match /tenants/{tenantId}/{collection}/{docId} {
+      allow read, create, update: if hasTenantClaim(tenantId) || isSuperAdmin();
+      // Delete solo permitido en colecciones NO contables.
+      // Las contables (invoices/caja_entries/caja_records) tienen sus matches
+      // dedicados abajo que NO permiten delete.
+      allow delete: if !isAccountingCollection(collection)
+                    && (hasTenantClaim(tenantId) || isSuperAdmin());
+    }
+    // Subcolecciones anidadas (raro pero soportado: ej tenants/{tid}/inbox/{m}/foo/{x}).
+    // Permitimos read+create+update con claim, pero NUNCA delete por seguridad.
+    match /tenants/{tenantId}/{collection}/{docId}/{deep=**} {
+      allow read, create, update: if hasTenantClaim(tenantId) || isSuperAdmin();
+    }
 
-      // FASE 2 → FASE 3: Acceso con tenantId válido Y auth (real o anónima)
-      // En Fase 3 reemplazar por: hasTenantClaim(tenantId) || isSuperAdmin()
-      allow read, write: if isAuth()
-                         && tenantId.matches('[a-z0-9\\-]{2,50}');
+    // ─── Facturas: NO se pueden BORRAR (RD 1619/2012) ──────────────────────
+    // Las facturas y notas de abono solo permiten read/create/update. Si una
+    // factura esta mal, se emite un credit (nota de abono) que la corrige;
+    // NO se borra (contabilidad inmutable).
+    match /tenants/{tenantId}/invoices/{invoiceId} {
+      allow read, create, update: if hasTenantClaim(tenantId) || isSuperAdmin();
+      allow delete: if false;
+    }
 
-      // Motor de reservas público: crear reserva sin auth completa
-      // Solo permite create con campos mínimos obligatorios
+    // ─── Caja diaria: tampoco se borra ──────────────────────────────────────
+    // caja_entries y caja_records son contabilidad: ingresos/cobros del dia.
+    // Si una entrada esta mal, se compensa con otra entrada (no se borra).
+    match /tenants/{tenantId}/caja_entries/{entryId} {
+      allow read, create, update: if hasTenantClaim(tenantId) || isSuperAdmin();
+      allow delete: if false;
+    }
+    match /tenants/{tenantId}/caja_records/{recordId} {
+      allow read, create, update: if hasTenantClaim(tenantId) || isSuperAdmin();
+      allow delete: if false;
+    }
+
+    // ─── Motor de reservas público (excepciones Fase 3) ────────────────────
+    // Lectura pública de precios (booking engine sin auth)
+    match /tenants/{tenantId}/config/prices {
+      allow read: if tenantId.matches('[a-z0-9\\-]{2,50}');
+    }
+
+    // Lectura pública de parcelas (mostrar disponibilidad)
+    match /tenants/{tenantId}/pitches/{pitchId} {
+      allow read: if tenantId.matches('[a-z0-9\\-]{2,50}');
+    }
+
+    // Creación pública de reservas (booking engine) con campos mínimos.
+    // La confirmación de pago (paid:true) se hace SOLO desde CF redsysNotification.
+    match /tenants/{tenantId}/guests/{guestId} {
       allow create: if tenantId.matches('[a-z0-9\\-]{2,50}')
-        && request.resource.data.keys().hasAll(['name', 'dateIn', 'dateOut']);
+        && request.resource.data.keys().hasAll(['name', 'dateIn', 'dateOut'])
+        && request.resource.data.paid == false;
     }
 
     // ─── Cuentas SaaS (login portal) ──────────────────────────────────────
     match /saas_accounts/{userId} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId;
+      allow read, write: if isAuth() && request.auth.uid == userId;
     }
 
     // ─── Config privada (credenciales Redsys, PowerNet) ───────────────────
-    // Solo accesible desde Cloud Functions (server-side), nunca desde browser
+    // Solo accesible desde Cloud Functions (server-side), nunca desde browser.
     match /private_config/{document=**} {
       allow read, write: if false;
     }

@@ -43,6 +43,10 @@
   "timezone": "Europe/Madrid",
   "activo": true,
   "fechaAlta": "2026-04-14",
+  "features": {
+    "tiposPlaza": false,
+    "_comment": "tiposPlaza:false → Roquetas usa tarifa plana (pernocta), sin subdivisión por tipo de parcela. No muestra UI de Tipos en Configuración ni selector en booking. Motor/ficha360 trabajan con tipo único 'estandar'."
+  },
   "redesSociales": {
     "facebook": "https://www.facebook.com/roquetasdemarcamperpark/",
     "instagram": "https://www.instagram.com/camperparkroquetas/"
@@ -74,6 +78,35 @@
     "abierto365": true,
     "niniosGratis": true,
     "adultoExtraMax": 4
+  },
+  "fianza": {
+    "habilitada": true,
+    "umbralNochesSenal": 4,
+    "porcentajeSenal": 50,
+    "_comment": "Si nights >= umbralNochesSenal → cobra porcentajeSenal% como señal. Si nights < umbral → cobra 100%. La señal se descuenta del total al check-in."
+  },
+  "politicaCancelacion": {
+    "textoIntro": "Una vez realizada la reserva, la política de cancelación aplicable es la siguiente:",
+    "diaria": {
+      "titulo": "Reservas diarias (menos de 30 noches)",
+      "tramos": [
+        { "cuando": "Más de 15 días antes de la llegada",        "cobro": 0,   "etiqueta": "Reembolso del 100%" },
+        { "cuando": "Entre 15 y 7 días antes de la llegada",     "cobro": 50,  "etiqueta": "El establecimiento se reserva el derecho de cobrar el 50%" },
+        { "cuando": "7 días o menos antes de la llegada",        "cobro": 100, "etiqueta": "El establecimiento se reserva el derecho de cobrar el 100%" }
+      ]
+    },
+    "larga": {
+      "titulo": "Reservas de larga estancia (30 noches o más)",
+      "tramos": [
+        { "cuando": "Hasta la fecha de llegada",                  "cobro": 0,   "etiqueta": "Cancelación gratuita" },
+        { "cuando": "Con menos de 30 días de antelación",         "cobro": 100, "etiqueta": "El depósito no será reembolsable" }
+      ]
+    },
+    "notas": [
+      "Las cancelaciones se comunican por email a camperparkroquetas@gmail.com o por teléfono al +34 722 16 83 07.",
+      "En caso de no presentación (no-show) se aplica el tramo más próximo a la fecha de llegada.",
+      "Los reembolsos se realizan por el mismo medio de pago en un plazo máximo de 14 días naturales."
+    ]
   },
   "servicios": [
     "Electricidad incluida hasta 4 kWh/día",

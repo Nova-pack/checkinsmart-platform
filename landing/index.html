@@ -5,6 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CheckingSmart — Gestión inteligente para áreas de autocaravanas</title>
 <meta name="description" content="CheckingSmart es el sistema todo-en-uno para gestionar áreas de autocaravanas, campings y RV parks. Reservas online, check-in, facturación, partes policía y más.">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/assets/icon-pwa.svg">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/icon-192.png">
+
+<!-- OpenGraph (WhatsApp/Facebook/LinkedIn) -->
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://checkingsmart.com/">
+<meta property="og:title"       content="CheckingSmart — Gestión inteligente para áreas de autocaravanas">
+<meta property="og:description" content="Motor de reservas online, partes policía SES, facturación, tienda y caja. Todo integrado. Prueba gratis 30 días.">
+<meta property="og:image"       content="https://checkingsmart.com/assets/og-image.png">
+<meta property="og:locale"      content="es_ES">
+<meta property="og:site_name"   content="CheckingSmart">
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="CheckingSmart — Gestión inteligente para áreas de autocaravanas">
+<meta name="twitter:description" content="Motor de reservas online, partes policía SES, facturación, tienda y caja. Todo integrado.">
+<meta name="twitter:image"       content="https://checkingsmart.com/assets/og-image.png">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://checkingsmart.com/">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -88,6 +112,52 @@ section{padding:80px 5%}
 .module-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
 .module-card p{font-size:.9rem;color:var(--text-sec)}
 
+/* ── VISTA DEL PRODUCTO (mockups) ── */
+.preview-bg{background:linear-gradient(180deg,#fff 0%,var(--bg) 100%);padding:80px 5%}
+.preview-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:60px}
+.preview-card{background:#fff;border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);transition:transform .2s}
+.preview-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.preview-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.preview-head .dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb}
+.preview-head .dot.r{background:#ef4444}.preview-head .dot.y{background:#f59e0b}.preview-head .dot.g{background:#10b981}
+.preview-label{font-size:.75rem;color:var(--text-ter);font-weight:600;letter-spacing:.5px;margin-left:auto}
+.preview-body{background:#f8fafc;border-radius:8px;padding:14px;min-height:260px;font-family:'DM Sans',sans-serif}
+
+/* Mockup 1 — Dashboard */
+.m-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.m-kpi{background:#fff;padding:10px 12px;border-radius:6px;border:1px solid #e5e7eb}
+.m-kpi-l{font-size:.62rem;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}
+.m-kpi-v{font-size:1.1rem;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--primary);line-height:1.2}
+.m-kpi-s{font-size:.65rem;color:#10b981}
+.m-bar{display:flex;gap:2px;align-items:flex-end;height:52px;margin-top:4px}
+.m-bar span{flex:1;background:linear-gradient(180deg,#64b5f6,#0288d1);border-radius:2px 2px 0 0}
+
+/* Mockup 2 — Mapa parcelas */
+.m-map-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.m-pitch{aspect-ratio:1;border-radius:3px;font-size:.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.m-pitch.free{background:#d1fae5;color:#059669}
+.m-pitch.occ{background:#fca5a5}
+.m-pitch.res{background:#fcd34d;color:#92400e}
+.m-pitch.out{background:#d1d5db;color:#6b7280}
+.m-map-legend{display:flex;gap:10px;margin-top:10px;font-size:.7rem;color:#6b7280;flex-wrap:wrap}
+.m-map-legend span{display:inline-flex;align-items:center;gap:4px}
+.m-map-legend span::before{content:'';width:10px;height:10px;border-radius:2px}
+.m-map-legend .l-free::before{background:#d1fae5}.m-map-legend .l-occ::before{background:#fca5a5}.m-map-legend .l-res::before{background:#fcd34d}
+
+/* Mockup 3 — Booking wizard */
+.m-wiz-steps{display:flex;gap:4px;margin-bottom:14px}
+.m-wiz-step{flex:1;height:4px;background:#e5e7eb;border-radius:2px}
+.m-wiz-step.active{background:var(--primary)}
+.m-wiz-step.done{background:#10b981}
+.m-wiz-title{font-size:.8rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.m-wiz-field{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:.72rem;color:#6b7280;display:flex;align-items:center;gap:8px}
+.m-wiz-field strong{color:var(--text);font-weight:600}
+.m-wiz-summary{background:var(--primary-light);border-radius:6px;padding:10px;font-size:.72rem;color:var(--primary-dark);font-weight:600;text-align:center;margin-top:6px}
+
+@media(max-width:900px){
+  .preview-grid{grid-template-columns:1fr;gap:16px}
+}
+
 /* ── PRECIOS ── */
 .pricing-bg{background:linear-gradient(180deg,var(--bg) 0%,#eef4ff 100%)}
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:60px;max-width:800px;margin-left:auto;margin-right:auto}
@@ -151,7 +221,28 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   .problem-grid,.case-card,.pricing-grid,.footer-grid{grid-template-columns:1fr}
   .hero-stats{gap:24px}
   .hero-stat strong{font-size:1.5rem}
+  .hamburger{display:flex!important}
 }
+
+/* ── HAMBURGER / MOBILE MENU ── */
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;margin-left:8px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--text);border-radius:2px;transition:all .3s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;bottom:0;background:#fff;z-index:98;padding:32px 5%;flex-direction:column;gap:0;overflow-y:auto}
+.mobile-menu.open{display:flex}
+.mobile-menu a{color:var(--text);font-size:1.1rem;font-weight:600;padding:18px 0;border-bottom:1px solid var(--border)}
+.mobile-menu a.btn{margin-top:16px;text-align:center;border-bottom:none;border-radius:10px;padding:14px 24px;justify-content:center}
+
+/* ── COOKIE BANNER ── */
+#cs-cookie-bar{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0a1628;color:rgba(255,255,255,.92);padding:16px 5%;display:none;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 -4px 24px rgba(0,0,0,.25);font-size:.88rem;line-height:1.5}
+#cs-cookie-bar p{margin:0;flex:1;min-width:220px}
+#cs-cookie-bar a{color:#64b5f6;text-decoration:underline}
+.cs-cb-btns{display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.cs-cb-accept{background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem}
+.cs-cb-reject{background:transparent;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.3);padding:10px 22px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem;transition:border-color .2s,color .2s}
+.cs-cb-reject:hover{border-color:rgba(255,255,255,.7);color:#fff}
 </style>
 </head>
 <body>
@@ -159,19 +250,32 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="#" style="display:inline-flex;align-items:center;text-decoration:none">
+    <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" style="display:inline-flex;align-items:center;text-decoration:none" aria-label="CheckingSmart — inicio">
       <img src="/assets/logo.svg" alt="CheckingSmart" height="44" style="height:44px;width:auto"/>
     </a>
     <div class="nav-links">
       <a href="#modulos">Funcionalidades</a>
+      <a href="#vista">Vista del producto</a>
       <a href="#precios">Precios</a>
-      <a href="#como-funciona">Cómo funciona</a>
       <a href="#faq">FAQ</a>
       <a href="#contacto" class="btn btn-outline" style="padding:8px 20px">Contacto</a>
       <a href="/login/" class="btn btn-primary" style="padding:8px 20px">Acceder</a>
     </div>
+    <button class="hamburger" aria-label="Abrir menú" onclick="csToggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="cs-mobile-menu">
+  <a href="#modulos" onclick="csCloseMenu()">Funcionalidades</a>
+  <a href="#vista" onclick="csCloseMenu()">Vista del producto</a>
+  <a href="#precios" onclick="csCloseMenu()">Precios</a>
+  <a href="#faq" onclick="csCloseMenu()">FAQ</a>
+  <a href="#contacto" onclick="csCloseMenu()" class="btn btn-accent">Solicitar prueba gratuita</a>
+  <a href="/login/" class="btn btn-primary">Acceder</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -185,7 +289,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   <div class="hero-stats">
     <div class="hero-stat"><strong>100%</strong><span>Sin papel</span></div>
     <div class="hero-stat"><strong>4 idiomas</strong><span>ES / EN / DE / FR</span></div>
-    <div class="hero-stat"><strong>3,33€/día</strong><span>Plan Essential</span></div>
+    <div class="hero-stat"><strong>199€/mes</strong><span>Todo incluido</span></div>
     <div class="hero-stat"><strong>30 días</strong><span>Prueba gratuita</span></div>
   </div>
 </section>
@@ -302,6 +406,92 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   </div>
 </section>
 
+<!-- VISTA DEL PRODUCTO (mockups) -->
+<section class="preview-bg" id="vista">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-label">Vista del producto</span>
+      <h2 class="section-title">Así se ve trabajar con CheckingSmart</h2>
+      <p class="section-sub">Tres ejemplos de lo que tú y tu equipo manejáis cada día.</p>
+    </div>
+    <div class="preview-grid">
+
+      <!-- Mockup 1 — Dashboard -->
+      <div class="preview-card">
+        <div class="preview-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="preview-label">📊 DASHBOARD</span>
+        </div>
+        <div class="preview-body">
+          <div class="m-kpi-grid">
+            <div class="m-kpi"><div class="m-kpi-l">Ocupación hoy</div><div class="m-kpi-v">47/70</div><div class="m-kpi-s">67 %</div></div>
+            <div class="m-kpi"><div class="m-kpi-l">Llegadas hoy</div><div class="m-kpi-v">12</div><div class="m-kpi-s">+3 vs ayer</div></div>
+            <div class="m-kpi"><div class="m-kpi-l">Ingresos día</div><div class="m-kpi-v">893 €</div><div class="m-kpi-s">+15 %</div></div>
+            <div class="m-kpi"><div class="m-kpi-l">Pendientes</div><div class="m-kpi-v" style="color:#e65100">4</div><div class="m-kpi-s" style="color:#e65100">revisar</div></div>
+          </div>
+          <div class="m-kpi" style="padding:8px 12px">
+            <div class="m-kpi-l">Ingresos últimos 7 días</div>
+            <div class="m-bar">
+              <span style="height:40%"></span><span style="height:55%"></span><span style="height:35%"></span><span style="height:70%"></span><span style="height:85%"></span><span style="height:60%"></span><span style="height:92%"></span>
+            </div>
+          </div>
+        </div>
+        <h3 style="font-size:.95rem;margin:12px 0 4px">Dashboard en vivo</h3>
+        <p style="font-size:.8rem;color:var(--text-sec)">Ocupación, llegadas, ingresos y pendientes, siempre actualizados.</p>
+      </div>
+
+      <!-- Mockup 2 — Mapa parcelas -->
+      <div class="preview-card">
+        <div class="preview-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="preview-label">🗺️ MAPA DE PARCELAS</span>
+        </div>
+        <div class="preview-body">
+          <div class="m-map-grid">
+            <div class="m-pitch occ">01</div><div class="m-pitch occ">02</div><div class="m-pitch free">03</div><div class="m-pitch occ">04</div><div class="m-pitch res">05</div><div class="m-pitch free">06</div><div class="m-pitch occ">07</div><div class="m-pitch occ">08</div><div class="m-pitch free">09</div><div class="m-pitch occ">10</div>
+            <div class="m-pitch occ">11</div><div class="m-pitch res">12</div><div class="m-pitch occ">13</div><div class="m-pitch occ">14</div><div class="m-pitch free">15</div><div class="m-pitch occ">16</div><div class="m-pitch res">17</div><div class="m-pitch occ">18</div><div class="m-pitch occ">19</div><div class="m-pitch free">20</div>
+            <div class="m-pitch free">21</div><div class="m-pitch occ">22</div><div class="m-pitch occ">23</div><div class="m-pitch free">24</div><div class="m-pitch occ">25</div><div class="m-pitch occ">26</div><div class="m-pitch free">27</div><div class="m-pitch res">28</div><div class="m-pitch occ">29</div><div class="m-pitch occ">30</div>
+            <div class="m-pitch occ">31</div><div class="m-pitch occ">32</div><div class="m-pitch free">33</div><div class="m-pitch out">34</div><div class="m-pitch out">35</div><div class="m-pitch free">36</div><div class="m-pitch occ">37</div><div class="m-pitch free">38</div><div class="m-pitch occ">39</div><div class="m-pitch occ">40</div>
+          </div>
+          <div class="m-map-legend">
+            <span class="l-free">Libre</span>
+            <span class="l-occ">Ocupada</span>
+            <span class="l-res">Reservada</span>
+          </div>
+        </div>
+        <h3 style="font-size:.95rem;margin:12px 0 4px">Mapa visual del área</h3>
+        <p style="font-size:.8rem;color:var(--text-sec)">Haz clic en cualquier parcela para ver quién la ocupa.</p>
+      </div>
+
+      <!-- Mockup 3 — Booking wizard -->
+      <div class="preview-card">
+        <div class="preview-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="preview-label">🗓️ RESERVA ONLINE</span>
+        </div>
+        <div class="preview-body">
+          <div class="m-wiz-steps">
+            <div class="m-wiz-step done"></div>
+            <div class="m-wiz-step done"></div>
+            <div class="m-wiz-step active"></div>
+            <div class="m-wiz-step"></div>
+          </div>
+          <div class="m-wiz-title">Paso 3 de 4 — Tus datos</div>
+          <div class="m-wiz-field">📅 <strong>12 – 17 ago 2026</strong> · 5 noches</div>
+          <div class="m-wiz-field">🚐 Autocaravana · <strong>1234 ABC</strong></div>
+          <div class="m-wiz-field">👪 2 adultos · 1 niño</div>
+          <div class="m-wiz-field">👤 <strong>Nombre y apellidos</strong></div>
+          <div class="m-wiz-field" style="background:#e1f5fe;border-color:#81d4fa">✉️ cliente@email.com</div>
+          <div class="m-wiz-summary">💳 Total 95,00 € · Señal 50% (47,50 €)</div>
+        </div>
+        <h3 style="font-size:.95rem;margin:12px 0 4px">Motor de reservas 24/7</h3>
+        <p style="font-size:.8rem;color:var(--text-sec)">En tu propio dominio, tu marca, en 4 idiomas.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- PRECIOS -->
 <section class="pricing-bg" id="precios">
   <div class="container">
@@ -336,7 +526,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
           <li>2 usuarios</li>
           <li>Soporte email 48h</li>
         </ul>
-        <a id="link-essential" href="https://buy.stripe.com/test_cNi3cvcXi70s79F52k63K03" target="_blank" class="btn btn-outline" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <a id="link-essential" href="mailto:hola@checkingsmart.com?subject=Prueba%20gratuita%20plan%20Essential&body=Hola%2C%20me%20interesa%20probar%20CheckingSmart%20plan%20Essential.%0A%0ANombre%20del%20%C3%A1rea%3A%0ANo%20de%20plazas%3A%0ATel%C3%A9fono%3A%0A%0AGracias." class="btn btn-outline" style="width:100%;justify-content:center">Solicitar prueba gratuita</a>
         <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
       </div>
       <div class="price-card featured">
@@ -353,16 +543,16 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
           <li>Onboarding personalizado</li>
           <li>Videollamada de configuración</li>
         </ul>
-        <a id="link-professional" href="https://buy.stripe.com/test_eVq00j3mI84weC70M463K04" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center">Empezar gratis 30 días</a>
+        <a id="link-professional" href="mailto:hola@checkingsmart.com?subject=Prueba%20gratuita%20plan%20Professional&body=Hola%2C%20me%20interesa%20probar%20CheckingSmart%20plan%20Professional.%0A%0ANombre%20del%20%C3%A1rea%3A%0ANo%20de%20plazas%3A%0ATel%C3%A9fono%3A%0A%0AGracias." class="btn btn-primary" style="width:100%;justify-content:center">Solicitar prueba gratuita</a>
         <p class="price-trial">Sin tarjeta de crédito • Cancela cuando quieras</p>
       </div>
     </div>
     <script>
     var PRICES = {
-      month: { essential: { amount:'199', period:'/ mes · IVA no incluido', url:'https://buy.stripe.com/test_cNi3cvcXi70s79F52k63K03' },
-               professional: { amount:'299', period:'/ mes · IVA no incluido', url:'https://buy.stripe.com/test_eVq00j3mI84weC70M463K04' } },
-      year:  { essential: { amount:'179', period:'/ mes · facturado 2.149 €/año · IVA no incluido', url:'https://buy.stripe.com/test_cNi4gz0aw70s8dJgL263K07' },
-               professional: { amount:'269', period:'/ mes · facturado 3.229 €/año · IVA no incluido', url:'https://buy.stripe.com/test_bJe7sL0aw1G8fGbbqI63K08' } }
+      month: { essential:    { amount:'199', period:'/ mes · IVA no incluido' },
+               professional: { amount:'299', period:'/ mes · IVA no incluido' } },
+      year:  { essential:    { amount:'179', period:'/ mes · facturado 2.149 €/año · IVA no incluido' },
+               professional: { amount:'269', period:'/ mes · facturado 3.229 €/año · IVA no incluido' } }
     };
     function switchBilling(isAnnual) {
       var mode = isAnnual ? 'year' : 'month';
@@ -378,7 +568,7 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
         var d = PRICES[mode][p];
         document.getElementById('price-'+p).innerHTML = d.amount+'<span>€</span>';
         document.getElementById('period-'+p).textContent = d.period;
-        document.getElementById('link-'+p).href = d.url;
+        // nota: el botón sigue siendo mailto y no cambia con el período (recibimos la solicitud por email)
       });
     }
     </script>
@@ -409,8 +599,8 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <h3>Videollamada de configuración</h3>
-        <p>1 hora contigo para configurar parcelas, tarifas y motor de reservas.</p>
+        <h3>Configuramos tu área</h3>
+        <p>Parcelas, tarifas y motor de reservas listos. Te acompañamos en cada paso.</p>
       </div>
       <div class="step">
         <div class="step-num">4</div>
@@ -421,37 +611,44 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   </div>
 </section>
 
-<!-- CASO DE ÉXITO -->
+<!-- SEGURIDAD Y CUMPLIMIENTO (trust signals) -->
 <section class="case-bg">
   <div class="container">
-    <div class="case-card">
-      <div>
-        <span class="section-label">Caso de éxito</span>
-        <h2 class="section-title">Area Málaga Beach</h2>
-        <blockquote class="case-quote">
-          "Antes perdíamos reservas por no estar disponibles 24 horas. Ahora el sistema trabaja por nosotros mientras dormimos. Los partes de policía que antes tardaban 20 minutos los hacemos en 2 clics."
-        </blockquote>
-        <div class="case-author">
-          <div class="case-avatar">A</div>
-          <div>
-            <strong>Administración</strong>
-            <div style="font-size:.85rem;color:var(--text-sec)">Area Málaga Beach · Primera línea de playa, Málaga</div>
-          </div>
-        </div>
+    <div class="text-center">
+      <span class="section-label">Seguridad y cumplimiento</span>
+      <h2 class="section-title">Tus datos, protegidos</h2>
+      <p class="section-sub">Cumplimos la normativa europea desde el primer día. Infraestructura segura y copias de seguridad automáticas.</p>
+    </div>
+    <div class="modules-grid" style="margin-top:48px">
+      <div class="module-card">
+        <div class="module-icon">🇪🇺</div>
+        <h3>Datos alojados en Europa</h3>
+        <p>Infraestructura en Google Cloud (europe-west1, Bélgica). Cumplimiento total RGPD sin transferencias internacionales.</p>
       </div>
-      <div class="case-stats">
-        <div class="case-stat">
-          <strong>+40%</strong>
-          <span>Más reservas online el primer mes</span>
-        </div>
-        <div class="case-stat">
-          <strong>2 min</strong>
-          <span>Para hacer el parte de policía (antes: 20 min)</span>
-        </div>
-        <div class="case-stat">
-          <strong>0 errores</strong>
-          <span>En partes de viajeros desde que usan el escáner DNI</span>
-        </div>
+      <div class="module-card">
+        <div class="module-icon">🔐</div>
+        <h3>Cifrado en tránsito y reposo</h3>
+        <p>Todas las conexiones SSL/TLS. Datos cifrados en la base de datos. Contraseñas nunca en claro.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">💾</div>
+        <h3>Backup diario automático</h3>
+        <p>Copia de seguridad nocturna con retención de 90 días. Recuperación punto en el tiempo (PITR) de los últimos 7 días.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">📋</div>
+        <h3>LOPD / RGPD</h3>
+        <p>Gestión del consentimiento, derechos ARCO/ARCOPOL, registro de actividades. Todo preparado para una inspección AEPD.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🧾</div>
+        <h3>Factura electrónica lista</h3>
+        <p>Generación de facturas con serie, numeración correlativa y datos fiscales completos. Compatible con gestoría.</p>
+      </div>
+      <div class="module-card">
+        <div class="module-icon">🚔</div>
+        <h3>SES Hospedajes oficial</h3>
+        <p>Formato exacto del Ministerio del Interior. Obligatorio desde 2024 para áreas y campings.</p>
       </div>
     </div>
   </div>
@@ -484,7 +681,6 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
       <div class="faq-item">
         <div class="faq-q">¿Puedo cancelar cuando quiera? <span>+</span></div>
         <div class="faq-a">Sí, sin permanencia ni penalizaciones. Cancela en cualquier momento y el acceso se mantiene hasta el final del período pagado.</div>
-      </div>
       <div class="faq-item">
         <div class="faq-q">¿Funciona para campings y RV parks además de áreas de autocaravanas? <span>+</span></div>
         <div class="faq-a">Completamente. El sistema es configurable: número de plazas, zonas, tipología de vehículos, tarifas... se adapta a cualquier tipo de área de estancia para vehículos de recreo.</div>
@@ -498,10 +694,11 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
   <h2>¿Listo para modernizar tu área?</h2>
   <p>30 días gratis, sin tarjeta de crédito. Tu área configurada en 24 horas.</p>
   <div class="hero-ctas">
-    <a href="mailto:checkingsmart.soporte@gmail.com?subject=Quiero probar CheckingSmart" class="btn btn-accent btn-xl">Solicitar prueba gratuita</a>
-    <a href="https://wa.me/34600000000?text=Hola, me interesa CheckingSmart" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">💬 Hablar por WhatsApp</a>
+    <a href="mailto:hola@checkingsmart.com?subject=Quiero%20probar%20CheckingSmart&body=Hola%2C%0A%0AMe%20interesa%20probar%20CheckingSmart%20en%20mi%20%C3%A1rea.%0A%0ANombre%20del%20%C3%A1rea%3A%0AN%C2%BA%20de%20plazas%3A%0ATel%C3%A9fono%3A%0A%0AGracias." class="btn btn-accent btn-xl">Solicitar prueba gratuita</a>
+    <!-- TODO: reemplaza 34600000000 con tu número de WhatsApp Business -->
+    <a href="https://wa.me/34600000000?text=Hola%2C%20me%20interesa%20CheckingSmart%20para%20mi%20%C3%A1rea%20de%20autocaravanas" class="btn btn-xl" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
   </div>
-  <p style="margin-top:24px;font-size:.85rem;opacity:.6">O escríbenos a checkingsmart.soporte@gmail.com</p>
+  <p style="margin-top:24px;font-size:.85rem;opacity:.6">O escríbenos a hola@checkingsmart.com</p>
 </section>
 
 <!-- FOOTER -->
@@ -520,14 +717,15 @@ footer{background:#0a1628;color:rgba(255,255,255,.7);padding:60px 5% 32px;font-s
     </div>
     <div class="footer-col">
       <h4>Empresa</h4>
-      <a href="mailto:checkingsmart.soporte@gmail.com">Contacto</a>
-      <a href="#">Aviso legal</a>
-      <a href="#">Privacidad</a>
-      <a href="#">Cookies</a>
+      <a href="mailto:hola@checkingsmart.com">Contacto</a>
+      <a href="#contacto">Solicitar demo</a>
+      <a href="/aviso-legal/">Aviso legal</a>
+      <a href="/privacidad/">Privacidad</a>
+      <a href="/cookies/">Cookies</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 CheckingSmart. Todos los derechos reservados.</span>
+    <span>© 2026 CheckingSmart™ — Safe Creative nº 2604225360000</span>
     <span>Hecho con ❤️ para áreas de autocaravanas</span>
   </div>
 </footer>
@@ -544,8 +742,63 @@ document.querySelectorAll('.faq-q').forEach(q => {
     icon.textContent = open ? '+' : '−';
   });
 });
-// Ocultar respuestas por defecto
 document.querySelectorAll('.faq-a').forEach(a => a.style.display = 'none');
+
+// ── Mobile menu ──────────────────────────────────────────────────
+function csToggleMenu(){
+  var m=document.getElementById('cs-mobile-menu');
+  var b=document.querySelector('.hamburger');
+  var open=m.classList.toggle('open');
+  b.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+function csCloseMenu(){
+  document.getElementById('cs-mobile-menu').classList.remove('open');
+  document.querySelector('.hamburger').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── Cookie consent + GA4 ────────────────────────────────────────
+// ⚠️ Reemplaza G-XXXXXXXXXX con tu Measurement ID real de Google Analytics 4
+var GA4_ID='G-XXXXXXXXXX';
+
+function loadGA4(){
+  if(window._csGA4Loaded||!GA4_ID||GA4_ID==='G-XXXXXXXXXX')return;
+  window._csGA4Loaded=true;
+  var s=document.createElement('script');
+  s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA4_ID;
+  document.head.appendChild(s);
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag=gtag;
+  gtag('js',new Date());
+  gtag('config',GA4_ID,{anonymize_ip:true});
+}
+
+function csCookies(accept){
+  localStorage.setItem('cs_cookie_choice',accept?'all':'essential');
+  document.getElementById('cs-cookie-bar').style.display='none';
+  if(accept)loadGA4();
+}
+
+(function initCookieBar(){
+  var choice=localStorage.getItem('cs_cookie_choice');
+  if(!choice){
+    document.getElementById('cs-cookie-bar').style.display='flex';
+  } else if(choice==='all'){
+    loadGA4();
+  }
+})();
 </script>
+
+<!-- COOKIE BANNER RGPD -->
+<div id="cs-cookie-bar">
+  <p>🍪 Usamos cookies propias y analíticas (Google Analytics) para mejorar tu experiencia. <a href="/cookies/">Política de cookies</a>.</p>
+  <div class="cs-cb-btns">
+    <button class="cs-cb-reject" onclick="csCookies(false)">Solo esenciales</button>
+    <button class="cs-cb-accept" onclick="csCookies(true)">Aceptar todas</button>
+  </div>
+</div>
+
 </body>
 </html>

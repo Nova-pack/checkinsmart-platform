@@ -4,68 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guía de Recepción — CheckingSmart</title>
+<link rel="icon" type="image/svg+xml" href="/assets/icon-pwa.svg">
 <style>
-  /* ── BASE ── */
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1a1a2e;background:#f0f2f5;line-height:1.55}
   a{color:#0066cc;text-decoration:none}
 
-  /* ── LAYOUT ── */
   .page-wrap{max-width:900px;margin:0 auto;padding:24px 16px}
 
-  /* ── COVER ── */
   .cover{background:linear-gradient(135deg,#0d2050 0%,#1a3a8f 60%,#2a4fa0 100%);color:#fff;border-radius:16px;padding:40px 36px;margin-bottom:32px;text-align:center}
   .cover h1{font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
   .cover .sub{font-size:.95rem;opacity:.75;margin-bottom:20px}
   .cover .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
   .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 14px;font-size:.78rem;font-weight:600}
+  .pdf-btn{display:inline-block;margin-top:18px;background:#FF6B35;color:#fff;padding:10px 22px;border-radius:10px;font-weight:700;font-size:.88rem;text-decoration:none}
+  .pdf-btn:hover{background:#e85a24}
 
-  /* ── TOC ── */
   .toc{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:28px;border:1px solid #e0e4f0}
   .toc h3{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:12px}
   .toc ol{padding-left:20px}
   .toc li{margin-bottom:5px;font-size:.88rem}
   .toc a{color:#1a3a8f;font-weight:500}
 
-  /* ── SECTIONS ── */
   .section{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid #e0e4f0;page-break-inside:avoid}
   .section-title{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8edf8}
   .section-title .icon{font-size:1.4rem}
   .section-title h2{font-size:1.05rem;font-weight:700;color:#0d2050}
   .section-title .num{background:#1a3a8f;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
 
-  /* ── STEPS ── */
   .steps{counter-reset:step}
   .step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
   .step-num{background:#1a3a8f;color:#fff;border-radius:50%;width:22px;height:22px;min-width:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;margin-top:1px}
   .step-body{flex:1}
   .step-body strong{color:#0d2050}
 
-  /* ── ALERTS ── */
   .alert{border-radius:8px;padding:12px 14px;margin:12px 0;font-size:.83rem}
   .alert-warn{background:#fff8e1;border-left:4px solid #ffc107;color:#7a5c00}
   .alert-info{background:#e3f2fd;border-left:4px solid #1976d2;color:#0d47a1}
   .alert-danger{background:#ffebee;border-left:4px solid #e53935;color:#7f0000}
   .alert-success{background:#e8f5e9;border-left:4px solid #43a047;color:#1b5e20}
   .alert-secret{background:#f3e5f5;border-left:4px solid #7b1fa2;color:#4a0072}
+  .alert-new{background:#e0f2fe;border-left:4px solid #0288d1;color:#01579b}
+  .alert-new strong{color:#01579b}
 
-  /* ── TABLES ── */
   table{width:100%;border-collapse:collapse;font-size:.83rem;margin:12px 0}
   th{background:#eef1fb;color:#0d2050;font-weight:700;padding:7px 10px;text-align:left;border-bottom:2px solid #d0d8f0}
   td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#fafbff}
 
-  /* ── COLS ── */
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 
-  /* ── CARDS SMALL ── */
   .mini-card{background:#f8f9ff;border:1px solid #dde2f5;border-radius:8px;padding:12px 14px}
   .mini-card h4{font-size:.82rem;font-weight:700;color:#1a3a8f;margin-bottom:5px}
   .mini-card p{font-size:.78rem;color:#555}
 
-  /* ── SHORTCUT BOX ── */
   .shortcuts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
   .sc{background:#1a3a8f;color:#fff;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600}
   .sc.red{background:#c62828}
@@ -73,13 +67,18 @@
   .sc.purple{background:#6a1b9a}
   .sc.orange{background:#e65100}
 
-  /* ── TIP ── */
+  .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;margin:0 2px}
+  .tag-blue{background:#e1f5fe;color:#0277bd}
+  .tag-green{background:#e8f5e9;color:#2e7d32}
+  .tag-purple{background:#f3e5f5;color:#6a1b9a}
+  .tag-orange{background:#fff3e0;color:#e65100}
+
+  .new-chip{display:inline-block;background:#FF6B35;color:#fff;font-size:.65rem;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
+
   .tip{font-size:.78rem;color:#888;font-style:italic;margin-top:6px}
 
-  /* ── FOOTER ── */
   .guide-footer{text-align:center;padding:20px;font-size:.75rem;color:#aaa;margin-top:12px}
 
-  /* ── PRINT ── */
   @media print{
     body{background:#fff;font-size:11px}
     .page-wrap{max-width:100%;padding:0}
@@ -92,6 +91,7 @@
     .sc{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .alert{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .cover{background:#1a3a8f !important}
+    .pdf-btn{display:none}
   }
 
   @media(max-width:600px){
@@ -108,11 +108,12 @@
   <h1>📋 Guía de Recepción</h1>
   <div class="sub">CheckingSmart · Sistema de Gestión de Áreas</div>
   <div class="badges">
-    <span class="badge">v1.0 · Abril 2026</span>
+    <span class="badge">v2.0 · Abril 2026</span>
     <span class="badge">🖨️ Imprimible</span>
     <span class="badge">📱 Digital</span>
     <span class="badge">🔒 Confidencial</span>
   </div>
+  <a class="pdf-btn no-print" href="/assets/guia-checkingsmart.pdf" target="_blank">📄 Descargar PDF</a>
 </div>
 
 <!-- TOC -->
@@ -121,12 +122,15 @@
   <ol>
     <li><a href="#acceso">Acceso al sistema (Login)</a></li>
     <li><a href="#panel">Panel principal</a></li>
-    <li><a href="#checkin">Check-in de huéspedes</a></li>
-    <li><a href="#cobro">Cobro y facturación</a></li>
+    <li><a href="#checkin">Check-in y asignación de parcela</a></li>
+    <li><a href="#cobro">Cobro, factura y fianzas</a></li>
+    <li><a href="#transferir">Transferir reserva a otro huésped</a></li>
     <li><a href="#checkout">Check-out</a></li>
-    <li><a href="#confirmacion">Correos de confirmación automáticos</a></li>
-    <li><a href="#masivos">Correos masivos (Comunicaciones)</a></li>
     <li><a href="#motor">Motor de reservas online</a></li>
+    <li><a href="#buzon">Buzón IA (correos entrantes)</a></li>
+    <li><a href="#papelera">Papelera y seguridad de datos</a></li>
+    <li><a href="#confirmacion">Correos automáticos</a></li>
+    <li><a href="#masivos">Correos masivos (Comunicaciones)</a></li>
     <li><a href="#incidencias">Incidencias frecuentes</a></li>
     <li><a href="#contacto">Contacto y soporte</a></li>
   </ol>
@@ -154,8 +158,8 @@
 
   <table>
     <tr><th>Rol</th><th>Qué puede hacer</th></tr>
-    <tr><td><strong>Administrador</strong></td><td>Todo: configuración, usuarios, facturas, estadísticas, comunicaciones, copias de seguridad</td></tr>
-    <tr><td><strong>Recepcionista</strong></td><td>Check-in/out, cobros, tienda, reservas, notebook, <strong>comunicaciones</strong></td></tr>
+    <tr><td><strong>Administrador</strong></td><td>Todo: configuración, usuarios, facturas, estadísticas, comunicaciones, copias de seguridad, papelera</td></tr>
+    <tr><td><strong>Recepcionista</strong></td><td>Check-in/out, cobros, tienda, reservas, notebook, comunicaciones <em>(sin botones destructivos)</em></td></tr>
   </table>
 </div>
 
@@ -171,27 +175,35 @@
   <div class="two-col">
     <div class="mini-card">
       <h4>📊 Dashboard</h4>
-      <p>Vista rápida: ocupación, llegadas hoy, salidas hoy, ingresos del día, parcelas libres.</p>
+      <p>Ocupación, llegadas/salidas hoy, ingresos día, pendientes de cobro <em>(sin contar C5)</em>.</p>
     </div>
     <div class="mini-card">
-      <h4>👥 Huéspedes</h4>
-      <p>Lista completa de todas las reservas. Filtra por estado, fecha o busca por nombre/matrícula/DNI.</p>
+      <h4>👥 Huéspedes / Reservas</h4>
+      <p>Lista completa. Filtros por estado y fecha. Filas lila = cobro C5. Punto morado al lado del nombre = alternativo.</p>
+    </div>
+    <div class="mini-card">
+      <h4>🗺️ Mapa de parcelas</h4>
+      <p>Vista visual del área con colores libre/ocupada/reservada. Clic en una parcela → ficha.</p>
     </div>
     <div class="mini-card">
       <h4>💰 Caja Diaria</h4>
-      <p>Registro de ingresos y gastos del día. Cierre de caja al finalizar turno.</p>
+      <p>Ingresos y gastos del día. Cierre de caja al finalizar turno.</p>
     </div>
     <div class="mini-card">
       <h4>🏪 Tienda</h4>
-      <p>Venta de productos y servicios (duchas, lavandería, etc.).</p>
+      <p>Venta de productos y servicios (duchas, lavandería, químicos, etc.).</p>
     </div>
     <div class="mini-card">
       <h4>📋 Listados</h4>
-      <p>Partes de policía, ocupación, facturas emitidas.</p>
+      <p>Partes SES Hospedajes, ocupación, facturas, registros INE/EOAC.</p>
     </div>
     <div class="mini-card">
       <h4>📧 Comunicaciones</h4>
-      <p>Envío masivo de emails a huéspedes seleccionados (solo admin).</p>
+      <p>Envío masivo de emails con variables y link de pago embebido (solo admin).</p>
+    </div>
+    <div class="mini-card">
+      <h4>📬 Buzón IA <span class="new-chip">NUEVO</span></h4>
+      <p>Correos entrantes clasificados automáticamente por IA. Borradores de respuesta auto-generados para reservas urgentes.</p>
     </div>
   </div>
 </div>
@@ -202,7 +214,11 @@
   <div class="section-title">
     <span class="num">3</span>
     <span class="icon">🚐</span>
-    <h2>Check-in de huéspedes</h2>
+    <h2>Check-in y asignación de parcela <span class="new-chip">CAMBIO</span></h2>
+  </div>
+
+  <div class="alert alert-new">
+    <strong>🎯 Novedad:</strong> Las reservas <strong>online</strong> ya no incluyen la selección de parcela por parte del cliente. El cliente solo reserva el <em>tipo</em> de estancia; es <strong>recepción</strong> quien asigna la parcela exacta a la llegada desde la ficha del huésped. Esto evita conflictos y da flexibilidad al día a día.
   </div>
 
   <div class="two-col">
@@ -210,22 +226,28 @@
       <strong style="font-size:.85rem;display:block;margin-bottom:8px">A · Reserva ya existente (online)</strong>
       <div class="steps">
         <div class="step"><div class="step-num">1</div><div class="step-body">Busca al huésped por nombre, matrícula o código de reserva</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-body">Pulsa <strong>Gestionar</strong> → verifica datos (parcela, fechas, vehículo)</div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-body">Pulsa <strong>Check-in</strong> → el estado cambia a 🟢 En el área</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">Abre la ficha → verás en la caja <strong>Parcela</strong> un aviso <span class="tag tag-orange">⏳ Sin asignar</span> con el tipo reservado</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">Pulsa el botón <strong>🎯 Asignar</strong> dentro de la caja Parcela, o bien <strong>🎯 Asignar</strong> en la pestaña "Cambiar Estancia"</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">Elige una parcela del listado filtrado por tipo — solo aparecen las libres para esas fechas</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">Pulsa <strong>Check-in</strong> → el estado cambia a <span class="tag tag-green">🟢 En el área</span></div></div>
       </div>
     </div>
     <div>
       <strong style="font-size:.85rem;display:block;margin-bottom:8px">B · Llegada sin reserva previa</strong>
       <div class="steps">
-        <div class="step"><div class="step-num">1</div><div class="step-body">Pulsa <strong>+ Nueva Reserva</strong> (botón superior)</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-body">Rellena: nombre, apellidos, DNI/pasaporte, matrícula, fechas, parcela, tipo de vehículo</div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-body">Pulsa <strong>+ Nueva Reserva</strong></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">Rellena: nombre, DNI/pasaporte, matrícula, fechas, parcela, tipo de vehículo, tipo de plaza</div></div>
         <div class="step"><div class="step-num">3</div><div class="step-body">Guarda → realiza el check-in desde la ficha</div></div>
       </div>
     </div>
   </div>
 
   <div class="alert alert-info">
-    <strong>💡 Escáner DNI:</strong> Dentro de la ficha del huésped, pulsa el icono de cámara 📷 para escanear el documento de identidad y autorellenar los campos automáticamente.
+    <strong>💡 Escáner DNI:</strong> Dentro de la ficha del huésped, pulsa el icono de cámara 📷 para escanear el documento y auto-rellenar nombre, apellidos, DNI y nacionalidad gracias al código MRZ.
+  </div>
+
+  <div class="alert alert-success">
+    <strong>✅ El listado de parcelas al asignar YA FILTRA por tipo reservado.</strong> Si una reserva es "1ª línea de playa 6A", solo verás parcelas de ese tipo disponibles en esas fechas. Ni te preocupes por elegir una incompatible.
   </div>
 </div>
 
@@ -235,191 +257,316 @@
   <div class="section-title">
     <span class="num">4</span>
     <span class="icon">🧾</span>
-    <h2>Cobro y facturación</h2>
+    <h2>Cobro, factura y fianzas <span class="new-chip">ACTUALIZADO</span></h2>
   </div>
 
-  <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha del huésped → pestaña <strong>Cobro</strong></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body">Revisa el importe calculado: alojamiento + extras de tienda</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body">Selecciona el método de pago: <strong>Efectivo</strong>, <strong>Tarjeta</strong>, <strong>Bizum</strong>, <strong>Transferencia</strong> o <strong>Mixto</strong></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body">Pulsa <strong>🧾 Emitir Factura</strong> → la factura queda registrada y el huésped aparece como <em>Pagado</em></div></div>
-    <div class="step"><div class="step-num">5</div><div class="step-body">Imprime la factura si el cliente la solicita con el botón <strong>🖨️ Imprimir Factura</strong></div></div>
+  <div class="alert alert-new">
+    <strong>💳 Regla de fianza 50% al reservar online:</strong>
+    <ul style="margin:6px 0 0 20px">
+      <li><strong>Reservas 1-3 noches:</strong> el cliente paga el <strong>100% del total</strong> en el momento de reservar.</li>
+      <li><strong>Reservas 4 noches o más:</strong> el cliente paga el <strong>50% como señal</strong> y el <strong>50% restante</strong> lo abona a la llegada en recepción.</li>
+    </ul>
+    La señal ya está descontada del total. En la ficha del huésped verás el desglose claro de lo cobrado online y lo pendiente.
   </div>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:14px 0 6px">Cobro estándar en recepción</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha del huésped → tarjeta <strong>Cobro y Factura</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Si hay <strong>señal online</strong>, verás un banner verde/naranja: <em>"✅ Señal cobrada online: €X · Pendiente: €Y"</em></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Selecciona método de pago para el pendiente: <strong>Tarjeta</strong>, <strong>Efectivo</strong>, <strong>Transferencia</strong> o <strong>Mixto</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Pulsa <strong>Cobrar €X · Factura €Y</strong> → registra el cobro y emite la factura por el total completo</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Imprime con el botón <strong>🖨️ Factura</strong> si el cliente la solicita</div></div>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>💡 IVA incluido:</strong> El precio de la plaza en la configuración YA incluye IVA. El desglose base imponible + IVA se calcula automáticamente para la factura. No sumes IVA manualmente.
+  </div>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:14px 0 6px">Marcado visual del cobro C5 en las tablas</h3>
+  <p style="font-size:.85rem;color:#555;margin-bottom:8px">En la tabla de Reservas y Pagos, los cobros alternativos (C5) se identifican por:</p>
+  <ul style="font-size:.85rem;color:#555;margin-left:20px">
+    <li>Fila con <strong>fondo lila pastel</strong> y borde izquierdo morado</li>
+    <li><strong>Punto lila</strong> al lado del nombre (tooltip "Cobro alternativo")</li>
+    <li>No cuenta en el widget <em>Pendientes de cobro</em> del dashboard</li>
+  </ul>
 
   <table>
     <tr><th>Método</th><th>Qué registra el sistema</th></tr>
+    <tr><td>💳 Tarjeta</td><td>Datacall a SumUp / Redsys · cobro digital</td></tr>
     <tr><td>💵 Efectivo</td><td>Suma al arqueo de caja del día</td></tr>
-    <tr><td>💳 Tarjeta</td><td>Marcado como cobrado; no conectado a TPV físico</td></tr>
-    <tr><td>📱 Bizum</td><td>Registrado como cobro digital</td></tr>
-    <tr><td>🏦 Transferencia</td><td>Marcado pendiente hasta confirmación</td></tr>
-    <tr><td>🔀 Mixto</td><td>Introduce los importes de tarjeta y efectivo por separado</td></tr>
+    <tr><td>🏦 Transferencia</td><td>Marcado pendiente hasta confirmación bancaria</td></tr>
+    <tr><td>🔀 Mixto</td><td>Tarjeta + efectivo — la suma debe igualar el pendiente</td></tr>
+  </table>
+</div>
+
+
+<!-- 5. TRANSFERIR RESERVA -->
+<div class="section" id="transferir">
+  <div class="section-title">
+    <span class="num">5</span>
+    <span class="icon">⇆</span>
+    <h2>Transferir reserva a otro huésped <span class="new-chip">NUEVO</span></h2>
+  </div>
+
+  <p style="margin-bottom:12px">Si por error la reserva (y/o factura) se adjudicó al huésped equivocado, puedes <strong>mover los datos al correcto</strong> con unos clics.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha del huésped <em>incorrecto</em></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">En la tarjeta <strong>Cobro y Factura</strong>, pulsa <strong>⇆ Transferir</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Marca los grupos de datos a mover (por defecto: todos excepto documentos y firma)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Busca al huésped correcto (nombre, DNI, email, matrícula, código)</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Pulsa <strong>⇆ Transferir</strong> → confirma en el diálogo</div></div>
+  </div>
+
+  <table>
+    <tr><th>Grupo</th><th>Qué incluye</th></tr>
+    <tr><td>👤 Datos personales</td><td>Nombre, apellidos, DNI, nacionalidad</td></tr>
+    <tr><td>✉️ Contacto</td><td>Email, teléfono</td></tr>
+    <tr><td>🚙 Vehículo</td><td>Tipo, matrícula</td></tr>
+    <tr><td>📅 Fechas</td><td>Entrada, salida, noches</td></tr>
+    <tr><td>🏕️ Parcela</td><td>Nº, tipo, amperaje</td></tr>
+    <tr><td>👪 Ocupación</td><td>Adultos, niños, mascotas</td></tr>
+    <tr><td>💰 Económico</td><td>Precio, señal online, cobros en caja, estado</td></tr>
+    <tr><td>🧾 Factura</td><td>Se <strong>re-adjudica al destino</strong> manteniendo el ID correlativo</td></tr>
+    <tr><td>📎 Documentos</td><td><em>Off por defecto — el DNI escaneado era del origen, hay que re-escanearlo</em></td></tr>
+    <tr><td>✍️ Firma</td><td><em>Off por defecto — igual, es del origen</em></td></tr>
   </table>
 
   <div class="alert alert-warn">
-    <strong>⚠️ Si el pago fue online (motor de reservas):</strong> El huésped ya aparece como <em>Pagado</em> con el tag <span style="background:#e8f5e9;padding:1px 6px;border-radius:4px;font-size:.8rem">💳 Pagado online</span>. No volver a cobrar.
+    <strong>⚠️ Atención legal:</strong> Usa <em>Transferir</em> <strong>antes</strong> de entregar la factura al cliente o enviarla a la gestoría. Una vez fuera, la ley exige emitir factura rectificativa (abono + nueva), no basta con reasignar.
+  </div>
+
+  <div class="alert alert-info">
+    La ficha del huésped equivocado <strong>se mantiene</strong> (aunque quede sin esa reserva). La operación queda registrada en el <em>Activity Log</em>: quién, cuándo, qué se movió.
   </div>
 </div>
 
 
-<!-- 5. CHECK-OUT -->
+<!-- 6. CHECK-OUT -->
 <div class="section" id="checkout">
   <div class="section-title">
-    <span class="num">5</span>
+    <span class="num">6</span>
     <span class="icon">🏁</span>
     <h2>Check-out</h2>
   </div>
 
   <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-body">Busca al huésped → verifica que la factura esté emitida (pestaña Cobro)</div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Busca al huésped → verifica que la factura esté emitida y el pendiente cobrado</div></div>
     <div class="step"><div class="step-num">2</div><div class="step-body">Si hay consumos de tienda pendientes, cóbralos primero</div></div>
     <div class="step"><div class="step-num">3</div><div class="step-body">Pulsa <strong>Check-out</strong> → confirma en el diálogo</div></div>
     <div class="step"><div class="step-num">4</div><div class="step-body">La parcela queda libre automáticamente en el mapa</div></div>
   </div>
 
   <div class="alert alert-info">
-    Si el huésped quiere ampliar su estancia, usa la pestaña <strong>Ampliar</strong> dentro de su ficha antes de hacer el check-out.
+    Para cambiar fechas o parcela antes del check-out, usa las pestañas <strong>🔀 Mover</strong> / <strong>📅 Ampliar</strong> / <strong>✂️ Dividir</strong> dentro de la ficha.
   </div>
 </div>
 
 
-<!-- 6. CORREOS DE CONFIRMACIÓN -->
+<!-- 7. MOTOR DE RESERVAS -->
+<div class="section" id="motor">
+  <div class="section-title">
+    <span class="num">7</span>
+    <span class="icon">🌐</span>
+    <h2>Motor de reservas online <span class="new-chip">ACTUALIZADO</span></h2>
+  </div>
+
+  <p style="margin-bottom:12px">Página pública donde los clientes reservan y pagan 24/7 sin llamar.</p>
+
+  <strong style="font-size:.82rem;display:block;margin-bottom:8px">Proceso que sigue el cliente:</strong>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Selecciona fechas</strong> y número de personas</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Elige el tipo de estancia</strong> (si el área lo diferencia) · NO elige parcela concreta</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Introduce sus datos</strong>: nombre, apellidos, documento, matrícula</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Resumen + aceptación</strong>: ve desglose 50%+50% si aplica y marca el <em>checkbox</em> obligatorio de aceptación de condiciones</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Pago con tarjeta</strong> a través de Redsys (100% o 50% según noches)</div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body">Recibe el <strong>email de confirmación</strong> con desglose, política de cancelación y aviso de pendiente</div></div>
+  </div>
+
+  <div class="two-col" style="margin-top:12px">
+    <div class="alert alert-success" style="margin:0">
+      <strong>✅ En el panel:</strong> La reserva aparece automáticamente. Estado inicial <span class="tag tag-blue">Pendiente de asignación</span> en la caja Parcela.
+    </div>
+    <div class="alert alert-warn" style="margin:0">
+      <strong>⚠️ Señal online:</strong> Si nights ≥ 4, al abrir la ficha verás "Señal cobrada online €X / Pendiente €Y". Cobra el pendiente, NO el total.
+    </div>
+  </div>
+</div>
+
+
+<!-- 8. BUZÓN IA -->
+<div class="section" id="buzon">
+  <div class="section-title">
+    <span class="num">8</span>
+    <span class="icon">📬</span>
+    <h2>Buzón IA <span class="new-chip">NUEVO</span></h2>
+  </div>
+
+  <p style="margin-bottom:12px">El Buzón IA recoge los emails que llegan a la dirección del área (p. ej. <em>camperparkroquetas@gmail.com</em>), los clasifica con IA y propone borradores de respuesta en el idioma del cliente.</p>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:12px 0 6px">Cómo se organiza</h3>
+  <table>
+    <tr><th>Categoría</th><th>Qué es</th></tr>
+    <tr><td>📥 reserva</td><td>Cliente pide disponibilidad, confirma o cancela</td></tr>
+    <tr><td>🧾 factura</td><td>Petición de factura, duplicado, datos fiscales</td></tr>
+    <tr><td>🛟 soporte</td><td>Dudas sobre servicios, normas, horarios</td></tr>
+    <tr><td>📣 reclamación</td><td>Queja, amenaza legal — <strong>prioridad crítica</strong></td></tr>
+    <tr><td>🔔 notificación</td><td>Automáticos del sistema (SES Hospedajes, Redsys) — auto-archivados</td></tr>
+    <tr><td>🚫 spam</td><td>Marketing, newsletters — auto-archivados</td></tr>
+  </table>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:12px 0 6px">Cómo responder</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Entra en la pestaña <strong>📬 Buzón</strong> del menú lateral</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Ordena por <em>prioridad</em> o filtra por categoría</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Abre el email → lee el mensaje <strong>limpio</strong> (sin citas ni firmas, solo lo nuevo)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Si es una reserva urgente, el <strong>borrador IA ya está pre-generado</strong>; si no, pulsa <strong>✨ Generar borrador</strong></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Revisa, edita si hace falta, y pulsa <strong>📤 Enviar respuesta</strong></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body">Opcional: pulsa <strong>🇪🇸 Vista previa ES</strong> para ver el borrador traducido antes de enviar</div></div>
+  </div>
+
+  <div class="alert alert-success">
+    <strong>✅ El sistema marca como leído el email en Gmail</strong> tras procesarlo. No duplica ni confunde.
+  </div>
+
+  <div class="alert alert-info">
+    <strong>💡 Vincular email → reserva:</strong> Si el remitente tiene una reserva activa, el email se vincula automáticamente y aparece en la pestaña 📧 de la ficha del huésped. Puedes vincular manualmente con el botón 🔗.
+  </div>
+</div>
+
+
+<!-- 9. PAPELERA Y SEGURIDAD -->
+<div class="section" id="papelera">
+  <div class="section-title">
+    <span class="num">9</span>
+    <span class="icon">🛡️</span>
+    <h2>Papelera y seguridad de datos <span class="new-chip">NUEVO</span></h2>
+  </div>
+
+  <div class="alert alert-new">
+    <strong>🔒 Red de seguridad activa 24/7:</strong>
+    <ul style="margin:6px 0 0 20px">
+      <li>🌙 <strong>Backup diario automático</strong> a Google Cloud Storage — retención 90 días</li>
+      <li>⏱️ <strong>PITR</strong> (Point-in-Time Recovery) de los últimos 7 días</li>
+      <li>✏️ <strong>Banner de auditoría</strong> en fichas: quién y cuándo tocó cada dato</li>
+      <li>🗑️ <strong>Papelera soft-delete</strong>: las reservas borradas se recuperan hasta 30 días</li>
+      <li>🔐 <strong>Roles</strong>: staff no ve botones destructivos</li>
+    </ul>
+  </div>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:12px 0 6px">Usar la papelera (solo admin)</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Pestaña <strong>🗑️ Papelera</strong> en el menú lateral</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Ves la lista de reservas borradas en los últimos 30 días con fecha de borrado</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Botón <strong>♻️ Restaurar</strong> → vuelve a la lista activa · <strong>🗑 Borrar definitivo</strong> → desaparece para siempre</div></div>
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>⚠️ Tras 30 días,</strong> las reservas en la papelera se purgan automáticamente tras el backup nocturno. Si necesitas recuperar algo después, se puede restaurar desde el backup de GCS (contacta con soporte).
+  </div>
+
+  <h3 style="font-size:.92rem;color:#0d2050;margin:14px 0 6px">Forzar actualización (si la app va rara)</h3>
+  <p style="font-size:.85rem;color:#555;margin-bottom:8px">Si una recepcionista ve datos extraños tras un despliegue nuevo, o la app parece "atascada":</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body">Menú <strong>Ajustes</strong> → <strong>Backup</strong></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Pulsa <strong>🔄 Limpiar caché y recargar</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Confirma el aviso · la app se recarga en 2 segundos con los datos frescos de Firestore</div></div>
+  </div>
+  <div class="tip">Esta acción <strong>NO borra datos</strong> de Firestore, solo limpia la caché local del navegador.</div>
+</div>
+
+
+<!-- 10. CORREOS DE CONFIRMACIÓN -->
 <div class="section" id="confirmacion">
   <div class="section-title">
-    <span class="num">6</span>
+    <span class="num">10</span>
     <span class="icon">📩</span>
-    <h2>Correos de confirmación automáticos</h2>
+    <h2>Correos automáticos al cliente</h2>
   </div>
 
-  <p style="margin-bottom:12px">Cuando un cliente completa una reserva a través del <strong>motor de reservas online</strong>, el sistema envía automáticamente un email de confirmación con:</p>
-
-  <div class="three-col" style="margin-bottom:14px">
-    <div class="mini-card"><h4>📋 Datos de la reserva</h4><p>Nombre, parcela, fechas, tipo de vehículo, número de personas</p></div>
-    <div class="mini-card"><h4>💰 Resumen de pago</h4><p>Importe total, método de pago, estado (pagado / pendiente)</p></div>
-    <div class="mini-card"><h4>🏕️ Información del área</h4><p>Logo, dirección, teléfono y enlace al área</p></div>
-  </div>
+  <p style="margin-bottom:12px">El sistema envía emails automáticos al cliente en momentos clave, con su marca, logo y colores del área.</p>
 
   <table>
-    <tr><th>Cuándo se envía</th><th>A quién</th><th>Contenido</th></tr>
-    <tr><td>Al completar la reserva online</td><td>Email del cliente</td><td>Confirmación + resumen completo</td></tr>
-    <tr><td>Tras pago Redsys exitoso</td><td>Email del cliente</td><td>Confirmación de pago + datos reserva</td></tr>
+    <tr><th>Cuándo</th><th>Contenido</th></tr>
+    <tr><td>Al completar reserva online</td><td>Plaza [tipo] confirmada · Código reserva · Fechas · Desglose 50%+50% (si aplica) · <strong>Política de cancelación completa</strong></td></tr>
+    <tr><td>Pago Redsys confirmado</td><td>Email al cliente + email al admin del área con "Señal cobrada €X / Pendiente al check-in €Y"</td></tr>
+    <tr><td>Recepción asigna parcela</td><td>Opcional — se puede reenviar confirmación con el número de parcela</td></tr>
   </table>
 
   <div class="alert alert-info">
-    <strong>Remitente:</strong> Los emails salen desde <strong>noreply@checkingsmart.com</strong> con el nombre de tu área. El cliente puede responder directamente al email del área.
+    <strong>📋 Política de cancelación</strong> (incluida en el email de confirmación):
+    <ul style="margin:6px 0 0 20px">
+      <li><em>Reservas diarias:</em> >15 días antes → 100% reembolso · 15-7 días → se reserva derecho del 50% · ≤7 días → 100% del importe</li>
+      <li><em>Larga estancia (≥30 noches):</em> gratis hasta llegada · <30 días antelación → depósito no reembolsable</li>
+    </ul>
   </div>
 </div>
 
 
-<!-- 7. CORREOS MASIVOS -->
+<!-- 11. CORREOS MASIVOS -->
 <div class="section" id="masivos">
   <div class="section-title">
-    <span class="num">7</span>
+    <span class="num">11</span>
     <span class="icon">📧</span>
     <h2>Correos masivos — Comunicaciones</h2>
   </div>
 
-  <p style="margin-bottom:12px">Permite enviar un email personalizado a múltiples huéspedes a la vez. Ideal para solicitar pagos pendientes, recordar fechas, o enviar información.</p>
+  <p style="margin-bottom:12px">Envía un email personalizado a múltiples huéspedes a la vez. Ideal para cobrar pendientes, recordar fechas o comunicar novedades.</p>
 
   <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-body">Ve a <strong>Comunicaciones</strong> en el menú lateral</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Filtra los destinatarios:</strong> por fechas de entrada, estado de la reserva (Confirmada, Check-in, Pendiente...)</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body">Marca los huéspedes a los que quieres escribir (o usa <em>Seleccionar todo</em>)</div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body">Escribe el <strong>asunto</strong> del email</div></div>
-    <div class="step"><div class="step-num">5</div><div class="step-body">Redacta el <strong>cuerpo del mensaje</strong> usando las variables para personalizar</div></div>
-    <div class="step"><div class="step-num">6</div><div class="step-body">Pulsa <strong>Enviar email a N destinatarios</strong></div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Menú <strong>Comunicaciones</strong> en el lateral</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Filtra destinatarios</strong>: por fechas, estado (Confirmada, Check-in, Pendiente...)</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Marca los huéspedes (o <em>Seleccionar todo</em>)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Escribe <strong>asunto</strong> y <strong>cuerpo</strong>, usando variables para personalizar</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Vista previa 👁️ → <strong>Enviar email a N destinatarios</strong></div></div>
   </div>
 
-  <strong style="font-size:.82rem;display:block;margin:12px 0 6px">Variables disponibles — se sustituyen automáticamente por los datos de cada huésped:</strong>
+  <strong style="font-size:.82rem;display:block;margin:12px 0 6px">Variables disponibles:</strong>
   <div class="shortcuts">
     <span class="sc">&#123;&#123;nombre&#125;&#125;</span>
     <span class="sc">&#123;&#123;fechaEntrada&#125;&#125;</span>
     <span class="sc">&#123;&#123;fechaSalida&#125;&#125;</span>
     <span class="sc">&#123;&#123;parcela&#125;&#125;</span>
+    <span class="sc">&#123;&#123;tipoPlaza&#125;&#125;</span>
     <span class="sc">&#123;&#123;importe&#125;&#125;</span>
     <span class="sc">&#123;&#123;codigo&#125;&#125;</span>
     <span class="sc green">&#123;&#123;linkPago&#125;&#125;</span>
   </div>
 
   <div class="alert alert-success">
-    <strong>💡 &#123;&#123;linkPago&#125;&#125;</strong> inserta automáticamente un botón de pago personalizado para cada cliente. Al hacer clic, el cliente accede a su reserva y puede pagar con tarjeta de forma segura. El pago queda reflejado en el panel en tiempo real.
-  </div>
-
-  <div class="alert alert-info">
-    <strong>Consejo:</strong> Haz clic en los botones de variables (arriba del área de texto) para insertarlas en la posición del cursor. Usa el botón <em>👁️ Vista previa</em> para ver cómo quedará el email antes de enviarlo.
+    <strong>💡 <code>&#123;&#123;linkPago&#125;&#125;</code></strong> inserta un botón de pago personalizado por cliente. Al hacer clic, el cliente paga con tarjeta y el pago queda reflejado en el panel en tiempo real.
   </div>
 </div>
 
 
-<!-- 8. MOTOR DE RESERVAS -->
-<div class="section" id="motor">
-  <div class="section-title">
-    <span class="num">8</span>
-    <span class="icon">🌐</span>
-    <h2>Motor de reservas online</h2>
-  </div>
-
-  <p style="margin-bottom:12px">El motor de reservas es la página pública donde los clientes pueden hacer y pagar su reserva directamente desde internet, sin llamar ni escribir.</p>
-
-  <strong style="font-size:.82rem;display:block;margin-bottom:8px">Proceso que sigue el cliente:</strong>
-  <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Selecciona fechas</strong> y número de personas (mínimo 3 noches)</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Elige parcela</strong> disponible en el plano interactivo</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Introduce sus datos</strong>: nombre, apellidos, documento, matrícula (opcionalmente escanea su DNI con la cámara)</div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Resumen y confirmación</strong>: ve el desglose de precio antes de pagar</div></div>
-    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Pago con tarjeta</strong> a través de Redsys (TPV bancario seguro)</div></div>
-    <div class="step"><div class="step-num">6</div><div class="step-body">Recibe el <strong>email de confirmación</strong> automáticamente</div></div>
-  </div>
-
-  <div class="two-col" style="margin-top:12px">
-    <div class="alert alert-success" style="margin:0">
-      <strong>✅ En el panel (recepción):</strong> La reserva aparece automáticamente con estado <em>Pendiente de pago</em> → al confirmar el banco cambia a <em>Confirmada</em> y marcada como pagada online.
-    </div>
-    <div class="alert alert-warn" style="margin:0">
-      <strong>⚠️ Pago online ya efectuado:</strong> No volver a cobrar en recepción. El sistema lo indica claramente con el tag <em>💳 Pagado online</em>.
-    </div>
-  </div>
-</div>
-
-
-<!-- 9. SISTEMA DE SEGURIDAD — 5 CLICS (OCULTO: se revela con 5 clicks sobre el icono del footer) -->
+<!-- 12. SEGURIDAD 5 CLICS (OCULTA) -->
 <div class="section" id="seguridad-5clicks" style="display:none">
   <div class="section-title">
-    <span class="num">9</span>
+    <span class="num">·</span>
     <span class="icon">🛡️</span>
     <h2>Sistema de Seguridad — Acceso con 5 clics</h2>
   </div>
 
-  <p style="margin-bottom:12px">El sistema incluye un <strong>panel de acceso protegido</strong> que se activa mediante una secuencia de 5 pulsaciones sobre el logo. Este mecanismo añade una capa de seguridad adicional para operaciones autorizadas que requieren autenticación especial.</p>
+  <p style="margin-bottom:12px">Panel de acceso protegido activable con 5 pulsaciones sobre el logo de la ficha. Añade capa de seguridad para operaciones autorizadas.</p>
 
-  <strong style="font-size:.83rem;display:block;margin-bottom:8px">Cómo funciona la secuencia de seguridad:</strong>
   <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha de cualquier huésped (icono <strong>👁 Ver detalles</strong>)</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body">En la parte inferior del modal verás el <strong>logo del establecimiento</strong> — pulsa sobre él <strong>5 veces seguidas en menos de 3 segundos</strong></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body">El sistema pedirá un <strong>PIN de seguridad de 4 dígitos</strong> — diferente al PIN de turno. Solo el administrador conoce este PIN</div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body">Con el PIN correcto se abre el <strong>panel de cobro autorizado</strong> con el importe calculado y método <strong>Efectivo</strong></div></div>
-    <div class="step"><div class="step-num">5</div><div class="step-body">Pulsa <strong>✔ Confirmar Cobro</strong> para registrar. El huésped queda marcado como pagado y el registro queda guardado de forma segura</div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Abre la ficha de cualquier huésped</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Pulsa <strong>5 veces seguidas en &lt;3 segundos</strong> sobre el logo del establecimiento (parte inferior del modal)</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Introduce el <strong>PIN de seguridad de 4 dígitos</strong> (distinto al PIN de turno, solo admin)</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Aparece el panel de cobro autorizado en <strong>Efectivo</strong> con el importe calculado</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Pulsa <strong>✔ Confirmar Cobro</strong> — el huésped queda pagado, la fila aparece en lila</div></div>
   </div>
 
-  <table style="margin-top:12px">
-    <tr><th>Elemento</th><th>Detalle</th></tr>
-    <tr><td>Activación</td><td>5 pulsaciones rápidas (&lt;3 seg) sobre el logo en la ficha del huésped</td></tr>
-    <tr><td>Autenticación</td><td>PIN de seguridad de 4 dígitos (lo gestiona el administrador)</td></tr>
-    <tr><td>PIN incorrecto</td><td>El sistema bloquea el acceso — se cancela automáticamente</td></tr>
-    <tr><td>Método de pago</td><td>Efectivo exclusivamente</td></tr>
-    <tr><td>Registro</td><td>Guardado de forma separada y segura en el sistema</td></tr>
-    <tr><td>Reversión</td><td>No se puede deshacer una vez confirmado</td></tr>
-  </table>
-
-  <div class="alert" style="background:#e8f5e9;border-color:#a5d6a7;color:#1b5e20;margin-top:12px">
-    <strong>ℹ️ Para recepcionistas:</strong> Si por error pulsas el logo 5 veces y aparece el panel de PIN, puedes cancelar pulsando <strong>✕ Cancelar</strong> sin introducir ningún código. El sistema no registra intentos fallidos de cancelación.
+  <div class="alert alert-secret">
+    <strong>ℹ️ Si pulsas 5 clics por error</strong> y aparece el PIN, cancela con ✕. No quedan registros de intentos fallidos.
   </div>
 </div>
 
 
-<!-- 9. INCIDENCIAS -->
+<!-- 13. INCIDENCIAS -->
 <div class="section" id="incidencias">
   <div class="section-title">
-    <span class="num">9</span>
+    <span class="num">12</span>
     <span class="icon">🔧</span>
     <h2>Incidencias frecuentes</h2>
   </div>
@@ -428,36 +575,44 @@
     <tr><th>Problema</th><th>Solución</th></tr>
     <tr>
       <td>No puedo acceder con mi PIN</td>
-      <td>Comprueba que el correo del área sea correcto. Pide al administrador que verifique tu PIN en Configuración → Usuarios.</td>
+      <td>Comprueba el email del área. Pide al admin que verifique tu PIN en Configuración → Usuarios.</td>
     </tr>
     <tr>
-      <td>El huésped no recibió el email de confirmación</td>
-      <td>Verifica que el email del cliente sea correcto en su ficha. Puedes reenviar la confirmación desde la pestaña Resumen → botón <em>Enviar confirmación</em>.</td>
+      <td>El huésped no recibió el email</td>
+      <td>Verifica su email en la ficha. Reenvía desde Resumen → <em>Enviar confirmación</em>.</td>
     </tr>
     <tr>
-      <td>La reserva online aparece como pendiente de pago</td>
-      <td>El banco puede tardar unos minutos en confirmar. Si pasan más de 15 minutos, consulta con el administrador.</td>
+      <td>Reserva online aparece pendiente de pago</td>
+      <td>El banco tarda minutos en confirmar. Si pasan más de 15 min, consulta con el admin.</td>
     </tr>
     <tr>
-      <td>Error al emitir factura (mixto)</td>
-      <td>Con pago Mixto, la suma de efectivo + tarjeta debe ser exactamente igual al total. Verifica los importes.</td>
+      <td>Error factura con pago Mixto</td>
+      <td>La suma de efectivo + tarjeta debe ser exactamente igual al pendiente a cobrar. Verifica.</td>
     </tr>
     <tr>
-      <td>La página no carga o va lenta</td>
-      <td>Recarga el navegador (F5). Si persiste, comprueba la conexión a internet.</td>
+      <td>La app va lenta o muestra datos raros</td>
+      <td>Menú <strong>Ajustes → Backup → 🔄 Limpiar caché y recargar</strong>. Limpia localStorage y recarga.</td>
     </tr>
     <tr>
-      <td>Me equivoqué en el check-in</td>
-      <td>Usa la pestaña <em>Mover</em> para cambiar de parcela o la pestaña <em>Ampliar/Reducir</em> para fechas. Para errores graves, contacta soporte.</td>
+      <td>Borré una reserva por error</td>
+      <td>Pide al admin: pestaña <strong>🗑️ Papelera</strong> → busca la reserva → <strong>♻️ Restaurar</strong>. Hasta 30 días.</td>
+    </tr>
+    <tr>
+      <td>Facturé al huésped equivocado</td>
+      <td>Ficha del huésped incorrecto → tarjeta Cobro → <strong>⇆ Transferir</strong> → elige correcto → confirma.</td>
+    </tr>
+    <tr>
+      <td>Falta reescanear DNI tras transferir</td>
+      <td>Normal. Tras una transferencia, los documentos/firma NO se mueven. Re-escanea en la nueva ficha.</td>
     </tr>
   </table>
 </div>
 
 
-<!-- 11. CONTACTO -->
+<!-- 14. CONTACTO -->
 <div class="section" id="contacto">
   <div class="section-title">
-    <span class="num">10</span>
+    <span class="num">13</span>
     <span class="icon">📞</span>
     <h2>Contacto y soporte</h2>
   </div>
@@ -470,23 +625,26 @@
     </div>
     <div class="mini-card">
       <h4>👤 Administrador del área</h4>
-      <p>Para cambios de PIN, precios, configuración o cualquier duda de gestión, contacta con el administrador de tu área.</p>
+      <p>Para PIN, precios, configuración, tarifas, usuarios o dudas de gestión, contacta con el admin del área.</p>
     </div>
   </div>
 
   <div class="alert alert-info" style="margin-top:14px">
-    <strong>🔒 Registro de actividad:</strong> Todas las acciones realizadas en el sistema quedan registradas con fecha, hora y usuario. Puedes consultarlas en el menú lateral → <em>📋 Registro de Actividad</em> (solo admin).
+    <strong>🔒 Registro de actividad (Activity Log):</strong> Todas las acciones quedan registradas con fecha, hora, usuario y qué se cambió. Menú lateral → <em>📋 Registro de Actividad</em> (solo admin).
+  </div>
+
+  <div class="alert alert-info">
+    <strong>📄 Páginas legales:</strong> <a href="/aviso-legal/">Aviso Legal</a> · <a href="/privacidad/">Privacidad</a> · <a href="/cookies/">Cookies</a> · <a href="/politica-de-cancelacion/">Política de cancelación (Roquetas)</a>
   </div>
 </div>
 
 
 <div class="guide-footer">
-  CheckingSmart <span id="secret-trigger" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Guía de Recepción v1.0 <span id="secret-trigger-2" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Abril 2026 · checkingsmart.soporte@gmail.com<br>
-  <span class="no-print">Pulsa <strong>Ctrl+P</strong> (o Cmd+P en Mac) para imprimir esta guía</span>
+  CheckingSmart <span id="secret-trigger" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Guía de Recepción v2.0 <span id="secret-trigger-2" style="cursor:default;user-select:none;padding:0 4px;color:inherit">·</span> Abril 2026 · checkingsmart.soporte@gmail.com<br>
+  <span class="no-print">Pulsa <strong>Ctrl+P</strong> (o Cmd+P en Mac) para imprimir · o descarga el <a href="/assets/guia-checkingsmart.pdf" target="_blank">PDF</a></span>
 </div>
 
 <script>
-// Acceso secreto a la sección 9: 5 clicks rápidos sobre el punto '·' del footer
 (function(){
   var clicks=0, timer=null;
   function trigger(){
@@ -499,7 +657,6 @@
       if(sec){
         sec.style.display='';
         sec.scrollIntoView({behavior:'smooth',block:'start'});
-        // Visual flash to confirm
         sec.style.transition='background-color .6s';
         sec.style.background='#fff3e0';
         setTimeout(function(){sec.style.background='';},1200);
@@ -513,6 +670,6 @@
 })();
 </script>
 
-</div><!-- /page-wrap -->
+</div>
 </body>
 </html>

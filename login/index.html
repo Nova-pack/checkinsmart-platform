@@ -108,7 +108,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
       ¿Problemas de acceso?
       <a href="mailto:checkingsmart.soporte@gmail.com">Contactar soporte</a>
       <div style="margin-top:10px;font-size:.72rem;color:var(--text-ter);opacity:.75">
-        © 2026 David Jiménez del Castillo — CheckinSmart™ — Todos los derechos reservados<br>
+        © 2026 CheckinSmart™ — Todos los derechos reservados<br>
         Safe Creative nº 2604225360000
       </div>
     </div>
@@ -140,14 +140,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
       storageBucket:     'checkingsmart-dev.firebasestorage.app',
       messagingSenderId: '1014452832497',
       appId:             '1:1014452832497:web:07197b232f544ea90cc150'
-    },
-    legacy: {
-      apiKey:            'AIzaSyDP9yWuhGPmHUByb-N7Qynh7Lc1OGZHE7k',
-      authDomain:        'area-malaga-beach.firebaseapp.com',
-      projectId:         'area-malaga-beach',
-      storageBucket:     'area-malaga-beach.firebasestorage.app',
-      messagingSenderId: '559229870217',
-      appId:             '1:559229870217:web:dfa860e653300ef5efa658'
     }
   };
 
@@ -165,7 +157,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
     } catch(e) {}
     var h = (window.location.hostname || '').toLowerCase();
     if (h.indexOf('checkingsmart-dev') !== -1 || h.indexOf('-dev.') !== -1) return 'dev';
-    if (h.indexOf('area-malaga-beach') !== -1) return 'legacy';
     return 'prod';
   }
 
@@ -207,8 +198,19 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
     viewForm.style.display = 'none';
     viewSuccess.style.display = 'block';
     tenantNom.textContent = nombre;
+    // Si venimos de un redirect automático (?next=), honrarlo
+    var nextParam = '';
+    try {
+      var sp = new URLSearchParams(window.location.search);
+      var n = sp.get('next');
+      // Seguridad: solo rutas relativas propias (empieza por /)
+      if (n && n.startsWith('/') && !n.startsWith('//')) nextParam = n;
+    } catch(e) {}
     // Incluir ?tenant= en la URL — fuente de verdad que no depende de storage
-    setTimeout(function(){ window.location.href = '/app/?tenant=' + encodeURIComponent(tenantId); }, 1000);
+    var dest = nextParam
+      ? (nextParam + (nextParam.includes('?') ? '&' : '?') + 'tenant=' + encodeURIComponent(tenantId))
+      : '/app/?tenant=' + encodeURIComponent(tenantId);
+    setTimeout(function(){ window.location.href = dest; }, 1000);
   }
 
   function doLogin(){
@@ -237,21 +239,40 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
           return;
         }
         // ── Fase 3: asignar custom claim de tenant en servidor ──────────────
-        // La sesión Firebase se mantiene viva — firestore-db.js la usará en /app/
-        // para tener request.auth != null en las reglas de Firestore.
+        // 1. Pedimos al backend que ponga/refresque el claim tenantId en el user.
+        // 2. Forzamos getIdToken(true) para refrescar el idToken local con los
+        //    claims más recientes — sin esto, las reglas Firestore dan 403
+        //    aunque el user tenga los claims puestos en el backend.
+        // 3. Solo entonces hacemos redirect a /app/.
         var user = userCredential.user;
         var fnUrl = CS_FN_BASE + '/assignTenantClaim';
+
+        function finishAndRedirect(){
+          // Force-refresh para que el idToken contenga los custom claims
+          user.getIdToken(true).then(function(){
+            redirect(tenant.tenantId, tenant.nombre);
+          }).catch(function(){
+            // Aun si el refresh falla, redirigimos — la app reintentará
+            redirect(tenant.tenantId, tenant.nombre);
+          });
+        }
+
         user.getIdToken().then(function(token) {
           fetch(fnUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ tenantId: tenant.tenantId })
-          }).catch(function(){
-            // Si la función no existe aún, no bloquear el login
+          })
+          .then(function(){ finishAndRedirect(); })
+          .catch(function(){
+            // CF puede fallar (CORS, no desplegada, red) — los claims pueden estar
+            // ya puestos por provision-tenant.js. Refrescamos token igualmente.
+            finishAndRedirect();
           });
-        }).catch(function(){});
-
-        redirect(tenant.tenantId, tenant.nombre);
+        }).catch(function(){
+          // Si ni siquiera podemos sacar el idToken, intentamos redirect a pelo
+          redirect(tenant.tenantId, tenant.nombre);
+        });
       })
       .catch(function(err){
         var msg;
@@ -288,3 +309,4 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);line-he
 </script>
 </body>
 </html>
+<!-- redeploy 1777311978 -->

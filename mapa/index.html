@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plano Interactivo — Camper Park Roquetas</title>
-<script src="/assets/config.js"></script>
+<script src="/assets/config.js?v=20260504-division-v1"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="/assets/firestore-db.js"></script>
+<script src="/assets/firestore-db.js?v=20260504-division-v1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -173,17 +174,68 @@
     <svg class="overlay" id="overlay" viewBox="0 0 4800 2742" preserveAspectRatio="none"></svg>
     <div id="loader"><div class="spin"></div><span>Cargando plano…</span></div>
   </div>
+  <!-- Fallback cuando el tenant no tiene plano configurado -->
+  <div id="noMapFallback" style="display:none;position:absolute;inset:0;background:#f8f7f4;display:none;align-items:center;justify-content:center;padding:40px;text-align:center;">
+    <div style="max-width:500px;">
+      <div style="font-size:4rem;margin-bottom:16px;">🗺️</div>
+      <h2 style="margin:0 0 12px;color:#333;">Plano interactivo no configurado</h2>
+      <p style="color:#666;line-height:1.5;margin:0 0 16px;">
+        Este establecimiento todavía no tiene cargado su plano interactivo en CheckinSmart.
+      </p>
+      <p style="color:#999;font-size:.9rem;margin:0;">
+        Contacta con soporte para enviar el plano del área y configurar las coordenadas de cada parcela.
+      </p>
+    </div>
+  </div>
 </div>
 
 <!-- Tooltip -->
 <div id="tooltip"></div>
 
 <script>
+// ─── Tenant configs (multi-tenant 28/04/2026) ────────────────────────────
+// Cada tenant define su plano, coords, dimensiones e inventario. waitTenantAndBoot()
+// detecta el tenantId y aplica la config correspondiente antes de cargar.
+var TENANT_CONFIGS = {
+  'camperpark-roquetas': {
+    nombre:           'Camper Park Roquetas',
+    nombreCorto:      'CP',
+    imagen:           'plano-camperpark.jpg',
+    coords:           'parcelas-coords.json',
+    img_w:            4800,
+    img_h:            2742,
+    parcelasNumeros:  (function(){ var a=[]; for(var i=1;i<=70;i++)a.push(i); return a; })(),
+    parkings:         ['P1','P2','P3','P4'],
+    xxl:              []
+  },
+  'area-malaga-beach': {
+    nombre:           'Área Málaga Beach',
+    nombreCorto:      'AMB',
+    imagen:           'plano-amb.png',
+    coords:           'parcelas-coords-amb.json',
+    img_w:            2526,
+    img_h:            1786,
+    parcelasNumeros:  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,40,41,42,43,44,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99],
+    parkings:         ['P1','P2','P3','P4','P5','P6','P7','P8'],
+    xxl:              ['XXL 1','XXL 2','XXL 3','XXL 5']
+  }
+};
+function getTenantConfig(tid){ return TENANT_CONFIGS[tid] || null; }
+
 // ─── State ────────────────────────────────────────────────────────────────
 var IMG_W = 4800, IMG_H = 2742;
-var COORDS = null;   // loaded from parcelas-coords.json
-var DATA = {};       // DATA[n] = {status, guest, electricity, water}  (parcelas 1-70)
-var PDATA = {};      // PDATA[code] = {status, guest}  (parkings P1..P4)
+var COORDS = null;   // loaded from coords JSON del tenant
+var DATA = {};       // DATA[n] = {status, guest, electricity, water}  (parcelas)
+var PDATA = {};      // PDATA[code] = {status, guest}  (parkings + XXL)
+
+// Normaliza pitchCode para lookup en DATA (parcelas numéricas).
+// Algunos tenants (AMB) almacenan parcelas regulares como "P-02", "P-03"...
+// pero DATA usa keys numéricos "2", "3"...
+// _pcNum("P-02") → "2" | _pcNum("P-2") → "2" | _pcNum("5") → null (ya es número)
+function _pcNum(code) {
+  var m = String(code || '').match(/^[Pp]-?0*(\d+)$/);
+  return (m && DATA[m[1]] !== undefined) ? m[1] : null;
+}
 var tipEl = document.getElementById('tooltip');
 var overlay = document.getElementById('overlay');
 
@@ -206,14 +258,54 @@ var SELECT_CHOSEN = null;      // parcela seleccionada temporalmente
   } catch(e) {}
 })();
 
-// ─── Initialize default state for all 70 parcels ─────────────────────────
-for (var i=1; i<=70; i++) DATA[i] = { status:'libre', guest:null, electricity:true, water:false };
-// Parkings por defecto
-['P1','P2','P3','P4'].forEach(function(c){ PDATA[c] = { status:'libre', guest:null }; });
+// ─── Inicialización de DATA/PDATA según tenant activo ────────────────────
+// Se rehace en applyTenantConfig() cuando se conoce el tenant. Estos defaults
+// son sólo para evitar errores antes de la primera aplicación.
+
+// ─── Aplicar config de tenant al DOM y al state ──────────────────────────
+function applyTenantConfig(cfg){
+  IMG_W = cfg.img_w; IMG_H = cfg.img_h;
+  var bg = document.getElementById('bgImg');
+  if (bg) { bg.src = cfg.imagen; bg.alt = 'Plano ' + cfg.nombre; }
+  var ov = document.getElementById('overlay');
+  if (ov) ov.setAttribute('viewBox', '0 0 ' + IMG_W + ' ' + IMG_H);
+  var wrap = document.querySelector('.map-wrapper');
+  if (wrap) wrap.style.aspectRatio = IMG_W + ' / ' + IMG_H;
+  var hLogo = document.querySelector('.header-logo');
+  if (hLogo) hLogo.textContent = cfg.nombreCorto;
+  var hSpan = document.querySelector('.header h1 span');
+  if (hSpan) hSpan.textContent = cfg.nombre;
+  document.title = 'Plano Interactivo — ' + cfg.nombre;
+
+  DATA = {};
+  cfg.parcelasNumeros.forEach(function(n){
+    DATA[n] = { status:'libre', guest:null, electricity:true, water:false };
+  });
+  PDATA = {};
+  cfg.parkings.forEach(function(c){ PDATA[c] = { status:'libre', guest:null }; });
+  cfg.xxl.forEach(function(c){ PDATA[c] = { status:'libre', guest:null }; });
+
+  var totalP = cfg.parcelasNumeros.length;
+  var totalK = cfg.parkings.length + cfg.xxl.length;
+  var sTotal = document.getElementById('sTotal');
+  if (sTotal) sTotal.textContent = totalP + ' + ' + totalK;
+  var cAll = document.getElementById('cAll');
+  if (cAll) cAll.textContent = '(' + (totalP + totalK) + ')';
+}
 
 // ─── Load coords JSON ────────────────────────────────────────────────────
-function loadCoords() {
-  return fetch('parcelas-coords.json?v=1')
+// tid puede pasarse explícitamente desde waitTenantAndBoot para evitar
+// que se re-lea window.Checksmart.tenantId cuando aún puede estar vacío.
+function loadCoords(tid) {
+  var cs = window.Checksmart || {};
+  tid = tid || cs.tenantId || (cs.config && cs.config.tenantId);
+  var cfg = getTenantConfig(tid);
+  if (!cfg) {
+    console.error('[mapa] loadCoords: sin config para tenant "' + tid + '" — abortando');
+    return Promise.reject(new Error('No tenant config: ' + tid));
+  }
+  console.log('[mapa] loadCoords tenant:', tid, '→', cfg.coords);
+  return fetch(cfg.coords + '?v=20260504-division-v1')
     .then(function(r){ return r.json(); })
     .then(function(j){ COORDS = j; });
 }
@@ -277,8 +369,11 @@ function build() {
     overlay.appendChild(g);
   });
 
-  // ─── Renderizar parkings ────────────────────────────────────────────────
-  var parkings = COORDS.parkings || {};
+  // ─── Renderizar parkings + XXL (mismo render path) ──────────────────────
+  // XXL spots se tratan funcionalmente igual que parkings: se accede por código,
+  // tienen estado libre/ocupada/reservada y se les puede asignar un huésped.
+  // El visual (dot pequeño) y el tooltip son los mismos.
+  var parkings = Object.assign({}, COORDS.parkings || {}, COORDS.xxl || {});
   Object.keys(parkings).forEach(function(code){
     var p = parkings[code];
     var d = PDATA[code] || { status:'libre' };
@@ -325,6 +420,40 @@ function build() {
   updateStats();
 }
 
+// ─── Helpers de formato de parámetros (admin → tooltip) ─────────────────
+// El admin define electricity como '4amp'/'6amp' (string AMB) o boolean (Roquetas
+// legacy). tipoPlaza puede ser 'S','M','L','XL','XXL','otras'. Damos labels
+// legibles para que la recepción sepa qué tiene cada parcela sin abrir admin.
+function _fmtTipoPlaza(t) {
+  var L = { S:'Estándar S', M:'Mediana M', L:'Grande L', XL:'XL', XXL:'XXL', otras:'Otras' };
+  return L[String(t||'').toUpperCase()] || (t ? String(t) : null);
+}
+function _fmtElec(e) {
+  if (e === true)  return '⚡ Sí';
+  if (e === false) return 'No';
+  if (e === '4amp') return '⚡ 4 Amp';
+  if (e === '6amp') return '⚡⚡ 6 Amp';
+  if (e === '10amp') return '⚡⚡⚡ 10 Amp';
+  if (typeof e === 'string' && e) return '⚡ ' + e;
+  return null;
+}
+function _yesNo(v) { return v ? 'Sí ✓' : 'No'; }
+function _appendPitchExtras(html, d) {
+  // Bloque de parámetros administrativos (los que admin haya configurado)
+  var extras = '';
+  var tp = _fmtTipoPlaza(d.tipoPlaza);
+  if (tp) extras += row('Tipo', esc(tp));
+  var el = _fmtElec(d.electricity);
+  if (el) extras += row('Electricidad', el);
+  if (d.water !== undefined && d.water !== null) extras += row('Agua', _yesNo(d.water));
+  if (d.sombra)   extras += row('Sombra', '🌳');
+  if (d.barbacoa) extras += row('Barbacoa', '🔥');
+  if (d.wifi)     extras += row('Wifi', '📶');
+  if (d.vertido)  extras += row('Vertido', '🚿');
+  if (d.notas)    extras += row('Notas', '<span style="font-size:11px;opacity:.85">' + esc(d.notas) + '</span>');
+  return html + extras;
+}
+
 // ─── Tooltip ─────────────────────────────────────────────────────────────
 function showTip(n, ev) {
   var d = DATA[n];
@@ -355,10 +484,12 @@ function showTip(n, ev) {
     }
     if (g.nights) html += row('Noches', g.nights);
     if (g.adults) html += row('Viajeros', g.adults + ' ad.' + (g.children ? ' + ' + g.children + ' niños':''));
+    // Parámetros admin de la parcela (tipo, amperaje, etc.)
+    html = _appendPitchExtras(html, d);
     html += '<div class="tt-hint">📋 Clic para abrir ficha completa</div>';
   } else {
-    if (d.electricity !== undefined) html += row('Electricidad', d.electricity ? '⚡ Incluida' : 'No');
-    if (d.water !== undefined) html += row('Agua', d.water ? 'Sí ✓' : 'No');
+    // Libre / mantenimiento → mostrar todos los parámetros admin de la parcela
+    html = _appendPitchExtras(html, d);
   }
 
   tipEl.innerHTML = html;
@@ -441,9 +572,11 @@ function showTipParking(code, ev) {
     if (g.vehicleType) html += row('Vehículo', esc(g.vehicleType));
     if (g.dateIn)  html += row('Entrada', fmtDate(g.dateIn));
     if (g.dateOut) html += row('Salida',  fmtDate(g.dateOut));
+    html = _appendPitchExtras(html, d);
     html += '<div class="tt-hint">📋 Clic para abrir ficha completa</div>';
   } else {
-    html += '<div class="tt-hint">Plaza de parking — gestionar desde lista de plazas</div>';
+    html = _appendPitchExtras(html, d);
+    html += '<div class="tt-hint">Plaza disponible — gestionar desde lista de plazas</div>';
   }
   tipEl.innerHTML = html;
   tipEl.classList.add('vis');
@@ -465,13 +598,18 @@ function doFilter(f) {
 // ─── Stats ───────────────────────────────────────────────────────────────
 function updateStats() {
   var cnt = { libre:0, ocupada:0, reservada:0, mant:0, transit:0 };
-  for (var i=1; i<=70; i++) {
-    var s = DATA[i].status;
+  // Iterar sobre las parcelas reales del tenant (no rango fijo 1-70)
+  Object.keys(DATA).forEach(function(k){
+    var d = DATA[k];
+    if (!d) return;
+    var s = d.status;
     if (cnt[s] !== undefined) cnt[s]++;
-  }
+  });
   // Parkings también cuentan
   Object.keys(PDATA).forEach(function(k){
-    var s = PDATA[k].status;
+    var d = PDATA[k];
+    if (!d) return;
+    var s = d.status;
     if (cnt[s] !== undefined) cnt[s]++;
   });
   setNum('sLibres', cnt.libre);
@@ -532,90 +670,224 @@ function selClassForParcela(code, d) {
 }
 
 // ─── Load live data from Firestore ──────────────────────────────────────
+// IMPORTANTE: pitches y guests se cargan en PARALELO con Promise.allSettled.
+// - pitches: lectura pública permitida por rules → siempre OK
+// - guests:  requiere auth (rules Fase 3) → OK si el mapa está dentro del
+//            iframe del /app/ autenticado; permission-denied si se abre
+//            /mapa/ directo (sin login). En ese caso pintamos con pitch.status
+//            y mostramos banner sin exponer datos sensibles.
 function loadData() {
   if (!window.Checksmart || !window.Checksmart.db) { setTimeout(loadData, 400); return; }
   var db = window.Checksmart.db;
   var tid = window.Checksmart.tenantId || (window.Checksmart.config && window.Checksmart.config.tenantId);
   if (!tid) return;
 
-  db.collection('tenants').doc(tid).collection('guests').get().then(function(snap){
+  var pitchesProm = db.collection('tenants').doc(tid).collection('pitches').get();
+  var guestsProm  = db.collection('tenants').doc(tid).collection('guests').get();
+
+  Promise.allSettled([pitchesProm, guestsProm]).then(function(results){
+    var pitchesRes = results[0], guestsRes = results[1];
+
+    // byCode: mapa pitchCode → guest. Si guests falla, quedará vacío (colores
+    // vendrán solo de pitch.status, suficiente para libre/ocupada/reservada).
     var byCode = {};
-    snap.forEach(function(d){
-      var g = d.data();
-      if (g.status === 'checkedIn' || g.status === 'confirmed') {
-        if (g.pitchCode) byCode[g.pitchCode] = Object.assign({ id: d.id }, g);
-      }
-    });
-    return db.collection('tenants').doc(tid).collection('pitches').get().then(function(ps){
-      ps.forEach(function(d){
-        var p = d.data();
-        // Excluir solo tránsito/virtual (no parking — ahora va también en el mapa)
-        if (p.zone === 'TRÁNSITO' || p.size === 'virtual') return;
-        var code = p.code || d.id || '';
-        if (/^ESPERA[-_]/i.test(code)) return;
+    var _mapaToday = new Date().toISOString().split('T')[0];
+    function _mapaActive(g){ return g && g.status!=='checkedOut' && g.status!=='cancelled' && !g._deleted; }
+    function _mapaOccToday(g){ return g.dateIn<=_mapaToday && g.dateOut>_mapaToday; }
 
-        var statusMap = { free:'libre', occupied:'ocupada', reserved:'reservada', maintenance:'mant' };
-        var stTrans = statusMap[p.status] || 'libre';
-
-        // ¿Es una plaza de parking?
-        var isParking = (p.zone === 'PARKING' || p.size === 'parking' || /^PK[-_]/i.test(code));
-        if (isParking) {
-          // Mapear PK-01 → P1, PK-02 → P2, etc (solo las 4 primeras visibles en el plano)
-          var pkNum = parseInt(code.replace(/\D/g, ''), 10);
-          if (pkNum >= 1 && pkNum <= 4) {
-            var pcode = 'P' + pkNum;
-            var pd = PDATA[pcode];
-            if (pd) {
-              pd.status = stTrans;
-              var g = byCode[code] || byCode[pcode];
-              if (g) {
-                pd.guest = g;
-                if (g.status === 'checkedIn' && pd.status !== 'mant') pd.status = 'ocupada';
-                else if (g.status === 'confirmed' && pd.status !== 'mant') pd.status = 'reservada';
-              }
-            }
-          }
-          return;   // no procesar como parcela
-        }
-
-        // Plaza regular (parcela 1-70)
-        var num = parseInt(code.replace(/\D/g, ''), 10);
-        if (num >= 1 && num <= 70) {
-          var pd2 = DATA[num];
-          if (pd2) {
-            pd2.status = stTrans;
-            if (p.electricity !== undefined) pd2.electricity = !!p.electricity;
-            if (p.water !== undefined) pd2.water = !!p.water;
-            var g = byCode[p.code] || byCode[String(num)];
-            if (g) {
-              pd2.guest = g;
-              if (g.status === 'checkedIn' && pd2.status !== 'mant') pd2.status = 'ocupada';
-              else if (g.status === 'confirmed' && pd2.status !== 'mant') pd2.status = 'reservada';
-            }
+    if (guestsRes.status === 'fulfilled'){
+      guestsRes.value.forEach(function(d){
+        var g = d.data();
+        if (_mapaActive(g)){
+          if (g.pitchCode) {
+            byCode[g.pitchCode] = Object.assign({ id:d.id }, g);
+            var pn = _pcNum(g.pitchCode);
+            if (pn) byCode[pn] = Object.assign({ id:d.id }, g);
           }
         }
       });
+    } else {
+      console.warn('[MAPA] guests: sin permisos o error. Pintando solo con pitch.status.', guestsRes.reason && (guestsRes.reason.code || guestsRes.reason.message));
+      // Banner de aviso si estamos fuera del iframe del app (acceso directo)
+      try{
+        if (window.parent === window){
+          var box = document.createElement('div');
+          box.style.cssText = 'position:fixed;top:70px;right:18px;max-width:320px;background:#fff8e1;border:1px solid #ffc107;border-left:4px solid #ff9800;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#7a5c00;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.1);line-height:1.45';
+          box.innerHTML = '<strong>ℹ️ Vista pública limitada</strong><br>Estás viendo el plano sin datos de huéspedes. Para ver ocupación en tiempo real y tooltips con nombres, accede desde el <a href="/app/" style="color:#0066cc;font-weight:600">panel de gestión</a>.';
+          document.body.appendChild(box);
+        }
+      }catch(e){}
+    }
+
+    // Si pitches falla, no hay nada que hacer — pintamos con el default (libre).
+    if (pitchesRes.status !== 'fulfilled'){
+      console.warn('[MAPA] pitches error:', pitchesRes.reason && (pitchesRes.reason.code || pitchesRes.reason.message));
       refreshParcelas();
+      return;
+    }
+
+    // 1) Aplicar pitches doc → status (mant, reservada, etc.) sobre DATA/PDATA
+    //    según el código real, sin hardcodeos de rangos. Cada tenant tiene su
+    //    inventario en applyTenantConfig; aquí solo respetamos esos keys.
+    pitchesRes.value.forEach(function(d){
+      var p = d.data();
+      if (p.zone === 'TRÁNSITO' || p.size === 'virtual') return;
+      var code = p.code || d.id || '';
+      if (/^ESPERA[-_]/i.test(code)) return;
+
+      var statusMap = { free:'libre', occupied:'ocupada', reserved:'reservada', maintenance:'mant' };
+      var stTrans = statusMap[p.status] || 'libre';
+      var codeUp = String(code).toUpperCase();
+
+      // Buscar primero en PDATA (parkings + XXL), luego en DATA (parcelas numeradas)
+      var pdRef = PDATA[codeUp] || PDATA[code];
+      if (pdRef){
+        pdRef.status = stTrans;
+        var g0 = byCode[codeUp] || byCode[code];
+        if (g0){
+          pdRef.guest = g0;
+          if (pdRef.status !== 'mant') pdRef.status = _mapaOccToday(g0) ? 'ocupada' : 'reservada';
+        }
+        return;
+      }
+
+      // Parcelas numeradas: el code suele ser "2", "37", "97"... pero podría ser
+      // "P-2" o similar. Extraemos el número y miramos DATA[n] (key numérico).
+      var num = parseInt(String(code).replace(/\D/g, ''), 10);
+      if (!isNaN(num) && DATA[num]){
+        var pd2 = DATA[num];
+        pd2.status = stTrans;
+        if (p.electricity !== undefined) pd2.electricity = !!p.electricity;
+        if (p.water !== undefined) pd2.water = !!p.water;
+        var g = byCode[p.code] || byCode[String(num)] || byCode[codeUp];
+        if (g){
+          pd2.guest = g;
+          if (pd2.status !== 'mant') pd2.status = _mapaOccToday(g) ? 'ocupada' : 'reservada';
+        }
+      }
     });
-  }).catch(function(err){
-    console.warn('[MAPA] Error Firestore:', err);
+
+    // 2) Pasada de respaldo: si una parcela/parking NO tiene doc en pitches
+    //    pero SÍ hay un guest activo con ese pitchCode, aplicar el guest.
+    Object.keys(DATA).forEach(function(nKey){
+      var d = DATA[nKey];
+      if (!d || d.guest) return; // ya aplicado en pasada 1
+      var g = byCode[String(nKey).toUpperCase()] || byCode[String(nKey)];
+      if (g){
+        d.guest = g;
+        if (d.status !== 'mant') d.status = _mapaOccToday(g) ? 'ocupada' : 'reservada';
+      }
+    });
+    Object.keys(PDATA).forEach(function(code){
+      var d = PDATA[code];
+      if (!d || d.guest) return;
+      var g = byCode[String(code).toUpperCase()] || byCode[code];
+      if (g){
+        d.guest = g;
+        if (d.status !== 'mant') d.status = (g.status === 'checkedIn' ? 'ocupada' : 'reservada');
+      }
+    });
+
+    // 3) Barrido anti-fantasma: solo si guests se cargó correctamente.
+    //    Si guests falla (permission-denied), byCode queda vacío y el barrido
+    //    convertiría en libre TODAS las parcelas ocupadas — resultado incorrecto.
+    //    Con guests OK: si pitch dice ocupada pero no hay guest → es un status
+    //    legacy olvidado → forzar libre para evitar "ocupada por nadie".
+    if (guestsRes.status === 'fulfilled') {
+      Object.keys(DATA).forEach(function(nKey){
+        var d = DATA[nKey];
+        if (!d || d.guest) return;
+        if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+      });
+      Object.keys(PDATA).forEach(function(code){
+        var d = PDATA[code];
+        if (!d || d.guest) return;
+        if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+      });
+    }
     refreshParcelas();
   });
 }
 
-// ─── Boot ────────────────────────────────────────────────────────────────
-loadCoords().then(function(){
-  build();
-  // Lanzar carga de datos en cuanto Firestore esté listo
-  window.addEventListener('cs:db-ready', loadData);
-  if (window.Checksmart && window.Checksmart.db) loadData();
-  // En select mode, avisar al parent que el mapa ya carga
-  if (SELECT_MODE && window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: 'mapaReady', mode: 'select' }, '*');
+// ─── Tenant gating ──────────────────────────────────────────────────────
+// Cada tenant configurable se declara en TENANT_CONFIGS arriba. Si el tenant
+// no está ahí, se muestra el fallback "Plano no configurado".
+function isPlanoReadyForTenant(tid){
+  return !!getTenantConfig(tid);
+}
+function showNoMapFallback(){
+  try{
+    var bg = document.getElementById('bgImg');
+    var ov = document.getElementById('overlay');
+    var ld = document.getElementById('loader');
+    var fb = document.getElementById('noMapFallback');
+    var fbar = document.querySelector('.filter-bar');
+    if(bg) bg.style.display='none';
+    if(ov) ov.style.display='none';
+    if(ld) ld.style.display='none';
+    if(fbar) fbar.style.display='none';
+    if(fb){ fb.style.display='flex'; }
+  }catch(e){}
+}
+// Boot con logging defensivo + timeout (29/04/2026): si tras 5s no hay tid,
+// loguea claramente qué falta y muestra el fallback visible en pantalla.
+var _bootAttempts = 0;
+var _bootMaxAttempts = 50; // 50 * 100ms = 5 segundos
+var _bootDone = false;
+function waitTenantAndBoot(){
+  if (_bootDone) return;
+  var cs = window.Checksmart || {};
+  var tid = cs.tenantId || (cs.config && cs.config.tenantId);
+  if(!tid){
+    _bootAttempts++;
+    if (_bootAttempts === 1) console.log('[mapa] waitTenantAndBoot: esperando tenantId…');
+    if (_bootAttempts >= _bootMaxAttempts) {
+      console.error('[mapa] waitTenantAndBoot: timeout 5s sin tenantId. Estado:',
+        'window.Checksmart=', window.Checksmart,
+        'sessionStorage.cs_tenant=', (function(){try{return sessionStorage.getItem('cs_tenant');}catch(e){return 'ERROR';}}()),
+        'localStorage.cs_active_tenant=', (function(){try{return localStorage.getItem('cs_active_tenant');}catch(e){return 'ERROR';}}())
+      );
+      _bootDone = true;
+      showNoMapFallback();
+      return;
+    }
+    setTimeout(waitTenantAndBoot, 100);
+    return;
   }
-});
+  _bootDone = true;
+  console.log('[mapa] waitTenantAndBoot: tenantId resuelto en', _bootAttempts*100, 'ms →', tid);
+  if(!isPlanoReadyForTenant(tid)){
+    console.log('[mapa] Plano no configurado para tenant:', tid);
+    showNoMapFallback();
+    if (SELECT_MODE && window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'mapaUnavailable', tenant: tid }, '*');
+    }
+    return;
+  }
+  console.log('[mapa] aplicando config tenant:', tid);
+  try { applyTenantConfig(getTenantConfig(tid)); }
+  catch(e){ console.error('[mapa] applyTenantConfig error:', e); showNoMapFallback(); return; }
+  loadCoords(tid).then(function(){
+    console.log('[mapa] coords loaded, building SVG…');
+    try { build(); console.log('[mapa] build() OK'); }
+    catch(e){ console.error('[mapa] build() error:', e); }
+    window.addEventListener('cs:db-ready', loadData);
+    if (window.Checksmart && window.Checksmart.db) loadData();
+    if (SELECT_MODE && window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'mapaReady', mode: 'select' }, '*');
+    }
+  }).catch(function(err){
+    console.error('[mapa] loadCoords falló:', err);
+    showNoMapFallback();
+  });
+}
+// Inicio: arranque inmediato + listener cs:config-ready como fallback en caso
+// de que config.js termine antes de que arranquemos el polling.
+window.addEventListener('cs:config-ready', function(){ waitTenantAndBoot(); });
+waitTenantAndBoot();
 
 // Permitir al parent actualizar conflictos/exclusión dinámicamente
+// y recibir datos de huéspedes para tooltips/ficha360 sin depender de auth propia
 window.addEventListener('message', function(ev){
   var m = ev && ev.data;
   if (!m || typeof m !== 'object') return;
@@ -629,6 +901,119 @@ window.addEventListener('message', function(ev){
     refreshParcelas();
   } else if (m.type === 'clearSelectChoice') {
     SELECT_CHOSEN = null;
+    refreshParcelas();
+  } else if (m.type === 'guestDataUpdate' && Array.isArray(m.guests)) {
+    // Datos de huéspedes inyectados desde el app padre. Iteramos sobre los keys
+    // REALES de DATA/PDATA (no hardcoded 1..70) porque cada tenant tiene un
+    // inventario distinto: Roquetas 1-70+P1-P4, AMB 1-99(con huecos)+XXL+P1-P8.
+    var byCode = {};
+    m.guests.forEach(function(g){
+      if (g && !g._deleted && g.status !== 'checkedOut' && g.status !== 'cancelled') {
+        // Registrar pitchCode raíz
+        if (g.pitchCode) {
+          var pc = String(g.pitchCode).toUpperCase();
+          byCode[pc] = g;
+          // AMB usa P-02, P-03… DATA usa keys numéricos "2","3"…
+          var pn = _pcNum(g.pitchCode);
+          if (pn) byCode[pn] = g;
+        }
+        // Registrar segmentos adicionales (división de estancia)
+        if (Array.isArray(g.segments)) {
+          g.segments.forEach(function(s){
+            if (!s || !s.pitchCode) return;
+            var spc = String(s.pitchCode).toUpperCase();
+            if (!byCode[spc]) byCode[spc] = g; // no pisar si otra reserva ya ocupa
+            var spn = _pcNum(s.pitchCode);
+            if (spn && !byCode[spn]) byCode[spn] = g;
+          });
+        }
+      }
+    });
+    // Parcelas numeradas (DATA[n]) — el guest data del app es la verdad: si no
+    // hay guest activo con ese pitchCode, la parcela queda libre (excepto mant).
+    Object.keys(DATA).forEach(function(nKey){
+      var d = DATA[nKey];
+      if (!d) return;
+      var g = byCode[String(nKey)] || byCode[String(nKey).toUpperCase()];
+      if (g) {
+        d.guest = g;
+        if (d.status !== 'mant') d.status = (g.status === 'checkedIn' || g.status === 'presente') ? 'ocupada' : 'reservada';
+      } else {
+        // Sin guest activo → limpiar fantasmas. Mant se mantiene.
+        d.guest = null;
+        if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+      }
+    });
+    Object.keys(PDATA).forEach(function(code){
+      var d = PDATA[code];
+      if (!d) return;
+      var g = byCode[String(code).toUpperCase()];
+      if (g) {
+        d.guest = g;
+        if (d.status !== 'mant') d.status = (g.status === 'checkedIn' || g.status === 'presente') ? 'ocupada' : 'reservada';
+      } else {
+        d.guest = null;
+        if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+      }
+    });
+    refreshParcelas();
+  } else if (m.type === 'pitchesDataUpdate' && Array.isArray(m.pitches)) {
+    // (29/04/2026) Cambios del admin sobre parámetros de parcela (tipoPlaza,
+    // electricity, agua, sombra, vertido, barbacoa, wifi, parking, notas)
+    // se propagan al plano sin recargar. Antes solo se aplicaban al abrir
+    // (loadData) y los cambios posteriores quedaban invisibles hasta refrescar.
+    var byCodePitch = {};
+    m.pitches.forEach(function (p) {
+      if (!p) return;
+      var c = String(p.code || p.id || '').toUpperCase();
+      if (c) {
+        byCodePitch[c] = p;
+        // También indexar por número puro (P-02 → "2") para DATA lookup
+        var pn = _pcNum(c);
+        if (pn) byCodePitch[pn] = p;
+      }
+    });
+    var statusMap = { free:'libre', occupied:'ocupada', reserved:'reservada', maintenance:'mant' };
+    function applyPitch(target, p) {
+      if (p.tipoPlaza   !== undefined) target.tipoPlaza   = p.tipoPlaza;
+      if (p.electricity !== undefined) target.electricity = p.electricity;
+      if (p.agua        !== undefined) target.water       = p.agua;
+      if (p.water       !== undefined) target.water       = p.water;
+      if (p.vertido     !== undefined) target.vertido     = p.vertido;
+      if (p.barbacoa    !== undefined) target.barbacoa    = p.barbacoa;
+      if (p.sombra      !== undefined) target.sombra      = p.sombra;
+      if (p.wifi        !== undefined) target.wifi        = p.wifi;
+      if (p.notas       !== undefined) target.notas       = p.notas;
+      // Status del admin solo aplica si NO hay guest activo. Mant siempre.
+      if (p.status) {
+        var st = statusMap[p.status] || null;
+        if (st === 'mant') target.status = 'mant';
+        else if (!target.guest && st) target.status = st;
+      }
+    }
+    Object.keys(DATA).forEach(function (nKey) {
+      var d = DATA[nKey];
+      if (!d) return;
+      var p = byCodePitch[String(nKey).toUpperCase()];
+      if (p) applyPitch(d, p);
+    });
+    Object.keys(PDATA).forEach(function (code) {
+      var d = PDATA[code];
+      if (!d) return;
+      var p = byCodePitch[String(code).toUpperCase()];
+      if (p) applyPitch(d, p);
+    });
+    // Barrido anti-fantasma: ocupada/reservada sin guest → libre
+    Object.keys(DATA).forEach(function (nKey) {
+      var d = DATA[nKey];
+      if (!d || d.guest) return;
+      if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+    });
+    Object.keys(PDATA).forEach(function (code) {
+      var d = PDATA[code];
+      if (!d || d.guest) return;
+      if (d.status === 'ocupada' || d.status === 'reservada') d.status = 'libre';
+    });
     refreshParcelas();
   }
 });

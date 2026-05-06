@@ -17,6 +17,16 @@
     'www.areamalagabeach.com':    'area-malaga-beach',
   };
 
+  // Sincroniza sessionStorage + localStorage con el tenantId resuelto.
+  // CRÍTICO (29/04/2026): si detectamos por dominio/subdominio pero el
+  // localStorage tiene cs_active_tenant de OTRO tenant, _csKey() en app puede
+  // leerlo como fallback temprano y operar con keys del tenant equivocado.
+  // Solución: siempre sobreescribir cs_active_tenant + cs_tenant con el actual.
+  function _persistTenant(tid) {
+    try { sessionStorage.setItem('cs_tenant', tid); } catch(e) {}
+    try { localStorage.setItem('cs_active_tenant', tid); } catch(e) {}
+  }
+
   function detectTenantId() {
     const host = window.location.hostname;
 
@@ -24,24 +34,35 @@
     try {
       const paramTenant = new URLSearchParams(window.location.search).get('tenant');
       if (paramTenant && /^[a-z0-9-]{2,50}$/.test(paramTenant)) {
-        // Sincronizar storage con la URL para que F5 siga funcionando
-        try { sessionStorage.setItem('cs_tenant', paramTenant); } catch(e) {}
-        try { localStorage.setItem('cs_active_tenant', paramTenant); } catch(e) {}
+        _persistTenant(paramTenant);
         return paramTenant;
       }
     } catch(e) {}
 
     // 2. Dominio propio del cliente (camperparkroquetas.com, etc.)
-    if (CUSTOM_DOMAIN_MAP[host]) return CUSTOM_DOMAIN_MAP[host];
+    if (CUSTOM_DOMAIN_MAP[host]) {
+      const t = CUSTOM_DOMAIN_MAP[host];
+      _persistTenant(t);
+      return t;
+    }
 
     // 3. Subdominio: camperpark-roquetas.checkingsmart.com → "camperpark-roquetas"
+    //    Excluimos también 'www' para que www.checkingsmart.com NO se trate como tenant.
     const parts = host.split('.');
-    if (parts.length >= 3 && !['web', 'firebaseapp'].includes(parts[1])) return parts[0];
+    if (parts.length >= 3 &&
+        !['web', 'firebaseapp'].includes(parts[1]) &&
+        !['www'].includes(parts[0])) {
+      _persistTenant(parts[0]);
+      return parts[0];
+    }
 
     // 4. sessionStorage — set by login portal just before redirecting
     try {
       const ssTenant = sessionStorage.getItem('cs_tenant');
-      if (ssTenant && /^[a-z0-9-]{2,50}$/.test(ssTenant)) return ssTenant;
+      if (ssTenant && /^[a-z0-9-]{2,50}$/.test(ssTenant)) {
+        _persistTenant(ssTenant);
+        return ssTenant;
+      }
     } catch(e) {}
 
     // 5. localStorage — remembers last active tenant (for F5/reloads)
