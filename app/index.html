@@ -1750,6 +1750,87 @@ function _parseMRZ(lines){
   var docType=l2.charAt(0)==='P'?'Pasaporte':'DNI';
   return{name:firstname,surname:surname,idDoc:docNum,nationality:nat,birthDate:birthDate,docType:docType};
 }
+// TD1 = DNI español (3 líneas de 30 chars). TD3 = pasaporte (2 líneas de 44 chars).
+function _parseMRZ_TD1(l1,l2,l3){
+  function pad(s){return (s+'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<').substring(0,30);}
+  l1=pad(l1);l2=pad(l2);l3=pad(l3);
+  var country=l1.substring(2,5).replace(/</g,'');
+  var docNum=l1.substring(5,14).replace(/</g,'');
+  var dob=l2.substring(0,6);
+  var yy=parseInt(dob.substring(0,2),10);
+  if(isNaN(yy)) return null;
+  var year=(yy>25?1900:2000)+yy;
+  var birthDate=year+'-'+dob.substring(2,4)+'-'+dob.substring(4,6);
+  // ICAO 9303 TD1: nacionalidad en posiciones 15-17 de la línea 2 (no 10-12 — eso es para TD3)
+  var nat=l2.substring(15,18).replace(/</g,'')||country;
+  var nameSplit=l3.split('<<');
+  var surname=(nameSplit[0]||'').replace(/</g,' ').trim();
+  var firstname=(nameSplit[1]||'').replace(/</g,' ').trim();
+  if(!docNum||!surname) return null;
+  return{name:firstname,surname:surname,idDoc:docNum,nationality:nat,birthDate:birthDate,docType:'DNI'};
+}
+function _parseMRZAuto(rawLines){
+  if(!rawLines||!rawLines.length) return null;
+  // Normaliza: solo chars MRZ (A-Z 0-9 <), mayúsculas, sin espacios.
+  // Threshold 20: el OCR a veces deja líneas algo cortas; preferimos intentar parsear con padding
+  // y descartar si el parser no extrae datos válidos.
+  var clean=rawLines.map(function(l){return String(l||'').replace(/[^A-Za-z0-9<]/g,'').toUpperCase();})
+                     .filter(function(l){return l.length>=20;});
+  if(clean.length===0) return null;
+  // TD1 (DNI): 3 líneas ~30 chars
+  if(clean.length>=3){
+    var t=clean.slice(-3);
+    if(t[0].length<=38&&t[1].length<=38&&t[2].length<=38){
+      var r=_parseMRZ_TD1(t[0],t[1],t[2]);
+      if(r) return r;
+    }
+  }
+  // TD3 (pasaporte): 2 líneas ~44 chars
+  if(clean.length>=2){
+    var p=clean.slice(-2);
+    if(p[0].length>=40||p[1].length>=40){
+      var r2=_parseMRZ(p);
+      if(r2) return r2;
+    }
+  }
+  return null;
+}
+// Carga Tesseract.js bajo demanda desde CDN. Resuelve con window.Tesseract.
+function _loadTesseract(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(window._tessLoading) return window._tessLoading;
+  window._tessLoading=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.async=true;
+    s.onload=function(){window.Tesseract?resolve(window.Tesseract):reject(new Error('Tesseract no se inicializó'));};
+    s.onerror=function(){window._tessLoading=null;reject(new Error('No se pudo cargar Tesseract.js (¿sin internet?)'));};
+    document.head.appendChild(s);
+  });
+  return window._tessLoading;
+}
+// Corre OCR sobre una imagen y devuelve {rawText, parsed} donde parsed viene de _parseMRZAuto.
+function _ocrMRZ(imageDataUrl,progressCb){
+  return _loadTesseract().then(function(Tess){
+    return Tess.recognize(imageDataUrl,'eng',{
+      logger:function(m){
+        if(progressCb&&m&&m.status){
+          if(m.status==='recognizing text') progressCb('Leyendo… '+Math.round((m.progress||0)*100)+'%');
+          else if(m.status==='loading tesseract core') progressCb('Cargando OCR…');
+          else if(m.status==='initializing tesseract') progressCb('Inicializando OCR…');
+          else if(m.status==='loading language traineddata') progressCb('Cargando datos OCR…');
+          else if(m.status==='initializing api') progressCb('Preparando…');
+        }
+      },
+      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<'
+    });
+  }).then(function(result){
+    var text=(result&&result.data&&result.data.text)||'';
+    var lines=text.split(/[\r\n]+/);
+    var parsed=_parseMRZAuto(lines);
+    return{rawText:text,parsed:parsed};
+  });
+}
 function _getAgeFromBirth(bd){
   if(!bd) return null;
   var d=new Date(bd),now=new Date();
@@ -1771,7 +1852,94 @@ function EscanerTab(props){
   var _nid=useState(''),scanId=_nid[0],setScanId=_nid[1];
   var _phF=useState(null),scanPhotoF=_phF[0],setScanPhotoF=_phF[1];
   var _phB=useState(null),scanPhotoB=_phB[0],setScanPhotoB=_phB[1];
-  var _mode=useState('photo'),scanMode=_mode[0],setScanMode=_mode[1];
+  var _mode=useState('auto'),scanMode=_mode[0],setScanMode=_mode[1];
+  // Estado del flujo Auto-leer (OCR)
+  var _ocr=useState({running:false,status:'',err:null,summary:null}),ocr=_ocr[0],setOcr=_ocr[1];
+  // Estado de la cámara en vivo (getUserMedia)
+  var _cam=useState({active:false,starting:false,err:null}),camState=_cam[0],setCamState=_cam[1];
+
+  function startCamera(){
+    setCamState({active:false,starting:true,err:null});
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      setCamState({active:false,starting:false,err:'Tu navegador no soporta acceso directo a cámara. Usa "Subir imagen" abajo.'});
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false})
+      .then(function(stream){
+        window._csCamStream=stream;
+        setCamState({active:true,starting:false,err:null});
+        setTimeout(function(){
+          var v=document.getElementById('cs-cam-video');
+          if(v){v.srcObject=stream;v.play().catch(function(){});}
+        },80);
+      })
+      .catch(function(err){
+        var msg;
+        if(err.name==='NotAllowedError') msg='Permiso de cámara denegado. Pulsa el icono cámara en la barra de direcciones y permítelo.';
+        else if(err.name==='NotFoundError'||err.name==='OverconstrainedError') msg='No se detectó cámara en este equipo.';
+        else if(err.name==='NotReadableError') msg='Cámara en uso por otra aplicación. Ciérrala y reintenta.';
+        else msg=String(err&&err.message||err);
+        setCamState({active:false,starting:false,err:msg});
+      });
+  }
+  function stopCamera(){
+    try{
+      if(window._csCamStream){window._csCamStream.getTracks().forEach(function(t){t.stop();});window._csCamStream=null;}
+    }catch(e){}
+    var v=document.getElementById('cs-cam-video');
+    if(v) v.srcObject=null;
+    setCamState({active:false,starting:false,err:null});
+  }
+  function captureFromCamera(){
+    var v=document.getElementById('cs-cam-video');
+    if(!v||!v.videoWidth){showToast('La cámara aún no está lista','warn');return;}
+    var c=document.createElement('canvas');
+    c.width=v.videoWidth;c.height=v.videoHeight;
+    try{c.getContext('2d').drawImage(v,0,0,c.width,c.height);}
+    catch(e3){showToast('No se pudo capturar el frame','error');return;}
+    var dataUrl=c.toDataURL('image/jpeg',0.88);
+    stopCamera();
+    runAutoOcr(dataUrl);
+  }
+  // Cleanup al desmontar / cambiar de huésped
+  useEffect(function(){return function(){stopCamera();};},[]);
+
+  // Lanza OCR sobre una imagen capturada y autorrellena los campos si encuentra MRZ.
+  function runAutoOcr(dataUrl){
+    setOcr({running:true,status:'Cargando OCR…',err:null,summary:null});
+    _ocrMRZ(dataUrl,function(s){setOcr(function(prev){return Object.assign({},prev,{status:s});});})
+      .then(function(res){
+        if(!res.parsed){
+          setOcr({running:false,status:'',err:'No se detectó MRZ legible. Reintenta con mejor luz / enfoque, o introduce los datos a mano.',summary:null});
+          return;
+        }
+        var p=res.parsed;
+        var full=((p.name||'')+' '+(p.surname||'')).trim();
+        setScanName(full);
+        setScanId(p.idDoc||'');
+        // La MRZ vive en el reverso del DNI o en la página de datos del pasaporte → guardamos la imagen como trasera
+        setScanPhotoB(dataUrl);
+        var age=p.birthDate?_getAgeFromBirth(p.birthDate):null;
+        var summary=(p.docType||'Documento')+' · '+(p.idDoc||'?')+
+          (full?' · '+full:'')+
+          (p.nationality?' · '+p.nationality:'')+
+          (p.birthDate?' · n. '+p.birthDate+(age!=null?' ('+age+' años)':''):'');
+        setOcr({running:false,status:'',err:null,summary:summary});
+        showToast('Datos leídos automáticamente','success');
+      })
+      .catch(function(err){
+        setOcr({running:false,status:'',err:String(err&&err.message||err),summary:null});
+        showToast('OCR: '+(err&&err.message||err),'error');
+      });
+  }
+  function handleAutoCaptureFile(ev){
+    var file=ev.target.files&&ev.target.files[0];if(!file)return;
+    var rd=new FileReader();
+    rd.onload=function(e2){runAutoOcr(e2.target.result);};
+    rd.readAsDataURL(file);
+    // Reset para permitir reintento con el mismo archivo
+    try{ev.target.value='';}catch(e3){}
+  }
 
   useEffect(function(){
     var existing=scans.find(function(s){return s.idx===activeIdx;})||null;
@@ -1895,9 +2063,59 @@ function EscanerTab(props){
             onChange:function(ev){setScanId(ev.target.value);}})
         ),
         e('div',{className:'tabs',style:{marginBottom:10}},
+          e('div',{className:'tab'+(scanMode==='auto'?' active':''),onClick:function(){setScanMode('auto');}},'\ud83e\udd16 Auto-leer'),
           e('div',{className:'tab'+(scanMode==='photo'?' active':''),onClick:function(){setScanMode('photo');}},'\ud83d\udcf7 Fotos'),
           e('div',{className:'tab'+(scanMode==='mrz'?' active':''),onClick:function(){setScanMode('mrz');}},'\u2328\ufe0f MRZ')
         ),
+        scanMode==='auto'?e('div',null,
+          e('div',{style:{background:'#e3f2fd',border:'1px solid #90caf9',borderRadius:8,padding:'10px 12px',marginBottom:10,fontSize:'.82rem',color:'#0d47a1',lineHeight:1.4}},
+            e('div',{style:{fontWeight:700,marginBottom:4}},'\ud83e\udd16 Lectura autom\u00e1tica del documento'),
+            e('div',null,'Apunta la c\u00e1mara al ',e('strong',null,'REVERSO del DNI'),' (donde est\u00e1 el bloque de letras y n\u00fameros) o a la ',e('strong',null,'p\u00e1gina de datos del pasaporte'),'. Los campos se rellenar\u00e1n solos.')
+          ),
+          // \u2500\u2500 C\u00e1mara en vivo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+          camState.active?e('div',null,
+            e('video',{id:'cs-cam-video',autoPlay:true,playsInline:true,muted:true,
+              style:{width:'100%',maxHeight:340,background:'#000',borderRadius:8,display:'block',marginBottom:8,objectFit:'contain'}}),
+            e('div',{style:{display:'flex',gap:8}},
+              e('button',{className:'btn btn-primary',style:{flex:2,padding:'12px 16px',fontWeight:700},disabled:ocr.running,
+                onClick:captureFromCamera},ocr.running?'\u23f3 '+(ocr.status||'Procesando\u2026'):'\ud83d\udcf8 Capturar y leer'),
+              e('button',{className:'btn btn-outline',style:{flex:1},disabled:ocr.running,onClick:stopCamera},'\u2715 Cerrar')
+            )
+          ):e('div',null,
+            // Bot\u00f3n principal \u2014 abre la c\u00e1mara en vivo
+            e('button',{className:'btn',
+              style:{width:'100%',background:camState.starting||ocr.running?'#9e9e9e':'var(--primary)',color:'white',textAlign:'center',padding:'14px 16px',borderRadius:10,fontWeight:700,fontSize:'.95rem',border:'none',cursor:camState.starting||ocr.running?'wait':'pointer'},
+              disabled:camState.starting||ocr.running,
+              onClick:startCamera},
+              camState.starting?'\u23f3 Abriendo c\u00e1mara\u2026':(ocr.running?'\u23f3 '+(ocr.status||'Procesando\u2026'):'\ud83d\udcf7 Abrir c\u00e1mara y leer DNI')
+            ),
+            // Fallback: subir imagen ya hecha
+            e('label',{style:{display:'block',marginTop:8,textAlign:'center',cursor:'pointer',fontSize:'.78rem',color:'var(--text-secondary)'}},
+              e('input',{type:'file',accept:'image/*',capture:'environment',disabled:ocr.running,
+                style:{display:'none'},onChange:handleAutoCaptureFile}),
+              e('span',{style:{textDecoration:'underline'}},'\u2026o subir una foto del DNI ya hecha')
+            )
+          ),
+          camState.err?e('div',{style:{marginTop:10,background:'#fff3e0',border:'1px solid #ffb74d',borderRadius:8,padding:'10px 12px',fontSize:'.82rem',color:'#bf360c'}},
+            '\ud83c\udfa5 '+camState.err
+          ):null,
+          ocr.summary?e('div',{style:{marginTop:10,background:'#e8f5e9',border:'1px solid #a5d6a7',borderRadius:8,padding:'10px 12px',fontSize:'.85rem',color:'#1b5e20'}},
+            e('div',{style:{fontWeight:700,marginBottom:2}},'\u2705 Datos detectados'),
+            e('div',null,ocr.summary),
+            e('div',{style:{fontSize:'.75rem',marginTop:4,color:'#33691e'}},'Revisa los campos de arriba y pulsa "Guardar esc\u00e1ner".')
+          ):null,
+          ocr.err?e('div',{style:{marginTop:10,background:'#fff3e0',border:'1px solid #ffb74d',borderRadius:8,padding:'10px 12px',fontSize:'.82rem',color:'#bf360c'}},
+            e('div',{style:{fontWeight:700,marginBottom:2}},'\u26a0\ufe0f '+ocr.err),
+            e('div',{style:{fontSize:'.75rem',color:'#5d4037'}},'Prueba con mejor luz, enfoca el MRZ o usa el modo "\ud83d\udcf7 Fotos" / "\u2328\ufe0f MRZ" manualmente.')
+          ):null,
+          e('div',{style:{marginTop:10,fontSize:'.72rem',color:'var(--text-tertiary)',lineHeight:1.5}},
+            '\u2022 El reconocimiento se hace ',e('strong',null,'en tu dispositivo'),', sin enviar la imagen a internet.',
+            e('br',null),
+            '\u2022 La primera vez tarda 3-5 s en cargar el motor OCR (luego queda cacheado).',
+            e('br',null),
+            '\u2022 DNI espa\u00f1oles muy antiguos sin MRZ no son legibles autom\u00e1ticamente.'
+          )
+        ):null,
         scanMode==='photo'?e('div',null,
           e('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:6}},
             // CARA FRONTAL
